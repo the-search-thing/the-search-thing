@@ -23,6 +23,17 @@ N::FrameSummary {
     content: String
 }
 
+N::Text {
+    INDEX text_id: ID,
+   //  no_of_chunks: U8,
+    content: String
+}
+
+V::TextEmbeddings {
+    text_id: ID,
+    content: String
+}
+
 E::Has{
     From: Video,
     To: Chunk

@@ -10,24 +10,21 @@ class Walk:
             "__pycache__",
             "venv",
             "dist",
-            "build",    
+            "build",
         }
         self.ignore_exts = {".pyc", ".exe", ".dll", ".bin", ".env"}
 
-    def scan_and_index(self, root_dir):
-        print(f"Scanning {root_dir}...")
+    def scan_and_index(self, root_dir, output_file):
+        # Walk & write the directory, file structure
+        with open(output_file, "w", encoding="utf-8") as f:
+            for root, dirs, files in os.walk(root_dir):
+                dirs[:] = [d for d in dirs if d not in self.ignore_dirs]
 
-        # Walk the directory
-        for root, dirs, files in os.walk(root_dir):
-            dirs[:] = [d for d in dirs if d not in self.ignore_dirs]
-
-            for file in files:
-                path = os.path.join(root, file)
-                if self._should_ignore(path):
-                    continue
-                print(path)
-
-        print("Indexing complete.")
+                for file in files:
+                    path = os.path.join(root, file)
+                    if self._should_ignore(path):
+                        continue
+                    f.write(path + "\n")
 
     def _should_ignore(self, path):
         _, ext = os.path.splitext(path)
@@ -36,4 +33,7 @@ class Walk:
 
 if __name__ == "__main__":
     walker = Walk()
-    walker.scan_and_index("C:\\Users\\amaan\\OneDrive\\Documents\\coding")
+    walker.scan_and_index(
+        "C:\\Users\\amaan\\OneDrive\\Documents\\coding",
+        "C:\\Users\\amaan\\OneDrive\\Documents\\coding\\the-search-thing\\backup.txt",
+    )

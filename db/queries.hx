@@ -52,7 +52,7 @@ QUERY CreateTranscript (chunk_id: String, content: String) =>
 
 // create frame summary node
 QUERY CreateFrameSummary(chunk_id: String, content: String) =>
-    frame_summary <- AddN<Transcript>({
+    frame_summary <- AddN<FrameSummary>({
         chunk_id: chunk_id,
         content: content
     })
@@ -158,6 +158,7 @@ QUERY CombinedSearchWithVideoId(search_text: String) =>
     RETURN transcripts, transcript_chunks, frames, frame_chunks
 
 // hybrid search transcript keywords + transcript embedddings
+// this doesnt work as of now
 QUERY SearchTranscriptCombined(search_string: String, keywords: String) =>
     vec_results <- SearchV<TranscriptEmbeddings>(Embed(search_string), 100)
     bm25_results <- SearchBM25<Transcript>(keywords, 100)
@@ -166,6 +167,7 @@ QUERY SearchTranscriptCombined(search_string: String, keywords: String) =>
     RETURN combined_results
 
 // hybrid search frame summary keywords + embeddings
+// this doesnt work as of now
 QUERY SearchFrameSummaryCombined(search_string: String, keywords: String) =>
     vec_results <- SearchV<FrameSummaryEmbeddings>(Embed(search_string), 100)
     bm25_results <- SearchBM25<FrameSummary>(keywords, 100)

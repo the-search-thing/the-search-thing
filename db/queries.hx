@@ -69,14 +69,14 @@ QUERY CreateVideoToChunkRelationship (video_id: String, chunk_id: String) =>
 // create chunk to transcript
 QUERY CreateChunkToTranscriptRelationship (chunk_id: String, transcript_id: ID) =>
     chunk <- N<Chunk>({chunk_id: chunk_id})
-    transcript <- N<Transcript>({transcript_id: transcript_id})
+    transcript <- N<Transcript>(transcript_id: transcript_id)
     hasTranscript <- AddE<Has>::From(chunk)::To(transcript)
     RETURN hasTranscript
 
 // create chunk to frame summary
 QUERY CreateChunkToFrameSummaryRelationship (chunk_id: String,frame_summary_id:ID ) =>
     chunk <- N<Chunk>({chunk_id: chunk_id})
-    frame_summary <- N<FrameSummary>({frame_summary_id: frame_summary_id})
+    frame_summary <- N<FrameSummary>(frame_summary_id)
     HasFrameSummary <- AddE<Has>::From(chunk)::To(frame_summary)
     RETURN HasFrameSummary
 

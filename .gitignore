@@ -1,0 +1,11 @@
+# venv
+.venv/
+# env vars
+.env*
+
+# rust
+target/
+Cargo.lock
+
+# python
+uv.lock

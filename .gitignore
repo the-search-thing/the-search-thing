@@ -14,3 +14,6 @@ uv.lock
 
 # misc
 backup.txt
+
+# helix
+.helix/

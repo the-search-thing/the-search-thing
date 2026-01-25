@@ -1,0 +1,5 @@
+- [ ] parse files
+- [ ] chunk files
+- [ ] embed files 
+- [ ] ingest to helix db
+- [ ] make files searchable

@@ -1,6 +1,7 @@
 use pyo3::prelude::*;
 
 mod add;
+mod walk;
 
 #[pymodule]
 fn the_search_thing(m: &Bound<'_, PyModule>) -> PyResult<()> {

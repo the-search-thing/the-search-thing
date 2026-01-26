@@ -8,6 +8,11 @@ def add_function(x: int, y: int) -> int:
     result = add_numbers(x, y)
     print(result)
     return result
+    
+def walk_dir(dir: str):
+    from the_search_thing import walk # ty:ignore[unresolved-import]
+    
+    walk("C:/Users/karth/Downloads")
 
 
 if __name__ == "__main__":

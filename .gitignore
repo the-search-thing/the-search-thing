@@ -21,3 +21,5 @@ backup.txt
 # helix
 .helix/
 *.log
+
+testing-parsing/

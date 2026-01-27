@@ -5,8 +5,8 @@
   "main": "./out/main/main.js",
   "license": "MIT",
   "author": {
-    "name": "Guasam",
-    "url": "https://github.com/guasam"
+    "name": "karthik",
+    "url": "https://github.com/AmaanBilwar/the-search-thing"
   },
   "scripts": {
     "dev": "cross-env ELECTRON_DISABLE_SANDBOX=1 electron-vite dev -w",

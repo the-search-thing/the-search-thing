@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react'
+import {Searchbar} from '../ui/searchbar'
 import { Badge } from '../ui/badge'
 import './styles.css'
 
 export default function Home() {
+  const [q, setQ] = useState("")
 
   return (
     <div className="welcome-content flex flex-col gap-5">
-      <div className="flex gap-5 items-center">
-        Search bar goes here
+      <div className="flex items-center h-[20%]">
+        <Searchbar
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search…"
+        />
       </div>
       <div className="flex justify-center items-center gap-4 opacity-50 hover:opacity-80 transition-opacity">
         <DarkModeToggle />

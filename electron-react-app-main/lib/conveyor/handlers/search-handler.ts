@@ -17,19 +17,19 @@ export const registerSearchHandlers = () => {
     return !!response.data.indexed;
   })
   
-  handle('index', async (query: string) => {
+  handle('index', async (filePaths: Array<string>) => {
     const response = await axios.post('http://localhost:3000/api/search', {
-      params: { q: query }
+      filePaths // Send to API
     });
     return !!response.data.success;
-  })
+  });
   
   // System operations
   handle('open-file-dialog', async () => {
     const result = await dialog.showOpenDialog({
       properties: ['openFile', 'multiSelections']
     })
-    return {results: result.filePaths}
+    return result.filePaths;
   })
   
 }

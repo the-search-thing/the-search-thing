@@ -22,9 +22,13 @@ export default function Home() {
   }
 
   const handleStartIndexing = async () => {
+    const res = await search.openFileDialog()
+    
+    if (!res || res.length === 0) return //check to prevent indexing null 
+    
     setIsIndexing(true)
     try {
-      const indexRes = await search.index()
+      const indexRes = await search.index(res)
       if (indexRes) {
         setIsIndexed(true)
       }

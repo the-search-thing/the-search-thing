@@ -2,7 +2,7 @@ import { ConveyorApi } from '@/lib/preload/shared'
 
 export class SearchApi extends ConveyorApi {
   check = () => this.invoke('check')
-  index = (input: string) => this.invoke('index', input)
+  index = (filePaths: Array<string>) => this.invoke('index', filePaths)
   search = (input: string) => this.invoke('search', input)
   
   // system methods

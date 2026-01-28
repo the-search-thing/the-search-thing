@@ -60,7 +60,7 @@ export default function Home() {
           ) : (
             <>
               <h2>No Index Found</h2>
-              <p>Scan your files to enable search functionality.</p>
+              <p>Scan your folders to enable search functionality.</p>
               <Button onClick={handleStartIndexing} className="mt-4">
                 Start Scanning
               </Button>

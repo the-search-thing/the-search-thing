@@ -27,7 +27,7 @@ export const registerSearchHandlers = () => {
   // System operations
   handle('open-file-dialog', async () => {
     const result = await dialog.showOpenDialog({
-      properties: ['openFile', 'multiSelections']
+      properties: ['openDirectory', 'multiSelections']
     })
     return result.filePaths;
   })

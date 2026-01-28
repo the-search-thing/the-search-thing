@@ -1,15 +1,15 @@
 import { z } from 'zod'
 
 export const searchIpcSchema = {
-  check: {
+  'check': {
     args: z.tuple([z.string()]),
     return: z.boolean(),
   },
-  index: {
+  'index': {
     args: z.tuple([z.string()]),
     return: z.boolean(),
   },
-  search: {
+  'search': {
     args: z.tuple([z.string()]),
     return: z.object({
       results: z.array(z.string()),

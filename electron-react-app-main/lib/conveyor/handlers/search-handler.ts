@@ -1,4 +1,5 @@
 import { handle } from '@/lib/main/shared'
+import { dialog } from 'electron'
 import axios from 'axios';
 
 export const registerSearchHandlers = () => {
@@ -22,4 +23,13 @@ export const registerSearchHandlers = () => {
     });
     return !!response.data.success;
   })
+  
+  // System operations
+  handle('open-file-dialog', async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile', 'multiSelections']
+    })
+    return {results: result.filePaths}
+  })
+  
 }

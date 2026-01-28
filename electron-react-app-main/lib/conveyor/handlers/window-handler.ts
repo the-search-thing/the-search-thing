@@ -1,5 +1,5 @@
 import type { BrowserWindow } from 'electron'
-import { shell } from 'electron'
+import { shell} from 'electron'
 import { handle } from '@/lib/main/shared'
 import { electronAPI } from '@electron-toolkit/preload'
 

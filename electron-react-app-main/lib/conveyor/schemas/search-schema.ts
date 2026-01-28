@@ -15,4 +15,11 @@ export const searchIpcSchema = {
       results: z.array(z.string()),
     }),
   },
+  // system operations
+  'open-file-dialog': {
+    args: z.tuple([]),
+    return: z.object({
+      results: z.array(z.string()),
+    }),
+  }
 };

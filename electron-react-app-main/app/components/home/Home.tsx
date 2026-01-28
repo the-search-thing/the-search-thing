@@ -84,7 +84,6 @@ export default function Home() {
         />
       </div>
       
-      {/* Display results */}
       {results.length > 0 && (
         <div className="results-container">
           {results.map((result, idx) => (

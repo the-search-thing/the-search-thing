@@ -4,4 +4,7 @@ export class SearchApi extends ConveyorApi {
   check = () => this.invoke('check')
   index = (input: string) => this.invoke('index', input)
   search = (input: string) => this.invoke('search', input)
+  
+  // system methods
+  openFileDialog = () => this.invoke('open-file-dialog')
 }

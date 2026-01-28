@@ -9,9 +9,9 @@ export const registerSearchHandlers = () => {
     return { results: response.data.results };
   });
   
-  handle('check', async (query: string) => {
+  handle('check', async () => {
     const response = await axios.get('http://localhost:3000/api/search', {
-      params: { q: query }
+      params: {}
     });
     return !!response.data.indexed;
   })

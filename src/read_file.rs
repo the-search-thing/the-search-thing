@@ -3,6 +3,7 @@ use std::fs;
 
 use pyo3::prelude::*;
 #[pyfunction]
+#[allow(dead_code)]
 pub fn get_file_contents(file_path: String) {
     let file_path = file_path;
 

@@ -2,6 +2,7 @@ use crate::read_file::get_file_contents;
 use pyo3::prelude::*;
 use walkdir::WalkDir;
 #[pyfunction]
+#[allow(dead_code)]
 pub fn walk_and_get_content(dir: String) -> PyResult<()> {
     for entry in WalkDir::new(dir) {
         let entry =

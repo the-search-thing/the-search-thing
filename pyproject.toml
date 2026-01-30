@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "the fastest search tool for your OS"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "fastapi>=0.128.0",
+]
 
 [build-system]
 requires = ["maturin>=1.0,<2.0"]

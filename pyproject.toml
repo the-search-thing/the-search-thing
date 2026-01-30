@@ -10,6 +10,7 @@ dependencies = [
   "groq>=1.0.0",
   "helix-py>=0.2.31",
   "python-dotenv>=1.2.1",
+  "uvicorn>=0.40.0",
 ]
 
 [build-system]

@@ -13,7 +13,7 @@ PORT = os.getenv("PORT")
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-app = FastAPI(title="Search Engine Backend API")
+app = FastAPI(title="the search thing")
 
 app.add_middleware(
     CORSMiddleware,  # type: ignore[ arg-type ]

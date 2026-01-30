@@ -473,7 +473,7 @@ async def create_frame_summary_node(
         "chunk_id": str(chunk_id),
         "content": content,
     }
-    return json.dumps(helix_client.query("CreateTranscript", frame_summary_params))
+    return json.dumps(helix_client.query("CreateFrameSummary", frame_summary_params))
 
 
 # create edge to connect video and chunk
@@ -494,7 +494,7 @@ async def create_chunk_transcript_relationship(
     helix_client = get_helix_client()
     return json.dumps(
         helix_client.query(
-            "CreateVideoToChunkRelationship",
+            "CreateChunkToTranscriptRelationship",
             {"chunk_id": str(chunk_id), "transcript_id": str(transcript_id)},
         )
     )
@@ -507,7 +507,7 @@ async def create_chunk_frame_summary_relationship(
     helix_client = get_helix_client()
     return json.dumps(
         helix_client.query(
-            "CreateVideoToChunkRelationship",
+            "CreateChunkToFrameSummaryRelationship",
             {"chunk_id": str(chunk_id), "frame_summary_id": str(frame_summary_id)},
         )
     )

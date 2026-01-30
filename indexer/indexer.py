@@ -15,7 +15,7 @@ from google import genai
 from google.genai import types
 from groq import Groq
 from helix.client import Client as Helix_Client
-from search_engine_api import rust_indexer  # ty:ignore[unresolved-import]
+from the_search_thing import rust_indexer  # ty:ignore[unresolved-import]
 
 load_dotenv()
 

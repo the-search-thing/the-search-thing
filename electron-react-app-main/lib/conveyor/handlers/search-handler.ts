@@ -11,14 +11,14 @@ export const registerSearchHandlers = () => {
   });
   
   handle('check', async () => {
-    const response = await axios.get('http://localhost:3000/api/search', {
+    const response = await axios.get('http://localhost:3000/api/check', {
       params: {}
     });
     return !!response.data.indexed;
   })
   
   handle('index', async (filePaths: Array<string>) => {
-    const response = await axios.post('http://localhost:3000/api/search', {
+    const response = await axios.post('http://localhost:3000/api/index', {
       filePaths // Send to API
     });
     return !!response.data.success;

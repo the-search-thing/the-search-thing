@@ -7,29 +7,26 @@ import './styles.css'
 import NoIndex from '../NoIndex'
 import Results from '../Results'
 import Footer from '../Footer'
-
+import { useAppContext } from '../AppContext'
 
 export default function Home() {
   const [query, setQuery] = useState("")
   const search = useConveyor("search")
   const [results, setResults] = useState<string[]>([])
-  const [isIndexed, setIsIndexed] = useState<boolean | null>(null)
+  const [isCheckingIndex, setIsCheckingIndex] = useState(true)
+  
+  const { isIndexed } = useAppContext() // Read global state
   
   const handleSearch = async () => {
     const res = await search.search(query)
     setResults(res.results)
   }
 
-  const handleIndexComplete = (indexed: boolean) => {
-    setIsIndexed(indexed)
-  }
-
   // Show loading while checking index
-  if (isIndexed === null) {
-    return <Loading onIndexComplete={handleIndexComplete} />
+  if (isCheckingIndex) {
+    return <Loading onIndexComplete={() => setIsCheckingIndex(false)} />
   }
 
-  // Show searchbar if indexed
   return (
     <div className="welcome-content flex flex-col gap-5">
       <div className="flex items-center basis-[15%]">
@@ -55,7 +52,7 @@ export default function Home() {
         {!isIndexed ? (
           <NoIndex />
         ) : (
-            <Results results={results}  query={query} />
+          <Results results={results} query={query} />
         )}
       </div>
       

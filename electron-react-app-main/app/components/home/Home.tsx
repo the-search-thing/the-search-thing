@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils'
 import './styles.css'
 import Results from '../Results'
 import Footer from '../Footer'
-import { useAppContext } from '../AppContext'
 
 export default function Home() {
   const [query, setQuery] = useState("")
@@ -14,8 +13,6 @@ export default function Home() {
   const [results, setResults] = useState<string[]>([])
   const [isCheckingIndex, setIsCheckingIndex] = useState(true)
   const [hasSearched, setHasSearched] = useState(false) //temporary logic (pls remove in the future :pray:)
-  
-  const { isIndexed } = useAppContext() // Read global state
   
   const handleSearch = async () => {
     setHasSearched(true)

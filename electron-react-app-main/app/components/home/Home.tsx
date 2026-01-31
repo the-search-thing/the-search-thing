@@ -3,6 +3,7 @@ import { Searchbar } from '../ui/searchbar'
 import { useConveyor } from '@/app/hooks/use-conveyor'
 import { Button } from '../ui/button'
 import Loading from '../loading'
+import { cn } from '@/lib/utils'
 import './styles.css'
 
 export default function Home() {
@@ -45,7 +46,7 @@ export default function Home() {
   }
 
   // Show scan prompt if not indexed
-  if (!isIndexed) {
+  if (isIndexed) {
     return (
       <div className="welcome-content flex flex-col gap-5 items-center justify-center min-h-[400px]">
         <div className="loading-container">
@@ -78,7 +79,7 @@ export default function Home() {
         <Searchbar
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search…"
+          placeholder="Search for files or folders…"
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault()
@@ -88,7 +89,17 @@ export default function Home() {
         />
       </div>
       
-      {results.length > 0 && (
+      <div className={cn(
+        "flex items-center",
+        "h-full",
+        "border border-zinc-800/80 bg-zinc-950/60",
+        "px-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]",
+        "focus-within:border-zinc-700 focus-within:ring-2 focus-within:ring-zinc-700/40",
+      )}>
+        Results here
+      </div>
+      
+      {/*{results.length > 0 && (
         <div className="results-container">
           {results.map((result, idx) => (
             <div key={idx} className="result-item">
@@ -96,7 +107,7 @@ export default function Home() {
             </div>
           ))}
         </div>
-      )}
+      )}*/}
     </div>
   )
 }

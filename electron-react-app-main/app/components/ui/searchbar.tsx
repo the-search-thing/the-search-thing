@@ -14,7 +14,7 @@ export function Searchbar({
     <div
       className={cn(
         "flex items-center gap-3",
-        "h-full w-screen rounded-2xl",
+        "h-full w-screen ",
         "border border-zinc-800/80 bg-zinc-950/60",
         "px-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]",
         "focus-within:border-zinc-700 focus-within:ring-2 focus-within:ring-zinc-700/40",
@@ -37,10 +37,10 @@ export function Searchbar({
       <input
         type="search"
         className={cn(
-          "w-full bg-transparent text-[15px] text-zinc-100 placeholder:text-zinc-500",
+          "w-full bg-transparent text-xl  placeholder:text-zinc-500",
           "outline-none"
         )}
-        placeholder="Search…"
+        placeholder="Search for files or folders…"
         {...props}
       />
     </div>

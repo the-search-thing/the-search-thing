@@ -8,8 +8,8 @@
 
 .welcome-content {
   display: flex;
-  padding: 2rem;
-  gap: 1rem;
+  padding: 0rem;
+  gap:0;
 }
 
 .welcome-content h2 {

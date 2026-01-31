@@ -17,9 +17,9 @@ export const registerSearchHandlers = () => {
     return !!response.data.indexed;
   })
   
-  handle('index', async (filePaths: Array<string>) => {
+  handle('index', async (dirPaths: string) => {
     const response = await axios.post('http://localhost:3000/api/index', {
-      filePaths // Send to API
+      dirPaths // Send to API
     });
     return !!response.data.success;
   });

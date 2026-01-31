@@ -18,4 +18,9 @@ requires = ["maturin>=1.0,<2.0"]
 build-backend = "maturin"
 
 [tool.maturin]
+name = "the-search-thing"
+version = "0.1.0"
+description = "the fastest search tool for your OS"
+readme = "README.md"
+requires-python = ">=3.11"
 features = ["pyo3/extension-module"]

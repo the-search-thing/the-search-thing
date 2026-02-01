@@ -1,7 +1,7 @@
 # the search thing
 
 <div align="center">
-  <h3>Spotlight for everything — fastest search tool for your OS</h3>
+  <h3>Fastest search tool for your OS</h3>
 </div>
 
 <div align="center">

@@ -1,6 +1,5 @@
 {
   "video": [".mp4", ".mov"],
   "image": [".jpeg", ".jpg", ".png", ".webp"],
-  "code": [".py", ".rs", ".ts", ".tsx"],
   "text": [".text", ".txt"]
 }

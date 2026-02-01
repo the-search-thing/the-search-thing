@@ -1,6 +1,10 @@
+import asyncio
 import json
 import logging
 import os
+from collections.abc import Iterator
+from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -37,7 +41,7 @@ async def index_exists():
 
 
 def _load_extension_to_category() -> dict[str, str]:
-    """Load file_types.json; returns mapping ext -> category e.g. {'.mp4': 'video', '.py': 'code'}.
+    """Load file_types.json; returns mapping ext -> category e.g. {'.mp4': 'video'}.
     Expects extensions to be lowercase with a leading '.'."""
     path = os.path.join(os.path.dirname(__file__), "file_types.json")
     try:
@@ -64,8 +68,6 @@ def _handle_by_category(category: str, path: str) -> None:
             print("image", path)
         case "text":
             print("text", path)
-        case "code":
-            print("code", path)
         case _:
             print(
                 "you are a stupid mothasucka this shit not in the allowed list gang",
@@ -84,13 +86,13 @@ async def index(dir: str):
 
     ext_to_category = _load_extension_to_category()
     paths = walk_and_get_files(dir)
-    if paths is None:
-        paths = []
+    # if paths is None:
+    # paths = []
 
     count = 0
     for path in paths:
-        if not os.path.isfile(path):
-            continue
+        # if not os.path.isfile(path):
+        # continue
         ext = Path(path).suffix.lower()
         category = ext_to_category.get(ext)
         if category is not None:

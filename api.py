@@ -2,9 +2,7 @@ import asyncio
 import json
 import logging
 import os
-from collections.abc import Iterator
-from pathlib import Path
-from typing import Any
+import uuid
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,6 +13,7 @@ frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
 PORT = os.getenv("PORT")
 
 
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -59,47 +58,118 @@ def _load_extension_to_category() -> dict[str, str]:
     return ext_to_category
 
 
-def _handle_by_category(category: str, path: str) -> None:
-    """Placeholder: do something per file type (video, image, text, code)."""
-    match category:
-        case "video":
-            print("video", path)
-        case "image":
-            print("image", path)
-        case "text":
-            print("text", path)
-        case _:
-            print(
-                "you are a stupid mothasucka this shit not in the allowed list gang",
-                path,
+def _get_text_extensions(ext_to_category: dict[str, str]) -> list[str]:
+    return [ext for ext, category in ext_to_category.items() if category == "text"]
+
+
+def _log_task_exception(task: "asyncio.Task[None]", job_id: str) -> None:
+    try:
+        task.result()
+    except Exception:
+        logger.exception("[job:%s] Indexing job failed", job_id)
+
+
+async def index_single_file(path: str, content: str, job_id: str) -> bool:
+    from indexer.file_indexer import create_file, create_file_embeddings
+
+    file_id = str(uuid.uuid4())
+    try:
+        await create_file(file_id, content)
+        await create_file_embeddings(file_id, content)
+        logger.info("[job:%s] [OK] Indexed: %s", job_id, path)
+        return True
+    except Exception as e:
+        logger.error("[job:%s] [ERROR] Failed: %s - %s", job_id, path, e)
+        return False
+
+
+async def _process_batch(batch: list[tuple[str, str]], job_id: str) -> dict[str, int]:
+    tasks = [
+        asyncio.create_task(index_single_file(path, content, job_id))
+        for path, content in batch
+    ]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    indexed = 0
+    errors = 0
+    for result in results:
+        if isinstance(result, Exception):
+            errors += 1
+            logger.error("[job:%s] [ERROR] Batch task exception: %s", job_id, result)
+        elif result:
+            indexed += 1
+        else:
+            errors += 1
+
+    return {"indexed": indexed, "errors": errors}
+
+
+async def _run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None:
+    from the_search_thing import (
+        walk_and_get_text_file_batch,  # ty: ignore[unresolved-import]
+    )
+
+    ext_to_category = _load_extension_to_category()
+    text_exts = _get_text_extensions(ext_to_category)
+    cursor = 0
+    total_found = 0
+    text_indexed = 0
+    non_text_skipped = 0
+    errors = 0
+
+    logger.info("[job:%s] Started indexing job for: %s", job_id, dir)
+
+    while True:
+        try:
+            batch, cursor, done, scanned_count, skipped_count = await asyncio.to_thread(
+                walk_and_get_text_file_batch, dir, text_exts, cursor, batch_size
             )
+        except Exception as e:
+            logger.exception("[job:%s] Walk failed: %s", job_id, e)
+            errors += 1
+            break
+
+        total_found += scanned_count
+        non_text_skipped += skipped_count
+
+        if batch:
+            batch_results = await _process_batch(batch, job_id)
+            text_indexed += batch_results["indexed"]
+            errors += batch_results["errors"]
+
+        if done:
+            break
+
+    logger.info(
+        "[job:%s] [SUMMARY] Job completed for %s - Found: %d, Indexed: %d, Skipped: %d, Errors: %d",
+        job_id,
+        dir,
+        total_found,
+        text_indexed,
+        non_text_skipped,
+        errors,
+    )
 
 
 # all indexing tasks need to be non blocking btw
 @app.get("/api/index")
 async def index(dir: str):
-    from pathlib import Path
+    job_id = uuid.uuid4().hex
+    task = asyncio.create_task(_run_indexing_job(dir, job_id))
+    task.add_done_callback(lambda t: _log_task_exception(t, job_id))
+    return {"success": True, "job_id": job_id}
 
-    from the_search_thing import (
-        walk_and_get_files,  # ty: ignore[unresolved-import]
-    )
 
-    ext_to_category = _load_extension_to_category()
-    paths = walk_and_get_files(dir)
-    # if paths is None:
-    # paths = []
+@app.get("/api/search")
+async def api_search(q: str):
+    from search import search_files
 
-    count = 0
-    for path in paths:
-        # if not os.path.isfile(path):
-        # continue
-        ext = Path(path).suffix.lower()
-        category = ext_to_category.get(ext)
-        if category is not None:
-            _handle_by_category(category, path)
-            count += 1
-
-    return {"indexed": count}
+    try:
+        result = await search_files(q, limit=10)
+        return JSONResponse({"success": True, **result})
+    except Exception as e:
+        logger.error("Error searching files: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/search")

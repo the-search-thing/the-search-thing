@@ -1,3 +1,4 @@
+import asyncio
 import json
 import uuid
 from pathlib import Path
@@ -65,17 +66,26 @@ async def file_indexer(
 
 # create file mode
 async def create_file(file_id: str, content: str) -> str:
-    helix_client = get_helix_client()
     file_params = {"file_id": file_id, "content": content}
-    return json.dumps(helix_client.query("CreateFile", file_params))
+
+    def _query() -> str:
+        helix_client = get_helix_client()
+        return json.dumps(helix_client.query("CreateFile", file_params))
+
+    return await asyncio.to_thread(_query)
 
 
 # create & connect file embeddings to file node
 async def create_file_embeddings(file_id: str, content: str) -> str:
-    helix_client = get_helix_client()
-    return json.dumps(
-        helix_client.query(
-            "CreateFileEmbeddings",
-            {"file_id": file_id, "content": content},
+    file_params = {"file_id": file_id, "content": content}
+
+    def _query() -> str:
+        helix_client = get_helix_client()
+        return json.dumps(
+            helix_client.query(
+                "CreateFileEmbeddings",
+                file_params,
+            )
         )
-    )
+
+    return await asyncio.to_thread(_query)

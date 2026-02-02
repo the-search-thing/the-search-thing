@@ -24,10 +24,11 @@
 
 
 // create file node
-QUERY CreateFile (file_id: String, content: String) =>
+QUERY CreateFile (file_id: String, content: String, path:String) =>
     file <- AddN<File>({
     file_id: file_id,
-    content: content
+    content: content,
+    path: path,
     })
     RETURN file
 
@@ -92,9 +93,9 @@ QUERY CreateChunkToFrameSummaryRelationship (chunk_id: String,frame_summary_id: 
 
 
 // create file embeddings vector and connect to file node
-QUERY CreateFileEmbeddings (file_id: String, content: String) =>
+QUERY CreateFileEmbeddings (file_id: String, content: String, path:String) =>
     file <- N<File>({file_id: file_id})
-    file_embeddings <- AddV<FileEmbeddings>(Embed(content), {file_id: file_id, content: content})
+    file_embeddings <- AddV<FileEmbeddings>(Embed(content), {file_id: file_id, content: content, path: path})
     edge <- AddE<HasFileEmbeddings>::From(file)::To(file_embeddings)
     RETURN "Success"
 
@@ -216,6 +217,10 @@ QUERY SearchFrameSummaryCombined(search_string: String, keywords: String) =>
 QUERY GetAllVideos() =>
     videos <- N<Video>
     RETURN videos
+
+QUERY GetAllFiles() =>
+    files <- N<File>
+    RETURN files
 
 // get video by video id
 //QUERY GetVideoByVideoId(video_id: String) =>

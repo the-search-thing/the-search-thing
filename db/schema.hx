@@ -3,7 +3,8 @@
 // not sure if a limit like that exists
 N::File {
     INDEX file_id: String,
-    content: String
+    content: String,
+    path: String
 }
 
 N::Video {
@@ -76,4 +77,5 @@ V::FrameSummaryEmbeddings {
 V::FileEmbeddings{
     INDEX file_id: String,
     content: String,
+    path: String,
 }

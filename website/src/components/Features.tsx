@@ -15,7 +15,7 @@ const items = [
     value: "item-2",
     trigger: "is my data safe?",
     content:
-      "Yes. we are currently not hosting anything ourselves, this is built as a fully-local system. When we eventually provide hosting, we will encypt all user data.",
+      "Yes. we are currently not hosting anything ourselves, this is built as a fully-local system. When we eventually provide hosting, we will encrypt all user data.",
   },
   {
     value: "item-3",

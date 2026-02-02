@@ -3,7 +3,7 @@ import { Google_Sans_Code, Inter } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
-  variable: "--font-geist-sans",
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -14,6 +14,7 @@ const sanscode = Google_Sans_Code({
 
 export const metadata: Metadata = {
   title: "the-search-thing",
+  description: "Fastest search tool for your OS",
 };
 
 export default function RootLayout({

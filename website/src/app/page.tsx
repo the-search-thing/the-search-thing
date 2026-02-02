@@ -24,6 +24,8 @@ export default function Home() {
               className="underline underline-offset-4 hover:cursor-pointer"
               href="https://github.com/amaanbilwar/the-search-thing"
             >
+              here
+            </a>
           </div>
         </div>
       </section>
@@ -50,6 +52,7 @@ export default function Home() {
         everything we build is open-source, help us make it better on{" "}
         <a
           target="_blank"
+          rel="noopener noreferrer"
           className="underline underline-offset-4 hover:cursor-pointer"
           href="https://github.com/amaanBilwar/the-search-thing/issues"
         >

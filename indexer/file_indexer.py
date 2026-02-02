@@ -46,8 +46,8 @@ async def file_indexer(
         for file_path, content in files_content.items():
             file_id = str(uuid.uuid4())
             try:
-                await create_file(file_id, content)
-                await create_file_embeddings(file_id, content)
+                await create_file(file_id, content, path=file_path)
+                await create_file_embeddings(file_id, content, path=file_path)
                 results.append({"path": file_path, "file_id": file_id, "indexed": True})
                 print(f"[OK] Indexed file: {file_path}")
             except Exception as e:
@@ -65,8 +65,8 @@ async def file_indexer(
 
 
 # create file mode
-async def create_file(file_id: str, content: str) -> str:
-    file_params = {"file_id": file_id, "content": content}
+async def create_file(file_id: str, content: str, path: str) -> str:
+    file_params = {"file_id": file_id, "content": content, "path": path}
 
     def _query() -> str:
         helix_client = get_helix_client()
@@ -76,8 +76,8 @@ async def create_file(file_id: str, content: str) -> str:
 
 
 # create & connect file embeddings to file node
-async def create_file_embeddings(file_id: str, content: str) -> str:
-    file_params = {"file_id": file_id, "content": content}
+async def create_file_embeddings(file_id: str, content: str, path: str) -> str:
+    file_params = {"file_id": file_id, "content": content, "path": path}
 
     def _query() -> str:
         helix_client = get_helix_client()

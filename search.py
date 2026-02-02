@@ -91,29 +91,41 @@ async def search_files(search_query: str, limit: int = 10) -> dict:
     search_params = {"query": search_query, "limit": limit}
     response = get_helix_client().query("SearchFileEmbeddings", search_params)
 
-    top_contents = []
+    results: list[dict] = []
+    top_contents: list[str] = []
+
     for item in response or []:
-        if isinstance(item, dict) and "text" in item:
-            for entry in item.get("text", [])[:limit]:
-                if isinstance(entry, dict):
-                    content = entry.get("content", "")
-                    if content:
-                        top_contents.append(content)
-        elif isinstance(item, dict):
-            content = item.get("content", "")
-            if content:
+        if (
+            isinstance(item, dict)
+            and "text" in item
+            and isinstance(item.get("text"), list)
+        ):
+            entries = item.get("text", [])
+        else:
+            entries = [item]
+
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            results.append(
+                {
+                    "file_id": entry.get("file_id"),
+                    "content": entry.get("content"),
+                    "path": entry.get("path"),
+                }
+            )
+            content = entry.get("content")
+            if isinstance(content, str) and content:
                 top_contents.append(content)
-        if len(top_contents) >= limit:
+            if len(results) >= limit:
+                break
+        if len(results) >= limit:
             break
 
     helix_response = f"File search results: {top_contents}"
     summary = await llm_responses_search(search_query, helix_response)
 
-    return {
-        "summary": summary,
-        # "results": response,
-        # "query": search_query,
-    }
+    return {"summary": summary, "results": results, "query": search_query}
 
 
 async def search_videos(search_query: str, limit: int = 5, video_id=None) -> dict:

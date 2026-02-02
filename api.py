@@ -74,8 +74,8 @@ async def index_single_file(path: str, content: str, job_id: str) -> bool:
 
     file_id = str(uuid.uuid4())
     try:
-        await create_file(file_id, content)
-        await create_file_embeddings(file_id, content)
+        await create_file(file_id, content, path=path)
+        await create_file_embeddings(file_id, content, path=path)
         logger.info("[job:%s] [OK] Indexed: %s", job_id, path)
         return True
     except Exception as e:

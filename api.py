@@ -62,6 +62,25 @@ def _get_text_extensions(ext_to_category: dict[str, str]) -> list[str]:
     return [ext for ext, category in ext_to_category.items() if category == "text"]
 
 
+def _get_video_extensions(ext_to_category: dict[str, str]) -> list[str]:
+    return [ext for ext, category in ext_to_category.items() if category == "video"]
+
+
+def _collect_files_by_extension(root: str, extensions: list[str]) -> list[str]:
+    ext_set = {ext.lower() for ext in extensions}
+    if os.path.isfile(root):
+        ext = os.path.splitext(root)[1].lower()
+        return [root] if ext in ext_set else []
+
+    matches: list[str] = []
+    for current_root, _, files in os.walk(root):
+        for name in files:
+            ext = os.path.splitext(name)[1].lower()
+            if ext in ext_set:
+                matches.append(os.path.join(current_root, name))
+    return matches
+
+
 def _log_task_exception(task: "asyncio.Task[None]", job_id: str) -> None:
     try:
         task.result()
@@ -111,11 +130,15 @@ async def _run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None
 
     ext_to_category = _load_extension_to_category()
     text_exts = _get_text_extensions(ext_to_category)
+    video_exts = _get_video_extensions(ext_to_category)
     cursor = 0
     total_found = 0
     text_indexed = 0
     non_text_skipped = 0
     errors = 0
+    video_found = 0
+    video_indexed = 0
+    video_errors = 0
 
     logger.info("[job:%s] Started indexing job for: %s", job_id, dir)
 
@@ -140,6 +163,36 @@ async def _run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None
         if done:
             break
 
+    if video_exts:
+        video_files = await asyncio.to_thread(
+            _collect_files_by_extension, dir, video_exts
+        )
+        video_found = len(video_files)
+        if video_files:
+            from indexer.indexer import indexer_function
+
+            for video_path in video_files:
+                video_id = uuid.uuid4().hex
+                try:
+                    results = await indexer_function(video_id, video_path)
+                    if results:
+                        video_indexed += sum(
+                            1 for result in results if result.get("indexed")
+                        )
+                        video_errors += sum(
+                            1 for result in results if not result.get("indexed")
+                        )
+                    else:
+                        video_errors += 1
+                except Exception as e:
+                    video_errors += 1
+                    logger.error(
+                        "[job:%s] [ERROR] Video indexing failed: %s - %s",
+                        job_id,
+                        video_path,
+                        e,
+                    )
+
     logger.info(
         "[job:%s] [SUMMARY] Job completed for %s - Found: %d, Indexed: %d, Skipped: %d, Errors: %d",
         job_id,
@@ -148,6 +201,13 @@ async def _run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None
         text_indexed,
         non_text_skipped,
         errors,
+    )
+    logger.info(
+        "[job:%s] [VIDEO SUMMARY] Found: %d, Indexed: %d, Errors: %d",
+        job_id,
+        video_found,
+        video_indexed,
+        video_errors,
     )
 
 
@@ -162,13 +222,13 @@ async def index(dir: str):
 
 @app.get("/api/search")
 async def api_search(q: str):
-    from search import search_files
+    from search import search_all
 
     try:
-        result = await search_files(q, limit=10)
-        return JSONResponse({"success": True, **result})
+        result = await search_all(q, limit=10)
+        return JSONResponse(result)
     except Exception as e:
-        logger.error("Error searching files: %s", e)
+        logger.error("Error searching videos: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -180,23 +240,11 @@ async def search(request: SearchRequest):
     Search for videos across all stores for a user.
     Returns video IDs and match details for videos containing the searched content.
     """
-    from search import search_videos
+    from search import search_all
 
     try:
-        result = await search_videos(
-            request.query,
-            limit=request.limit,
-        )
-
-        return JSONResponse(
-            {
-                "success": True,
-                "top_video_id": result.get("top_video_id"),
-                "video_ids": result.get("video_ids"),
-                "matches": result.get("matches"),
-                "query": result.get("query"),
-            }
-        )
+        result = await search_all(request.query, limit=request.limit)
+        return JSONResponse(result)
     except Exception as e:
         logger.error(f"Error searching: {e}")
         raise HTTPException(status_code=500, detail=str(e))

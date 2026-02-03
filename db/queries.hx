@@ -34,10 +34,11 @@ QUERY CreateFile (file_id: String, content: String, path:String) =>
 
 
 // create a video
-QUERY CreateVideo (video_id: String, no_of_chunks: U8) =>
+QUERY CreateVideo (video_id: String, no_of_chunks: U, path:String) =>
     video <- AddN<Video>({
         video_id: video_id,
-        no_of_chunks: no_of_chunks
+        no_of_chunks: no_of_chunks,
+        path: path
     })
     RETURN video
 
@@ -117,8 +118,6 @@ QUERY CreateFrameSummaryEmbeddings (chunk_id:String, content: String) =>
     frame_summary_embeddings <- AddV<FrameSummaryEmbeddings>(Embed(content),  {chunk_id: chunk_id, content: content })
     edge <- AddE<HasFrameSummaryEmbeddings>::From(chunk)::To(frame_summary_embeddings)
     RETURN "Success"
-
-
 
 
 // search transcript embeddings

@@ -128,107 +128,94 @@ async def search_files(search_query: str, limit: int = 10) -> dict:
     return {"summary": summary, "results": results, "query": search_query}
 
 
-async def search_videos(search_query: str, limit: int = 5, video_id=None) -> dict:
+async def search_videos(search_query: str, limit: int = 5) -> dict:
     """
-    Search for videos matching the query and return video IDs with relevance info.
+    Search across transcript + frame summary embeddings and return file-style results.
+    """
+    search_params = {"search_text": search_query}
+    response = get_helix_client().query("CombinedSearch", search_params)
+    result_data = response[0] if response else {}
 
-    Args:
-        search_query: Natural language search query
-        limit: Maximum number of results to consider
-        video_id: Optional video ID to scope search to (from @mention)
-    Returns:
-        dict with:
-            - video_ids: List of unique video IDs matching the query (ranked by relevance)
-            - top_video_id: The most relevant video ID
-            - matches: List of match details (chunk_id, content snippet, source type)
-    """
+    transcripts = result_data.get("transcripts", [])
+    frames = result_data.get("frames", [])
+
+    chunk_to_video: dict[str, str] = {}
+    video_to_path: dict[str, str] = {}
+
     try:
-        # TODO: add video_id to search params for @mention
-        # if video_id:
-        #     search_params = {
-        #         "query": search_query,
-        #         "limit": limit,
-        #         "video_id": video_id,
-        #     }
-        # else:
-        search_params = {"search_text": search_query}
-
-        # Use CombinedSearchWithVideoId to get chunks with video_id in one query
-
-        response = get_helix_client().query("CombinedSearchWithVideoId", search_params)
-        result_data = response[0] if response else {}
-
-        transcripts = result_data.get("transcripts", [])[:limit]
-        transcript_chunks = result_data.get("transcript_chunks", [])
-        frames = result_data.get("frames", [])[:limit]
-        frame_chunks = result_data.get("frame_chunks", [])
-
-        # Build chunk_id -> video_id mapping from chunk results
-        chunk_to_video = build_chunk_to_video_map(transcript_chunks + frame_chunks)
-
+        chunks = get_helix_client().query("GetAllChunks", {})
+        chunk_to_video = build_chunk_to_video_map(chunks or [])
     except Exception as e:
-        print(f"CombinedSearchWithVideoId failed, falling back to CombinedSearch: {e}")
-        # Fallback to old query
-        response = get_helix_client().query("CombinedSearch", search_params)
-        result_data = response[0] if response else {}
+        print(f"GetAllChunks failed: {e}")
 
-        transcripts = result_data.get("transcripts", [])[:limit]
-        frames = result_data.get("frames", [])[:limit]
-        chunk_to_video = {}
+    try:
+        videos = get_helix_client().query("GetAllVideos", {})
+        for video in videos or []:
+            if isinstance(video, dict):
+                video_id = video.get("video_id")
+                path = video.get("path")
+                if video_id and path:
+                    video_to_path[video_id] = path
+    except Exception as e:
+        print(f"GetAllVideos failed: {e}")
 
-    # Get video_ids in ORDER of relevance (from the ranked search results)
-    # The transcripts and frames are already ranked by Helix, so we preserve that order
-    all_video_ids = []
-    seen = set()
+    results: list[dict] = []
+    top_contents: list[str] = []
 
-    # First, get video_ids from transcripts (in order of relevance)
-    for item in transcripts:
-        chunk_id = item.get("chunk_id", "")
-        video_id = chunk_to_video.get(chunk_id)
-        if video_id and video_id not in seen:
-            seen.add(video_id)
-            all_video_ids.append(video_id)
+    def append_results(items: list) -> None:
+        for entry in items:
+            if not isinstance(entry, dict):
+                continue
+            chunk_id = entry.get("chunk_id")
+            if not isinstance(chunk_id, str) or not chunk_id:
+                continue
+            video_id = chunk_to_video.get(chunk_id)
+            path = video_to_path.get(video_id) if isinstance(video_id, str) else None
+            results.append(
+                {
+                    "file_id": chunk_id,
+                    "content": None,
+                    "path": path,
+                }
+            )
+            content = entry.get("content")
+            if isinstance(content, str) and content:
+                top_contents.append(content)
+            if len(results) >= limit:
+                break
 
-    # Then, get video_ids from frames (in order of relevance)
-    for item in frames:
-        chunk_id = item.get("chunk_id", "")
-        video_id = chunk_to_video.get(chunk_id)
-        if video_id and video_id not in seen:
-            seen.add(video_id)
-            all_video_ids.append(video_id)
+    append_results(transcripts)
+    if len(results) < limit:
+        append_results(frames)
 
-    # Build match details for debugging/display
-    matches = []
-    for item in transcripts:
-        chunk_id = item.get("chunk_id", "")
-        video_id = chunk_to_video.get(chunk_id)
-        content = item.get("content", "")[:200]  # Truncate for preview
-        matches.append(
-            {
-                "video_id": video_id,
-                "chunk_id": chunk_id,
-                "content_preview": content,
-                "source": "transcript",
-            }
-        )
-
-    for item in frames:
-        chunk_id = item.get("chunk_id", "")
-        video_id = chunk_to_video.get(chunk_id)
-        content = item.get("content", "")[:200]
-        matches.append(
-            {
-                "video_id": video_id,
-                "chunk_id": chunk_id,
-                "content_preview": content,
-                "source": "frame",
-            }
-        )
+    helix_response = f"Video search results: {top_contents}"
+    summary = await llm_responses_search(search_query, helix_response)
 
     return {
-        "video_ids": all_video_ids,
-        "top_video_id": all_video_ids[0] if all_video_ids else None,
-        "matches": matches,
+        "success": True,
+        "summary": summary,
+        "results": results,
+        "query": search_query,
+    }
+
+
+async def search_all(search_query: str, limit: int = 10) -> dict:
+    """
+    Search files and videos in parallel and return grouped results.
+    """
+    file_result, video_result = await asyncio.gather(
+        search_files(search_query, limit=limit),
+        search_videos(search_query, limit=limit),
+    )
+
+    return {
+        "success": True,
+        "summary": {
+            "files": file_result.get("summary"),
+            "videos": video_result.get("summary"),
+        },
+        "files": file_result.get("results", []),
+        "videos": video_result.get("results", []),
         "query": search_query,
     }
 

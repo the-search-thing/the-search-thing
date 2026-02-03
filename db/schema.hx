@@ -9,7 +9,8 @@ N::File {
 
 N::Video {
     INDEX video_id: String,
-    no_of_chunks: U8
+    no_of_chunks: U8,
+    path: String
 }
 
 N::Chunk {

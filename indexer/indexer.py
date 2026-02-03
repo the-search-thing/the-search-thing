@@ -384,9 +384,9 @@ async def generate_frame_summaries(
 
 
 # create video node
-async def create_video(video_id: str, no_of_chunks: int) -> str:
+async def create_video(video_id: str, no_of_chunks: int, path: str) -> str:
     helix_client = get_helix_client()
-    video_params = {"video_id": video_id, "no_of_chunks": no_of_chunks}
+    video_params = {"video_id": video_id, "no_of_chunks": no_of_chunks, "path": path}
     return json.dumps(helix_client.query("CreateVideo", video_params))
 
 
@@ -641,7 +641,7 @@ async def indexer_function(
         video_path = item["path"]
 
         # Create video node
-        await create_video(video_id, num_of_chunks)
+        await create_video(video_id, num_of_chunks, path=video_path)
         print(f"[OK] Created video node: {video_id} with {num_of_chunks} chunks")
 
         # Create chunk nodes for this video

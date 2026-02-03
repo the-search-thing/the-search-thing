@@ -7,7 +7,7 @@ export const registerSearchHandlers = () => {
     const response = await axios.get('http://localhost:5000/api/search', {
       params: { q: query }
     });
-    return { results: response.data.results };
+    return { success: response.data.success, files: response.data.files, videos: response.data.videos };
   });
   
   handle('check', async () => {

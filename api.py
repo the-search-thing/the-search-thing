@@ -36,6 +36,8 @@ class SearchRequest(BaseModel):
 @app.get("/api/check")
 # send a boolean value
 async def index_exists():
+    # check if any dirs are indexed
+    # return if any
     return {"Hello": "World"}
 
 

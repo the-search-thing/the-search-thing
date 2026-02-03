@@ -27,23 +27,37 @@ export const Titlebar = () => {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [menusVisible, closeActiveMenu, setMenusVisible, menuItems])
 
+  const isDarwin = wcontext?.platform === 'darwin'
+  const isWin32 = wcontext?.platform === 'win32'
+
   return (
-    <div className={`window-titlebar ${wcontext?.platform ? `platform-${wcontext.platform}` : ''}`}>
-      {wcontext?.platform === 'win32' && (
-        <div className="window-titlebar-icon">
-          <img src={icon} />
+    <div
+      className={`
+        flex relative h-10 items-center [-webkit-app-region:drag]
+        bg-[var(--window-c-titlebar-background)] text-[var(--window-c-text)]
+        transition-colors duration-300 border-b border-[var(--window-c-titlebar-border)]
+        ${isDarwin ? '[&_.window-titlebar-title]:ml-20 [&_.window-titlebar-menu]:left-20' : ''}
+      `}
+    >
+      {isWin32 && (
+        <div className="absolute left-0 top-0 w-[42px] h-full px-2.5 box-border flex items-center justify-center">
+          <img src={icon} className="w-full max-w-4" />
         </div>
       )}
 
       <div
-        className="window-titlebar-title"
+        className={`
+          window-titlebar-title flex-1 text-[13px] font-[var(--window-titlebar-font-weight,normal)]
+          ${titleCentered ? 'text-center pl-0 ml-0' : 'ml-[42px] pl-1'}
+          ${isDarwin && !titleCentered ? 'ml-20' : ''}
+        `}
         {...(titleCentered && { 'data-centered': true })}
         style={{ visibility: menusVisible ? 'hidden' : 'visible' }}
       >
         {title}
       </div>
       {menusVisible && <TitlebarMenu />}
-      {wcontext?.platform === 'win32' && <TitlebarControls />}
+      {isWin32 && <TitlebarControls />}
     </div>
   )
 }
@@ -52,7 +66,7 @@ const TitlebarControls = () => {
   const { window: wcontext } = useWindowContext()
 
   return (
-    <div className="window-titlebar-controls">
+    <div className="flex absolute right-0 top-0 [-webkit-app-region:no-drag]">
       {wcontext?.minimizable && <TitlebarControlButton label="minimize" svgPath={SVG_PATHS.minimize} />}
       {wcontext?.maximizable && <TitlebarControlButton label="maximize" svgPath={SVG_PATHS.maximize} />}
       <TitlebarControlButton label="close" svgPath={SVG_PATHS.close} />
@@ -72,8 +86,18 @@ const TitlebarControlButton = ({ svgPath, label }: { svgPath: string; label: str
     actions[label as keyof typeof actions]?.()
   }
 
+  const isClose = label === 'close'
+
   return (
-    <div aria-label={label} className="titlebar-controlButton" onClick={handleAction}>
+    <div
+      aria-label={label}
+      className={`
+        flex items-center justify-center w-9 h-[30px] cursor-pointer bg-transparent
+        hover:bg-[var(--window-c-control-hover)]
+        ${isClose ? 'hover:!bg-[var(--window-c-control-close-hover)] hover:text-[var(--window-c-control-close-hover-text,inherit)]' : ''}
+      `}
+      onClick={handleAction}
+    >
       <svg width="10" height="10">
         <path fill="currentColor" d={svgPath} />
       </svg>

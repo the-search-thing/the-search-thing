@@ -63,7 +63,7 @@ QUERY CreateChunkToTranscriptRelationship (chunk_id: String, transcript_id: ID) 
 QUERY CreateChunkToFrameSummaryRelationship (chunk_id: String,frame_summary_id: ID) =>
     chunk <- N<Chunk>({chunk_id: chunk_id})
     frame_summary <- N<FrameSummary>(frame_summary_id)
-    HasFrameSummary <- AddE<Has>::From(chunk)::To(frame_summary)
+    HasFrameSummary <- AddE<HasFrameSummaryEmbeddings>::From(chunk)::To(frame_summary)
     RETURN HasFrameSummary
 
 

@@ -1,29 +1,29 @@
 import { handle } from '@/lib/main/shared'
 import { dialog, shell } from 'electron'
-import axios from 'axios';
+import axios from 'axios'
 
 export const registerSearchHandlers = () => {
   handle('search', async (query: string) => {
-    const response = await axios.get('http://localhost:5000/api/search', {
-      params: { q: query }
-    });
-    return { success: response.data.success, files: response.data.files, videos: response.data.videos };
-  });
-  
-  handle('check', async () => {
-    const response = await axios.get('http://localhost:5000/api/check', {
-      params: {}
-    });
-    return { success: response.data.success};
+    const response = await axios.get('http://localhost:8000/api/search', {
+      params: { q: query },
+    })
+    return response.data
   })
-  
+
+  handle('check', async () => {
+    const response = await axios.get('http://localhost:8000/api/check', {
+      params: {},
+    })
+    return { success: response.data.success }
+  })
+
   handle('index', async (dirPaths: string) => {
-    const response = await axios.post('http://localhost:5000/api/index', {
-      dirPaths // Send to API
-    });
-    return { success: response.data.success, job_id: response.data.job_id};
-  });
-  
+    const response = await axios.post('http://localhost:8000/api/index', {
+      dirPaths, // Send to API
+    })
+    return { success: response.data.success, job_id: response.data.job_id }
+  })
+
   // System operations
   handle('open-file-dialog', async () => {
     const result = await dialog.showOpenDialog({

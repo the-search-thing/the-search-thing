@@ -1,19 +1,11 @@
-export interface FileObject {
-  file_id: string
-  content: string
-  path: string
-}
-
-export interface VideoObject {
-  file_id: string
-  content: string
+export interface SearchResultItem {
+  label: string
+  content?: string | null
   path: string
 }
 
 export interface SearchResponse {
-  success: boolean
-  files: FileObject[]
-  videos: VideoObject[]
+  results: SearchResultItem[]
 }
 
 export interface ResultProps {

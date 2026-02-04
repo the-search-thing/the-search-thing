@@ -5,9 +5,20 @@ use crate::helpers::{
 use pyo3::prelude::*;
 use pyo3::{PyErr, PyResult};
 use rayon::prelude::*;
+use std::cmp::Ordering;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
+
+use aubio_rs::{OnsetMode, Tempo};
+use symphonia::core::audio::SampleBuffer;
+use symphonia::core::codecs::DecoderOptions;
+use symphonia::core::errors::Error as SymphoniaError;
+use symphonia::core::formats::FormatOptions;
+use symphonia::core::io::MediaSourceStream;
+use symphonia::core::meta::MetadataOptions;
+use symphonia::core::probe::Hint;
+use symphonia::default::{get_codecs, get_probe};
 
 // extract audio
 #[allow(dead_code)]
@@ -220,4 +231,160 @@ pub fn extract_multiple_audios_with_rust(
 
         results
     })
+}
+
+#[pyfunction]
+pub fn detect_tempo(audio_path: String) -> PyResult<String> {
+    validate_file_exists(&audio_path)?;
+    let normalized_path = audio_path.replace("\\", "/");
+
+    let file = fs::File::open(&normalized_path).map_err(|e| {
+        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+            "Failed to open audio file: {}",
+            e
+        ))
+    })?;
+
+    let mss = MediaSourceStream::new(Box::new(file), Default::default());
+    let hint = Hint::new();
+    let probed = get_probe()
+        .format(
+            &hint,
+            mss,
+            &FormatOptions::default(),
+            &MetadataOptions::default(),
+        )
+        .map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+                "Failed to probe audio format: {}",
+                e
+            ))
+        })?;
+
+    let mut format = probed.format;
+    let track = format
+        .tracks()
+        .iter()
+        .find(|t| t.codec_params.sample_rate.is_some())
+        .ok_or_else(|| {
+            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("No decodable audio track found")
+        })?;
+
+    let track_id = track.id;
+    let sample_rate = track.codec_params.sample_rate.ok_or_else(|| {
+        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Missing sample rate in audio track")
+    })?;
+
+    let mut decoder = get_codecs()
+        .make(&track.codec_params, &DecoderOptions::default())
+        .map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+                "Failed to create audio decoder: {}",
+                e
+            ))
+        })?;
+
+    let mut mono_samples: Vec<f32> = Vec::new();
+
+    loop {
+        let packet = match format.next_packet() {
+            Ok(packet) => packet,
+            Err(SymphoniaError::IoError(err))
+                if err.kind() == std::io::ErrorKind::UnexpectedEof =>
+            {
+                break;
+            }
+            Err(SymphoniaError::ResetRequired) => {
+                return Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+                    "Decoder reset required",
+                ));
+            }
+            Err(e) => {
+                return Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+                    "Failed to read audio packet: {}",
+                    e
+                )))
+            }
+        };
+
+        if packet.track_id() != track_id {
+            continue;
+        }
+
+        let decoded = match decoder.decode(&packet) {
+            Ok(decoded) => decoded,
+            Err(SymphoniaError::DecodeError(_)) => continue,
+            Err(e) => {
+                return Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+                    "Failed to decode audio packet: {}",
+                    e
+                )))
+            }
+        };
+
+        let spec = *decoded.spec();
+        let mut sample_buffer = SampleBuffer::<f32>::new(decoded.capacity() as u64, spec);
+        sample_buffer.copy_interleaved_ref(decoded);
+
+        let channels = spec.channels.count();
+        let samples = sample_buffer.samples();
+        if channels == 0 {
+            continue;
+        }
+
+        for frame in samples.chunks(channels) {
+            let sum: f32 = frame.iter().copied().sum();
+            mono_samples.push(sum / channels as f32);
+        }
+    }
+
+    let win_size = 1024;
+    let hop_size = 512;
+    let mut tempo = Tempo::new(OnsetMode::Hfc, win_size, hop_size, sample_rate).map_err(|e| {
+        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+            "Failed to initialize tempo detector: {}",
+            e
+        ))
+    })?;
+
+    let mut bpm_values: Vec<f32> = Vec::new();
+    let mut idx = 0;
+
+    while idx < mono_samples.len() {
+        let end = (idx + hop_size).min(mono_samples.len());
+        let mut frame = vec![0.0f32; hop_size];
+        frame[..end - idx].copy_from_slice(&mono_samples[idx..end]);
+
+        tempo.do_result(&frame).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+                "Tempo detection failed: {}",
+                e
+            ))
+        })?;
+
+        let bpm = tempo.get_bpm();
+        let confidence = tempo.get_confidence();
+
+        if bpm.is_finite() && confidence.is_finite() && bpm > 0.0 && confidence > 0.2 {
+            bpm_values.push(bpm);
+        }
+
+        idx += hop_size;
+    }
+
+    if bpm_values.is_empty() {
+        return Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+            "error no beats are detected",
+        ));
+    }
+
+    bpm_values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+    let mid = bpm_values.len() / 2;
+    let bpm = if bpm_values.len() % 2 == 0 {
+        (bpm_values[mid - 1] + bpm_values[mid]) / 2.0
+    } else {
+        bpm_values[mid]
+    };
+
+    Ok(format!("{:.1}", bpm))
 }

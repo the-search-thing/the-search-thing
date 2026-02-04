@@ -1,5 +1,7 @@
 import asyncio
 import os
+import re
+import sys
 from typing import Any, cast
 
 from dotenv import load_dotenv
@@ -232,6 +234,78 @@ async def search_videos(search_query: str, limit: int = 5) -> dict:
     }
 
 
+async def search_file_vids_together(search_query: str) -> dict:
+    """
+    Search files and videos together using CombinedFileAndVideo.
+    Returns a combined results list without file/video grouping.
+    """
+    search_params = {"search_text": search_query}
+    response = get_helix_client().query("CombinedFileAndVideo", search_params)
+
+    file_items: list[dict] = []
+    video_items: list[dict] = []
+
+    def normalize_item(item: dict) -> None:
+        label = item.get("label")
+        if not isinstance(label, str) or not label:
+            return
+        path = item.get("path")
+        if not isinstance(path, str) or not path:
+            return
+        content = item.get("content")
+        if label.lower() == "video":
+            content = None
+        normalized = {"label": label, "content": content, "path": path}
+        if label.lower() == "file":
+            file_items.append(normalized)
+        else:
+            video_items.append(normalized)
+
+    def handle_value(value: object) -> None:
+        if isinstance(value, list):
+            for entry in value:
+                handle_value(entry)
+            return
+        if isinstance(value, dict):
+            normalize_item(value)
+
+    if isinstance(response, list):
+        for item in response:
+            if isinstance(item, dict):
+                for value in item.values():
+                    handle_value(value)
+            else:
+                handle_value(item)
+    elif isinstance(response, dict):
+        for value in response.values():
+            handle_value(value)
+
+    keywords = re.findall(r"\w+", search_query.lower())
+    has_file_match = False
+    if keywords:
+        for item in file_items:
+            content = item.get("content")
+            if not isinstance(content, str) or not content:
+                continue
+            content_lower = content.lower()
+            if any(keyword in content_lower for keyword in keywords):
+                has_file_match = True
+                break
+
+    ordered = file_items + video_items if has_file_match else video_items + file_items
+
+    deduped: list[dict] = []
+    seen: set[tuple] = set()
+    for item in ordered:
+        key = (item.get("label"), item.get("content"), item.get("path"))
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(item)
+
+    return {"results": deduped}
+
+
 async def search_all(search_query: str, limit: int = 10) -> dict:
     """
     Search files and videos in parallel and return grouped results.
@@ -251,24 +325,15 @@ async def search_all(search_query: str, limit: int = 10) -> dict:
         # helix response
         "files": file_result.get("results", []),
         "videos": video_result.get("results", []),
-        "query": search_query,
+        # "query": search_query,
     }
 
 
 if __name__ == "__main__":
-    # Test the video search
-    search_query = "what are the names of the founders and where are they sitting?"
+    search_query = sys.argv[1] if len(sys.argv) > 1 else "zed industries"
 
-    print("=== Testing search_videos ===")
-    result = asyncio.run(search_videos(search_query))
-    print(f"Query: {result['query']}")
-    print(f"Top Video ID: {result['top_video_id']}")
-    print(f"All Video IDs: {result['video_ids']}")
-    print(f"\nMatches ({len(result['matches'])}):")
-    for match in result["matches"][:3]:  # Show first 3 matches
-        print(f"  - Video: {match['video_id']}, Source: {match['source']}")
-        print(f"    Preview: {match['content_preview'][:100]}...")
-
-    # print("\n=== Testing search_combined (LLM response) ===")
-    # llm_response = asyncio.run(search_combined(search_query))
-    # print(llm_response)
+    print("=== Testing search_file_vids_together ===")
+    result = asyncio.run(search_file_vids_together(search_query))
+    print(f"Results count: {len(result.get('results', []))}")
+    for item in result.get("results", [])[:10]:
+        print(item)

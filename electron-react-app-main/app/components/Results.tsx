@@ -2,12 +2,12 @@ import * as React from 'react'
 import { useState, useEffect } from 'react'
 import { useAppContext } from './AppContext'
 import noFiles from '@/resources/no-files-found.svg'
-import { ResultProps, FileObject, VideoObject } from './types/types'
+import { ResultProps, SearchResultItem } from './types/types'
 import * as fileIcons from "@/resources/filetype icons"
 import { useConveyor } from "../hooks/use-conveyor"
 
 
-type ResultItem = FileObject | VideoObject
+type ResultItem = SearchResultItem
 
 
 const Results: React.FC<ResultProps> = ({ searchResults, query, hasSearched }) => {
@@ -15,19 +15,14 @@ const Results: React.FC<ResultProps> = ({ searchResults, query, hasSearched }) =
   const [selectedItem, setSelectedItem] = useState<ResultItem | null>(null)
   const search = useConveyor("search")
 
-  // extract the files & vids
-  const files = searchResults?.files || []
-  const videos = searchResults?.videos || []
-  const allResults = [...files, ...videos]
+  const allResults = searchResults?.results || []
 
   useEffect(() => {
     setSelectedItem(null)
   }, [searchResults])
 
-  const handleOpen = (e: React.KeyboardEvent<HTMLDivElement>, filePath: string) => {
-    if (e.key == 'Enter') {
-      search.openFile(filePath)
-    }
+  const handleOpen = (filePath: string) => {
+    search.openFile(filePath)
   }
   // Searched but found nothing
   if (hasSearched && allResults.length === 0 && query) {
@@ -65,14 +60,23 @@ const Results: React.FC<ResultProps> = ({ searchResults, query, hasSearched }) =
               <h3 className="text-zinc-400 text-[0.8rem] font-medium">Recently Used</h3>
             </div>
             <div className="flex flex-col justify-center pr-2">
-              {allResults.map((result) => (
+              {allResults.map((result, index) => (
                 <div
-                  key={result.file_id}
+                  key={`${result.path}-${result.label}-${index}`}
                   tabIndex={0}
                   onClick={() => setSelectedItem(result)}
-                  onKeyDown={ (e) => handleOpen(e, result.path)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleOpen(result.path)
+                    }
+                  }}
+                  onMouseDown={(e) => {
+                    if (e.metaKey || e.ctrlKey) {
+                      handleOpen(result.path)
+                    }
+                  }}
                   className={`flex flex-row p-2 rounded-xl cursor-pointer hover:bg-zinc-800 transition-colors border-b border-zinc-800 ${
-                    selectedItem?.file_id === result.file_id ? 'bg-zinc-700' : ''
+                    selectedItem?.path === result.path ? 'bg-zinc-700' : ''
                   }`}
                 >
                   <div className='pr-2'>
@@ -91,12 +95,14 @@ const Results: React.FC<ResultProps> = ({ searchResults, query, hasSearched }) =
 
           {/* Content preview */}
           <div className="flex-1 h-full overflow-y-auto">
-            {selectedItem ? (
-              <div className="p-4">
-                <div className='p-5 rounded-2xl min-h-[320px] bg-zinc-900'>
-                  <div className="text-zinc-300 whitespace-pre-wrap">{selectedItem.content}</div>
+              {selectedItem ? (
+                <div className="p-4">
+                  <div className='p-5 rounded-2xl min-h-[320px] bg-zinc-900'>
+                  <div className="text-zinc-300 whitespace-pre-wrap">
+                    {selectedItem.content ?? 'No preview available for this result.'}
+                  </div>
+                  </div>
                 </div>
-              </div>
             ) : (
               <div className="flex items-center justify-center h-full text-zinc-500">
                 {allResults.length > 0 ? 'Select a file to view its content' : 'Search for something to see results'}

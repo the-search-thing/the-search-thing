@@ -20,3 +20,6 @@
 
 > [!IMPORTANT] 
 > If you make changes to any rust code, make sure to run `maturin develop --release`. Use the name of the module to import into python files.
+
+> [!IMPORTANT] 
+> we need tomake sure the machine we deploy to has ffmpeg installed.

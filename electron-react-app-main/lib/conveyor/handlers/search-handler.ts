@@ -27,12 +27,12 @@ export const registerSearchHandlers = () => {
   // System operations
   handle('open-file-dialog', async () => {
     const result = await dialog.showOpenDialog({
-      properties: ['openDirectory']
+      properties: ['openDirectory'],
     })
-    return result.filePaths[0] ?? '';
+    return result.filePaths[0] ?? ''
   })
-  
+
   handle('open-file', async (filePath: string) => {
-    await shell.openPath(filePath);
+    await shell.openPath(filePath)
   })
 }

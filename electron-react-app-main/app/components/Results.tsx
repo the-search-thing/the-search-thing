@@ -81,9 +81,9 @@ const Results: React.FC<ResultProps> = ({ searchResults, query, hasSearched }) =
                       className='w-5 h-5'
                     />
                   </div>
-                  <div className="text-white truncate" title={result.path}>
-                    {getFileName(result.path)}
-                  </div>
+                    <div className="text-white truncate" title={result.path}>
+                      {getFileName(result.path)}
+                    </div>
                 </div>
               ))}
             </div>

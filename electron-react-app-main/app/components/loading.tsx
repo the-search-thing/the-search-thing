@@ -8,9 +8,9 @@ interface LoadingProps {
 }
 
 export default function Loading({ onIndexComplete }: LoadingProps) {
-  const search = useConveyor("search")
+  const search = useConveyor('search')
   const { setIsIndexed } = useAppContext()
-  
+
   const handleCheck = async () => {
     try {
       const checkRes = await search.check()
@@ -22,7 +22,7 @@ export default function Loading({ onIndexComplete }: LoadingProps) {
       onIndexComplete?.()
     }
   }
-  
+
   useEffect(() => {
     handleCheck()
   }, [])

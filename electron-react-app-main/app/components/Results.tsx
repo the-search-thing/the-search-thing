@@ -4,13 +4,16 @@ import { useAppContext } from './AppContext'
 import noFiles from '@/resources/no-files-found.svg'
 import { ResultProps, FileObject, VideoObject } from './types/types'
 import * as fileIcons from "@/resources/filetype icons"
+import { useConveyor } from "../hooks/use-conveyor"
 
 
 type ResultItem = FileObject | VideoObject
 
+
 const Results: React.FC<ResultProps> = ({ searchResults, query, hasSearched }) => {
   const { isIndexed } = useAppContext()
   const [selectedItem, setSelectedItem] = useState<ResultItem | null>(null)
+  const search = useConveyor("search")
 
   // extract the files & vids
   const files = searchResults?.files || []
@@ -21,9 +24,9 @@ const Results: React.FC<ResultProps> = ({ searchResults, query, hasSearched }) =
     setSelectedItem(null)
   }, [searchResults])
 
-  const handleOpen = (e: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleOpen = (e: React.KeyboardEvent<HTMLDivElement>, filePath: string) => {
     if (e.key == 'Enter') {
-      console.error("hello")
+      search.openFile(filePath)
     }
   }
   // Searched but found nothing
@@ -67,7 +70,7 @@ const Results: React.FC<ResultProps> = ({ searchResults, query, hasSearched }) =
                   key={result.file_id}
                   tabIndex={0}
                   onClick={() => setSelectedItem(result)}
-                  onKeyDown={ (e) => handleOpen(e)}
+                  onKeyDown={ (e) => handleOpen(e, result.path)}
                   className={`flex flex-row p-2 rounded-xl cursor-pointer hover:bg-zinc-800 transition-colors border-b border-zinc-800 ${
                     selectedItem?.file_id === result.file_id ? 'bg-zinc-700' : ''
                   }`}

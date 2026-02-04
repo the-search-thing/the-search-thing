@@ -80,3 +80,6 @@ V::FileEmbeddings{
     content: String,
     path: String,
 }
+
+
+// last resort is to have a single vector type for all fiels

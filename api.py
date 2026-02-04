@@ -12,6 +12,10 @@ from pydantic import BaseModel
 frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
 PORT = os.getenv("PORT")
 
+@app.get("/api/check")
+async def index_exists():
+    # Matches: { success: z.boolean() }
+    return {"success": True}
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)

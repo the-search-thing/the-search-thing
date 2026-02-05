@@ -56,10 +56,10 @@ const Results: React.FC<ResultProps> = ({ searchResults, query, hasSearched }) =
         <div className="flex w-full h-full">
           {/* Files & its paths */}
           <div className="w-1/3 min-w-[200px] max-w-[300px] h-full border-r border-zinc-700 flex flex-col">
-            <div className="p-1">
+            <div className="p-1 flex-none">
               <h3 className="text-zinc-400 text-[0.8rem] font-medium">Recently Used</h3>
             </div>
-            <div className="flex flex-col justify-center pr-2">
+            <div className="flex-1 min-h-0 flex flex-col overflow-y-auto pr-2">
               {allResults.map((result, index) => (
                 <div
                   key={`${result.path}-${result.label}-${index}`}
@@ -94,13 +94,13 @@ const Results: React.FC<ResultProps> = ({ searchResults, query, hasSearched }) =
           </div>
 
           {/* Content preview */}
-          <div className="flex-1 h-full overflow-y-auto">
+          <div className="flex-1 h-full ">
               {selectedItem ? (
-                <div className="p-4">
-                  <div className='p-5 rounded-2xl min-h-[320px] bg-zinc-900'>
-                  <div className="text-zinc-300 whitespace-pre-wrap">
-                    {selectedItem.content ?? 'No preview available for this result.'}
-                  </div>
+                <div className="p-4 h-full">
+                  <div className='p-5 rounded-2xl min-h-[320px] bg-zinc-900 overflow-hidden'>
+                    <div className="text-zinc-300 whitespace-pre-wrap overflow-y-auto max-h-[calc(100vh-200px)]">
+                      {selectedItem.content ?? 'No preview available for this result.'}
+                    </div>
                   </div>
                 </div>
             ) : (

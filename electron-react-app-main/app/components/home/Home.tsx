@@ -28,7 +28,7 @@ export default function Home() {
 
   return (
     <div className="welcome-content flex flex-col gap-5 h-screen">
-      <div className="flex items-center basis-[15%]">
+      <div className="flex items-center flex-none min-h-[55px]">
         <Searchbar
           value={query}
           onChange={(e) => {
@@ -47,8 +47,7 @@ export default function Home() {
 
       <div
         className={cn(
-          'flex',
-          'basis-[75%]',
+          'flex flex-1 min-h-0',
           'border-2 border-zinc-700/80 bg-zinc-800/60',
           'px-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
         )}
@@ -58,8 +57,7 @@ export default function Home() {
 
       <div
         className={cn(
-          'flex items-center',
-          'basis-[10%]',
+          'flex items-center flex-none min-h-[56px]',
           ' bg-zinc-800/60',
           'px-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
         )}

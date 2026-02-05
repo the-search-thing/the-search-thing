@@ -1,10 +1,10 @@
 import { z } from 'zod'
 
 export const searchIpcSchema = {
-  check: {
-    args: z.tuple([]),
-    return: z.object({ success: z.boolean() }),
-  },
+  // check: {
+  //   args: z.tuple([]),
+  //   return: z.object({ success: z.boolean() }),
+  // },
   index: {
     args: z.tuple([z.string()]),
     return: z.object({ success: z.boolean(), job_id: z.string() }),

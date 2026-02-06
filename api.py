@@ -39,6 +39,10 @@ class SearchRequest(BaseModel):
     limit: int = 10
 
 
+def _load_ignore_list() -> dict[str,str]:
+    pass
+
+
 def _load_extension_to_category() -> dict[str, str]:
     """Load file_types.json; returns mapping ext -> category e.g. {'.mp4': 'video'}.
     Expects extensions to be lowercase with a leading '.'."""
@@ -79,6 +83,77 @@ def _collect_files_by_extension(root: str, extensions: list[str]) -> list[str]:
             if ext in ext_set:
                 matches.append(os.path.join(current_root, name))
     return matches
+
+
+def _collect_files_by_extension_with_ignore(
+    root: str,
+    extensions: list[str],
+    ignore_exts: set[str],
+    ignore_files: set[str],
+) -> list[str]:
+    ext_set = {ext.lower() for ext in extensions}
+    ignore_ext_set = {ext.lower() for ext in ignore_exts}
+    ignore_file_set = {name.lower() for name in ignore_files}
+
+    if os.path.isfile(root):
+        base_name = os.path.basename(root).lower()
+        if base_name in ignore_file_set:
+            return []
+        ext = os.path.splitext(root)[1].lower()
+        if ext in ignore_ext_set:
+            return []
+        return [root] if ext in ext_set else []
+
+    matches: list[str] = []
+    for current_root, _, files in os.walk(root):
+        for name in files:
+            base_name = name.lower()
+            if base_name in ignore_file_set:
+                continue
+            ext = os.path.splitext(name)[1].lower()
+            if ext in ignore_ext_set:
+                continue
+            if ext in ext_set:
+                matches.append(os.path.join(current_root, name))
+    return matches
+
+
+def _normalize_extension(ext: str) -> str:
+    ext = ext.strip().lower()
+    if not ext:
+        return ext
+    return ext if ext.startswith(".") else f".{ext}"
+
+
+def _load_ignore_config() -> tuple[set[str], set[str]]:
+    path = os.path.join(os.path.dirname(__file__), "ignore.json")
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        logger.warning("Could not load ignore.json: %s", e)
+        return set(), set()
+
+    ignore_exts_raw = []
+    ignore_files_raw = []
+    if isinstance(data, dict):
+        ignore_exts_raw = data.get("ignore_extensions", [])
+        ignore_files_raw = data.get("ignore_files", [])
+        if not ignore_exts_raw and "ignore" in data:
+            ignore_exts_raw = data.get("ignore", [])
+
+    ignore_exts = {
+        _normalize_extension(ext)
+        for ext in ignore_exts_raw
+        if isinstance(ext, str) and _normalize_extension(ext)
+    }
+    ignore_files = {
+        name.strip().lower()
+        for name in ignore_files_raw
+        if isinstance(name, str) and name.strip()
+    }
+
+    return ignore_exts, ignore_files
 
 
 def _log_task_exception(task: "asyncio.Task[None]", job_id: str) -> None:
@@ -131,6 +206,7 @@ async def _run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None
     ext_to_category = _load_extension_to_category()
     text_exts = _get_text_extensions(ext_to_category)
     video_exts = _get_video_extensions(ext_to_category)
+    ignore_exts, ignore_files = _load_ignore_config()
     cursor = 0
     total_found = 0
     text_indexed = 0
@@ -144,9 +220,24 @@ async def _run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None
 
     while True:
         try:
-            batch, cursor, done, scanned_count, skipped_count = await asyncio.to_thread(
-                walk_and_get_text_file_batch, dir, text_exts, cursor, batch_size
-            )
+            try:
+                batch, cursor, done, scanned_count, skipped_count = (
+                    await asyncio.to_thread(
+                        walk_and_get_text_file_batch,
+                        dir,
+                        text_exts,
+                        sorted(ignore_exts),
+                        sorted(ignore_files),
+                        cursor,
+                        batch_size,
+                    )
+                )
+            except TypeError:
+                batch, cursor, done, scanned_count, skipped_count = (
+                    await asyncio.to_thread(
+                        walk_and_get_text_file_batch, dir, text_exts, cursor, batch_size
+                    )
+                )
         except Exception as e:
             logger.exception("[job:%s] Walk failed: %s", job_id, e)
             errors += 1
@@ -165,7 +256,11 @@ async def _run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None
 
     if video_exts:
         video_files = await asyncio.to_thread(
-            _collect_files_by_extension, dir, video_exts
+            _collect_files_by_extension_with_ignore,
+            dir,
+            video_exts,
+            ignore_exts,
+            ignore_files,
         )
         video_found = len(video_files)
         if video_files:

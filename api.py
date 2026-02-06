@@ -39,10 +39,6 @@ class SearchRequest(BaseModel):
     limit: int = 10
 
 
-def _load_ignore_list() -> dict[str,str]:
-    pass
-
-
 def _load_extension_to_category() -> dict[str, str]:
     """Load file_types.json; returns mapping ext -> category e.g. {'.mp4': 'video'}.
     Expects extensions to be lowercase with a leading '.'."""
@@ -221,22 +217,30 @@ async def _run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None
     while True:
         try:
             try:
-                batch, cursor, done, scanned_count, skipped_count = (
-                    await asyncio.to_thread(
-                        walk_and_get_text_file_batch,
-                        dir,
-                        text_exts,
-                        sorted(ignore_exts),
-                        sorted(ignore_files),
-                        cursor,
-                        batch_size,
-                    )
+                (
+                    batch,
+                    cursor,
+                    done,
+                    scanned_count,
+                    skipped_count,
+                ) = await asyncio.to_thread(
+                    walk_and_get_text_file_batch,
+                    dir,
+                    text_exts,
+                    sorted(ignore_exts),
+                    sorted(ignore_files),
+                    cursor,
+                    batch_size,
                 )
             except TypeError:
-                batch, cursor, done, scanned_count, skipped_count = (
-                    await asyncio.to_thread(
-                        walk_and_get_text_file_batch, dir, text_exts, cursor, batch_size
-                    )
+                (
+                    batch,
+                    cursor,
+                    done,
+                    scanned_count,
+                    skipped_count,
+                ) = await asyncio.to_thread(
+                    walk_and_get_text_file_batch, dir, text_exts, cursor, batch_size
                 )
         except Exception as e:
             logger.exception("[job:%s] Walk failed: %s", job_id, e)

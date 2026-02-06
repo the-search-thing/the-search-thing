@@ -38,6 +38,8 @@ pub fn walk_and_get_files_content(dir: String) -> PyResult<HashMap<String, Strin
 pub fn walk_and_get_text_file_batch(
     dir: String,
     text_exts: Vec<String>,
+    ignore_exts: Vec<String>,
+    ignore_files: Vec<String>,
     cursor: usize,
     batch_size: usize,
 ) -> PyResult<(Vec<(String, String)>, usize, bool, usize, usize)> {
@@ -48,6 +50,23 @@ pub fn walk_and_get_text_file_batch(
             normalized = format!(".{}", normalized);
         }
         text_ext_set.insert(normalized);
+    }
+
+    let mut ignore_ext_set = HashSet::new();
+    for ext in ignore_exts {
+        let mut normalized = ext.to_lowercase();
+        if !normalized.starts_with('.') {
+            normalized = format!(".{}", normalized);
+        }
+        ignore_ext_set.insert(normalized);
+    }
+
+    let mut ignore_file_set = HashSet::new();
+    for name in ignore_files {
+        let normalized = name.to_lowercase();
+        if !normalized.is_empty() {
+            ignore_file_set.insert(normalized);
+        }
     }
 
     let mut batch: Vec<(String, String)> = Vec::new();
@@ -67,11 +86,30 @@ pub fn walk_and_get_text_file_batch(
 
         if entry.path().is_file() {
             scanned_files += 1;
+            let file_name = entry
+                .path()
+                .file_name()
+                .and_then(|s| s.to_str())
+                .map(|s| s.to_lowercase());
+
+            if let Some(ref name) = file_name {
+                if ignore_file_set.contains(name) {
+                    skipped_non_text += 1;
+                    continue;
+                }
+            }
             let ext = entry
                 .path()
                 .extension()
                 .and_then(|s| s.to_str())
                 .map(|s| format!(".{}", s.to_lowercase()));
+
+            if let Some(ref e) = ext {
+                if ignore_ext_set.contains(e) {
+                    skipped_non_text += 1;
+                    continue;
+                }
+            }
 
             match ext {
                 Some(ref e) if text_ext_set.contains(e) => {

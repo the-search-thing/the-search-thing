@@ -5,11 +5,14 @@ use crate::helpers::{
 use pyo3::prelude::*;
 use pyo3::{PyErr, PyResult};
 use std::io::Cursor;
-use image::ImageDecoder;
+use image::{ImageDecoder, ImageFormat};
 use std::path::Path;
 
 
 #[pyfunction]
-pub fn get_bytes(image_path: String) -> PyResult<String> {
-    
+pub fn get_bytes(image_path: String) -> PyResult<Vec<u8>> {
+    let mut bytes: Vec<u8> = Vec::new();
+    let img = image::ImageReader::open(image_path)?.decode();
+    img.write_to(&mut Cursor::new(&mut bytes), image::ImageFormat::Png)?;
+    Ok(bytes)
 }

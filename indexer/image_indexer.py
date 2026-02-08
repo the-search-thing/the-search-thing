@@ -92,9 +92,14 @@ async def create_img_embeddings(file_id: str, content: str, path: str) -> str:
 
     return await asyncio.to_thread(_query)
 
-def base64_to_uri(img_base64: str, mime_hint: str = "jpeg" ) -> str:
+def _base64_to_uri(img_base64: str, mime_hint: str = "jpeg" ) -> str:
     return f"data:image/{mime_hint};base64,{img_base64}"
 
+def _normalize_summary_content(content_str: str) -> dict:
+    
+    
+def _build_embedding_text(summary: dict) -> str:
+    
 
 async def generate_summary(
     image_base64: str,
@@ -118,4 +123,35 @@ async def generate_summary(
         '"setting": "<location or scene>", "ocr": "<visible text or empty>", "quality": "<good|low>"}'
     )
     
+    response = client.chat.completions.create(
+        model="meta-llama/llama-4-maverick-17b-128e-instruct",
+        messages=[
+            {
+                "role": "user",
+                "content" : [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": data_uri}},
+                ],
+            }
+        ],
+        max_tokens=500,
+        temperature=0.2,
+    )
+    content = response.choices[0].message.content
+    if isinstance(content, list):
+        parts = []
+        for part in content:
+            if isinstance(part, dict) and "text" in part:
+                parts.append(part["text"])
+            else:
+                parts.append(str(part))
+        content = " ".join(parts)
+    summary_payload = (
+        _normalize_summary_content(content)
+        if isinstance(content, str)
+        else {"summary": str(content)}
+    )
+    embedding_text = _build_embedding_text(summay_payload)
+    
+    return summary_payload, embedding_text
     

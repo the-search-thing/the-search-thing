@@ -65,6 +65,7 @@ def _get_text_extensions(ext_to_category: dict[str, str]) -> list[str]:
 def _get_video_extensions(ext_to_category: dict[str, str]) -> list[str]:
     return [ext for ext, category in ext_to_category.items() if category == "video"]
 
+
 def _get_img_extensions(ext_to_category: dict[str, str]) -> list[str]:
     return [ext for ext, category in ext_to_category.items() if category == "image"]
 
@@ -135,7 +136,7 @@ async def _run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None
     text_exts = _get_text_extensions(ext_to_category)
     video_exts = _get_video_extensions(ext_to_category)
     img_exts = _get_img_extensions(ext_to_category)
-    
+
     cursor = 0
     total_found = 0
     text_indexed = 0
@@ -200,7 +201,7 @@ async def _run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None
                         video_path,
                         e,
                     )
-                    
+
     if img_exts:
         image_files = await asyncio.to_thread(
             _collect_files_by_extension, dir, img_exts
@@ -209,26 +210,24 @@ async def _run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None
         if image_files:
             from indexer.image_indexer import img_indexer
 
-            for image_path in image_files:
-                try:
-                    results = await img_indexer(image_path)
-                    if results:
-                        image_indexed += sum(
-                            1 for result in results if result.get("indexed")
-                        )
-                        image_errors += sum(
-                            1 for result in results if not result.get("indexed")
-                        )
-                    else:
-                        image_errors += 1
-                except Exception as e:
-                    image_errors += 1
-                    logger.error(
-                        "[job:%s] [ERROR] Video indexing failed: %s - %s",
-                        job_id,
-                        image_path,
-                        e,
+            try:
+                results = await img_indexer(image_files)
+                if results:
+                    image_indexed += sum(
+                        1 for result in results if result.get("indexed")
                     )
+                    image_errors += sum(
+                        1 for result in results if not result.get("indexed")
+                    )
+                else:
+                    image_errors += 1
+            except Exception as e:
+                image_errors += 1
+                logger.error(
+                    "[job:%s] [ERROR] Image indexing failed: %s",
+                    job_id,
+                    e,
+                )
 
     logger.info(
         "[job:%s] [SUMMARY] Job completed for %s - Found: %d, Indexed: %d, Skipped: %d, Errors: %d",
@@ -246,6 +245,7 @@ async def _run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None
         video_indexed,
         video_errors,
     )
+
     logger.info(
         "[job:%s] [IMAGE SUMMARY] Found: %d, Indexed: %d, Errors: %d",
         job_id,

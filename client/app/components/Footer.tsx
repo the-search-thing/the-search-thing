@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useConveyor } from "../hooks/use-conveyor"
-import { useAppContext } from "./AppContext"
+import { useAppContext } from "../AppContext"
 import { Button } from "./ui/button"
 import about from "@/resources/about.svg"
 import enter from "@/resources/enter.svg"

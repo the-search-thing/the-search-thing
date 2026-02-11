@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useConveyor } from '@/app/hooks/use-conveyor'
-import './home/styles.css'
-import { useAppContext } from './AppContext'
+import '../home/styles.css'
+import { useAppContext } from '../AppContext'
 
 interface LoadingProps {
   onIndexComplete?: () => void

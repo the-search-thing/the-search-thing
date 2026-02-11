@@ -1,8 +1,7 @@
 import * as React from 'react'
 import { useState, useEffect } from 'react'
-import { useAppContext } from './AppContext'
 import noFiles from '@/resources/no-files-found.svg'
-import { ResultProps, SearchResultItem } from './types/types'
+import { ResultProps, SearchResultItem } from '../types/types'
 import * as fileIcons from "@/resources/filetype icons"
 import { useConveyor } from "../hooks/use-conveyor"
 
@@ -11,7 +10,6 @@ type ResultItem = SearchResultItem
 
 
 const Results: React.FC<ResultProps> = ({ searchResults, query, hasSearched }) => {
-  // const { isIndexed } = useAppContext()
   const [selectedItem, setSelectedItem] = useState<ResultItem | null>(null)
   const search = useConveyor("search")
 

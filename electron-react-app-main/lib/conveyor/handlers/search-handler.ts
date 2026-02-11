@@ -10,13 +10,6 @@ export const registerSearchHandlers = () => {
     return response.data
   })
 
-  // handle('check', async () => {
-  //   const response = await axios.get('http://localhost:8000/api/check', {
-  //     params: {},
-  //   })
-  //   return { success: response.data.success }
-  // })
-
   handle('index', async (dirPaths: string) => {
     const response = await axios.post('http://localhost:8000/api/index', {
       dirPaths, // Send to API

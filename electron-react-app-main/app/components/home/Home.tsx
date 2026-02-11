@@ -12,11 +12,14 @@ export default function Home() {
   const search = useConveyor('search')
   const [searchResults, setSearchResults] = useState<SearchResponse>()
   const [hasSearched, setHasSearched] = useState(false) //temporary logic (pls remove in the future :pray:)
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleSearch = async () => {
-    setHasSearched(true)
+    setIsLoading(true)
     const res = await search.search(query)
     setSearchResults(res)
+    setHasSearched(true)
+    setIsLoading(false)
   }
 
   return (
@@ -45,7 +48,11 @@ export default function Home() {
           'px-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
         )}
       >
-        <Results searchResults={searchResults} query={query} hasSearched={hasSearched} />
+        {isLoading ? (
+          <div className="flex items-center justify-center w-full text-zinc-400">Searching...</div>
+        ) : (
+          <Results searchResults={searchResults} query={query} hasSearched={hasSearched} />
+        )}
       </div>
 
       <div

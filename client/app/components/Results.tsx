@@ -67,7 +67,7 @@ const Results: React.FC<ResultProps> = ({ searchResults, query, hasSearched, awa
   }
 
   useEffect(() => {
-    if (awaitingIndexing && !hasInitiatedIndexing && !hasOpenedDialogRef.current) {
+    if (awaitingIndexing && !hasInitiatedIndexing && !hasOpenedDialogRef.current) { //temporary guardrail for development strict mode
       hasOpenedDialogRef.current = true
       setHasInitiatedIndexing(true)
       handleStartIndexing()

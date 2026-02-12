@@ -223,35 +223,35 @@ async def index(dir: str):
 @app.get("/api/search")
 async def api_search(q: str):
     await asyncio.sleep(2)
-    # from search import search_all
-    # from search import search_file_vids_together
+    from search import search_all
+    from search import search_file_vids_together
 
-    # try:
-    #     # result = await search_all(q, limit=10)
-    #     result = await search_file_vids_together(q)
-    #     return JSONResponse(result)
-    # except Exception as e:
-    #     logger.error("Error searching videos: %s", e)
-    #     raise HTTPException(status_code=500, detail=str(e))
-    if q.strip().lower() == "lmao":
-        return JSONResponse({"results": []})
+    try:
+        # result = await search_all(q, limit=10)
+        result = await search_file_vids_together(q)
+        return JSONResponse(result)
+    except Exception as e:
+        logger.error("Error searching videos: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+    # if q.strip().lower() == "lmao":
+    #     return JSONResponse({"results": []})
 
-    dummy_results = {
-        "results": [
-            {
-                "label": "dummy-readme.md",
-                "content": "This is a dummy search result for development.",
-                "path": "C:/dummy/path/dummy-readme.md",
-            },
-            {
-                "label": "notes.txt",
-                "content": "Another fake result to populate the UI.",
-                "path": "C:/dummy/path/notes.txt",
-            },
-        ]
-    }
+    # dummy_results = {
+    #     "results": [
+    #         {
+    #             "label": "dummy-readme.md",
+    #             "content": "This is a dummy search result for development.",
+    #             "path": "C:/dummy/path/dummy-readme.md",
+    #         },
+    #         {
+    #             "label": "notes.txt",
+    #             "content": "Another fake result to populate the UI.",
+    #             "path": "C:/dummy/path/notes.txt",
+    #         },
+    #     ]
+    # }
 
-    return JSONResponse(dummy_results)
+    # return JSONResponse(dummy_results)
 
 
 # @app.post("/search")

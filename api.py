@@ -28,12 +28,6 @@ app.add_middleware(
 )
 
 
-@app.get("/api/check")
-async def index_exists():
-    # Matches: { success: z.boolean() }
-    return {"success": True}
-
-
 class SearchRequest(BaseModel):
     query: str
     limit: int = 10

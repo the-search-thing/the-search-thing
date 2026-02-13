@@ -203,6 +203,8 @@ async def _run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None
     text_exts = _get_text_extensions(ext_to_category)
     video_exts = _get_video_extensions(ext_to_category)
     ignore_exts, ignore_files = _load_ignore_config()
+    ignore_exts_sorted = sorted(ignore_exts)
+    ignore_files_sorted = sorted(ignore_files)
     cursor = 0
     total_found = 0
     text_indexed = 0
@@ -214,9 +216,55 @@ async def _run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None
 
     logger.info("[job:%s] Started indexing job for: %s", job_id, dir)
 
+    supports_ignore = True
+
     while True:
         try:
-            try:
+            if supports_ignore:
+                try:
+                    (
+                        batch,
+                        cursor,
+                        done,
+                        scanned_count,
+                        skipped_count,
+                    ) = await asyncio.to_thread(
+                        walk_and_get_text_file_batch,
+                        dir,
+                        text_exts,
+                        ignore_exts_sorted,
+                        ignore_files_sorted,
+                        cursor,
+                        batch_size,
+                    )
+                except TypeError as e:
+                    # Only fall back for the legacy arity mismatch case.
+                    # Do not swallow real TypeErrors raised by the walk implementation.
+                    msg = str(e)
+                    arity_mismatch = (
+                        "positional argument" in msg
+                        and "takes" in msg
+                        and "given" in msg
+                        and "but" in msg
+                    )
+                    if not arity_mismatch:
+                        raise
+
+                    supports_ignore = False
+                    (
+                        batch,
+                        cursor,
+                        done,
+                        scanned_count,
+                        skipped_count,
+                    ) = await asyncio.to_thread(
+                        walk_and_get_text_file_batch,
+                        dir,
+                        text_exts,
+                        cursor,
+                        batch_size,
+                    )
+            else:
                 (
                     batch,
                     cursor,
@@ -227,20 +275,8 @@ async def _run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None
                     walk_and_get_text_file_batch,
                     dir,
                     text_exts,
-                    sorted(ignore_exts),
-                    sorted(ignore_files),
                     cursor,
                     batch_size,
-                )
-            except TypeError:
-                (
-                    batch,
-                    cursor,
-                    done,
-                    scanned_count,
-                    skipped_count,
-                ) = await asyncio.to_thread(
-                    walk_and_get_text_file_batch, dir, text_exts, cursor, batch_size
                 )
         except Exception as e:
             logger.exception("[job:%s] Walk failed: %s", job_id, e)

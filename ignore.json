@@ -1,4 +1,0 @@
-{
-  "ignore_extensions": [".env"],
-  "ignore_files": [".env.local"]
-}

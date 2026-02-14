@@ -278,24 +278,6 @@ async def api_search(q: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# @app.post("/search")
-
-# # JSON with search results needs to be sent back with error in case any.
-# async def search(request: SearchRequest):
-#     """
-#     Search for videos across all stores for a user.
-#     Returns video IDs and match details for videos containing the searched content.
-#     """
-#     from search import search_all
-
-#     try:
-#         result = await search_all(request.query, limit=request.limit)
-#         return JSONResponse(result)
-#     except Exception as e:
-#         logger.error(f"Error searching: {e}")
-#         raise HTTPException(status_code=500, detail=str(e))
-
-
 if __name__ == "__main__":
     import uvicorn
 

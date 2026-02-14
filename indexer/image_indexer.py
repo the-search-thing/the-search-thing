@@ -1,12 +1,30 @@
 import asyncio
+import base64
 import json
 import uuid
 from pathlib import Path
 from typing import List
 
-from the_search_thing import get_base64_bytes
-
 from utils.clients import get_groq_client, get_helix_client
+
+
+def _bytes_to_data_uri(image_bytes: bytes, mime_hint: str = "jpeg") -> str:
+    encoded = base64.b64encode(image_bytes).decode("utf-8")
+    return f"data:image/{mime_hint};base64,{encoded}"
+
+
+def _mime_hint_from_path(path: Path) -> str:
+    suffix = path.suffix.lower()
+    mapping = {
+        ".jpg": "jpeg",
+        ".jpeg": "jpeg",
+        ".png": "png",
+        ".webp": "webp",
+        ".gif": "gif",
+        ".bmp": "bmp",
+        ".tiff": "tiff",
+    }
+    return mapping.get(suffix, "jpeg")
 
 
 async def img_indexer(
@@ -34,7 +52,9 @@ async def img_indexer(
             continue
 
         try:
-            img_base64 = get_base64_bytes(path)
+            image_bytes = p.read_bytes()
+            mime_hint = _mime_hint_from_path(p)
+            data_uri = _bytes_to_data_uri(image_bytes, mime_hint)
         except Exception as e:
             print(f"[WARN] Skipping (Bytes Extraction failed): {path} — {e}")
             results.append(
@@ -43,7 +63,9 @@ async def img_indexer(
             continue
 
         try:
-            summary_payload, embedding_text = await generate_summary(img_base64)
+            summary_payload, embedding_text = await generate_summary(data_uri)
+            print(f"Summary payload: {summary_payload}")
+            print(f"Embedding Text: {embedding_text}")
         except Exception as e:
             print(f"[WARN] Skipping (Summary failed): {path} — {e}")
             results.append(
@@ -73,28 +95,27 @@ async def create_img(image_id: str, content: str, path: str) -> str:
 
     def _query() -> str:
         helix_client = get_helix_client()
-        return json.dumps(helix_client.query("CreateImage", image_params))
+        response = helix_client.query("CreateImage", image_params)
+        print(f"[HELIX] CreateImage response for {path}: {response}")
+        return json.dumps(response)
 
     return await asyncio.to_thread(_query)
 
 
+# creating img vector nodes
 async def create_img_embeddings(image_id: str, content: str, path: str) -> str:
     image_params = {"image_id": image_id, "content": content, "path": path}
 
     def _query() -> str:
         helix_client = get_helix_client()
-        return json.dumps(
-            helix_client.query(
-                "CreateImageEmbeddings",
-                image_params,
-            )
+        response = helix_client.query(
+            "CreateImageEmbeddings",
+            image_params,
         )
+        print(f"[HELIX] CreateImageEmbeddings response for {path}: {response}")
+        return json.dumps(response)
 
     return await asyncio.to_thread(_query)
-
-
-def _base64_to_uri(img_base64: str, mime_hint: str = "jpeg") -> str:
-    return f"data:image/{mime_hint};base64,{img_base64}"
 
 
 def _normalize_summary_content(content_str: str) -> dict:
@@ -179,20 +200,18 @@ def _build_embedding_text(summary: dict) -> str:
 
 
 async def generate_summary(
-    image_base64: str,
+    image_data_uri: str,
 ) -> tuple[dict, str]:
     """
-    Summarize a single image (base64) and return both:
+    Summarize a single image (data URI) and return both:
     - structured JSON payload
     - normalized text string for embeddings
     """
-    if not image_base64:
+    if not image_data_uri:
         print("[WARN] No bytes data provided")
         return {}, ""
 
     client = get_groq_client()
-    data_uri = _base64_to_uri(image_base64, "jpeg")
-
     prompt = (
         "You are an expert vision assistant. Provide a concise JSON summary for "
         "the provided image. Respond with JSON only (no code fences). Use the schema: "
@@ -207,7 +226,7 @@ async def generate_summary(
                 "role": "user",
                 "content": [
                     {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": {"url": data_uri}},
+                    {"type": "image_url", "image_url": {"url": image_data_uri}},
                 ],
             }
         ],
@@ -231,3 +250,9 @@ async def generate_summary(
     embedding_text = _build_embedding_text(summary_payload)
 
     return summary_payload, embedding_text
+
+
+if __name__ == "__main__":
+    results = asyncio.run(img_indexer("C:\\Users\\amaan\\Downloads\\testing\\woody.jpg"))
+    import json
+    print(json.dumps(results, indent=2))

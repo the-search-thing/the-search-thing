@@ -293,3 +293,44 @@ QUERY CombinedFileAndVideo(search_text: String) =>
 
 
 // last resort is to have a single vector type for all fiels
+
+
+
+
+
+// testing combiend file and vidoe Search
+QUERY CombinedFileVidAndImage(search_text: String) =>
+    // File search
+    file_embeddings <- SearchV<FileEmbeddings>(Embed(search_text), 100)
+
+    // Video searches
+    transcripts <- SearchV<TranscriptEmbeddings>(Embed(search_text), 100)
+    frames <- SearchV<FrameSummaryEmbeddings>(Embed(search_text), 100)
+
+    // image search
+    image_embeddings <- SearchV<ImageEmbeddings>(Embed(search_text), 100)
+
+    // Combine all results with RRF
+    combined <- file_embeddings
+        ::RerankRRF(k: 60)
+    combined_with_transcripts <- transcripts
+        ::RerankRRF(k: 60)
+    combined_with_frames <- frames
+        ::RerankRRF(k: 60)
+    combined_with_images <- image_embeddings
+        ::RerankRRF(k: 60)
+        ::RANGE(0, 50)
+
+    // Get related items
+    chunks <- file_embeddings::In<HasFileEmbeddings>
+    transcript_videos <- transcripts::In<HasTranscriptEmbeddings>::In<Has>
+    frame_videos <- frames::In<HasFrameSummaryEmbeddings>::In<Has>
+    images <- image_embeddings::In<HasImageEmbeddings>
+
+    RETURN combined_with_frames, chunks, transcript_videos, frame_videos, images
+
+
+
+QUERY GetAllImagemebeddings()=>
+    images <- N<Image>
+    RETURN images

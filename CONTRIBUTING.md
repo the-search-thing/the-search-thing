@@ -42,13 +42,13 @@ maturin develop --release
 
 ```bash
 cp .env.example .env
-# set GROQ_API_KEY, HELIX_LOCAL=true, HELIX_PORT=7002, etc.
+# set GROQ_API_KEY, HELIX_LOCAL=true, HELIX_PORT=7002 (or whatever port you like).
 ```
 
 4) Start the API
 
 ```bash
-python -m backend.app
+uv run -m backend.app
 # or: uvicorn backend.app:app --reload
 ```
 

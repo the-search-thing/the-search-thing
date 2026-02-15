@@ -118,10 +118,10 @@ QUERY SearchFileEmbeddings(search_text: String) =>
     RETURN chunks
 
 // search image embeddings
-QUERY SearchImageEmbeddings(query: String, limit: I64) =>
-    text <- SearchV<ImageEmbeddings>(Embed(query), limit)
-    images <- text::In<HasImageEmbeddings>
-    RETURN text
+QUERY SearchImageEmbeddings(search_text: String) =>
+    image_embeddings <- SearchV<ImageEmbeddings>(Embed(search_text), 100)
+    images <- image_embeddings::In<HasImageEmbeddings>
+    RETURN images
 
 
 // search transcript & frame embeddings

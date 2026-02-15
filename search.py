@@ -310,8 +310,14 @@ async def goated_search(search_query: str) -> dict:
         "SearchTranscriptAndFrameEmbeddings", video_search_params
     )
 
+    image_search_params = {"search_text": search_query}
+    image_search_results = get_helix_client().query(
+        "SearchImageEmbeddings", image_search_params
+    )
+
     file_items: list[dict] = []
     video_items: list[dict] = []
+    image_items: list[dict] = []
 
     def normalize_file_results(response: object) -> None:
         if not response:
@@ -428,10 +434,71 @@ async def goated_search(search_query: str) -> dict:
         video_items.clear()
         video_items.extend(deduped)
 
-    print("file search results", file_search_results)
+    def normalize_image_results(response: object) -> None:
+        if not response:
+            return
+        items: list[object] = []
+        if isinstance(response, dict) and "images" in response:
+            images = response.get("images")
+            if isinstance(images, list):
+                items = images
+            else:
+                return
+        elif isinstance(response, list):
+            for entry in response:
+                if isinstance(entry, dict) and "images" in entry:
+                    images = entry.get("images")
+                    if isinstance(images, list):
+                        items.extend(images)
+                    continue
+                items.append(entry)
+        else:
+            items = [response]
+
+        for item in items:
+            if (
+                isinstance(item, dict)
+                and "text" in item
+                and isinstance(item.get("text"), list)
+            ):
+                entries = item.get("text", [])
+            else:
+                entries = [item]
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                image_id = entry.get("image_id") or entry.get("id")
+                content = entry.get("content")
+                path = entry.get("path")
+                if not (image_id or content or path):
+                    continue
+                normalized = {
+                    "label": "image",
+                    "image_id": image_id,
+                    "content": content,
+                    "path": path,
+                }
+                image_items.append(normalized)
+
+        if not image_items:
+            return
+        deduped: list[dict] = []
+        seen: set[tuple] = set()
+        for item in image_items:
+            key = (
+                item.get("image_id"),
+                item.get("path"),
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            deduped.append(item)
+        image_items.clear()
+        image_items.extend(deduped)
 
     normalize_file_results(file_search_results)
     normalize_video_results(video_search_results)
+    normalize_image_results(image_search_results)
 
     keywords = re.findall(r"\w+", search_query.lower())
 
@@ -457,8 +524,9 @@ async def goated_search(search_query: str) -> dict:
 
     attach_rank_score(file_items, "file")
     attach_rank_score(video_items, "video")
+    attach_rank_score(image_items, "image")
 
-    combined = file_items + video_items
+    combined = file_items + video_items + image_items
     combined.sort(
         key=lambda item: (
             item.get("score", 0),
@@ -474,6 +542,7 @@ async def goated_search(search_query: str) -> dict:
             item.get("label"),
             item.get("file_id") or item.get("chunk_id"),
             item.get("video_id"),
+            item.get("image_id"),
             item.get("path"),
             item.get("content"),
         )

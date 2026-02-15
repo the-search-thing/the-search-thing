@@ -97,24 +97,6 @@ async def llm_responses_search(query: str, helix_response: str) -> str:
         return helix_response
 
 
-async def search_combined(search_query: str) -> str:
-    """
-    Search across transcripts and frames, return LLM-formatted response.
-    """
-    search_params = {"search_text": search_query}
-    response = get_helix_client().query("CombinedSearch", search_params)
-
-    # Extract the actual content from the embedding results (top 5 from each)
-    transcript_contents = [
-        item.get("content", "") for item in response[0].get("transcripts", [])[:5]
-    ]
-    frame_contents = [
-        item.get("content", "") for item in response[0].get("frames", [])[:5]
-    ]
-
-    helix_response = f"Transcripts: {transcript_contents}\n\nFrames: {frame_contents}"
-    return await llm_responses_search(search_query, helix_response)
-
 
 async def search_files(search_query: str, limit: int = 10) -> dict:
     """
@@ -158,81 +140,6 @@ async def search_files(search_query: str, limit: int = 10) -> dict:
     summary = await llm_responses_search(search_query, helix_response)
 
     return {"summary": summary, "results": results, "query": search_query}
-
-
-async def search_videos(search_query: str, limit: int = 5) -> dict:
-    """
-    Search across transcript + frame summary embeddings and return file-style results.
-    """
-    search_params = {"search_text": search_query}
-    response = get_helix_client().query("CombinedSearch", search_params)
-    result_data = response[0] if response else {}
-
-    transcripts = result_data.get("transcripts", [])
-    frames = result_data.get("frames", [])
-
-    chunk_to_video: dict[str, str] = {}
-    video_to_path: dict[str, str] = {}
-
-    combined_videos = []
-    combined_videos.extend(result_data.get("transcript_videos", []) or [])
-    combined_videos.extend(result_data.get("frame_videos", []) or [])
-    if combined_videos:
-        video_to_path.update(_build_video_to_path_map(combined_videos))
-
-    try:
-        chunks_response = get_helix_client().query("GetAllChunks", {})
-        chunks = _extract_list_response(chunks_response, "chunks")
-        chunk_to_video = build_chunk_to_video_map(chunks or [])
-    except Exception as e:
-        print(f"GetAllChunks failed: {e}")
-
-    try:
-        videos_response = get_helix_client().query("GetAllVideos", {})
-        videos = _extract_list_response(videos_response, "videos")
-        video_to_path.update(_build_video_to_path_map(videos or []))
-    except Exception as e:
-        print(f"GetAllVideos failed: {e}")
-
-    results: list[dict] = []
-    top_contents: list[str] = []
-
-    def append_results(items: list) -> None:
-        for entry in items:
-            if not isinstance(entry, dict):
-                continue
-            chunk_id = entry.get("chunk_id")
-            if not isinstance(chunk_id, str) or not chunk_id:
-                continue
-            video_id = chunk_to_video.get(chunk_id)
-            path = video_to_path.get(video_id) if isinstance(video_id, str) else None
-            results.append(
-                {
-                    "file_id": chunk_id,
-                    "content": None,
-                    "path": path,
-                }
-            )
-            content = entry.get("content")
-            if isinstance(content, str) and content:
-                top_contents.append(content)
-            if len(results) >= limit:
-                break
-
-    append_results(transcripts)
-    if len(results) < limit:
-        append_results(frames)
-
-    helix_response = f"Video search results: {top_contents}"
-    summary = await llm_responses_search(search_query, helix_response)
-
-    return {
-        "success": True,
-        "summary": summary,
-        "results": results,
-        "query": search_query,
-    }
-
 
 async def search_file_vids_together(search_query: str) -> dict:
     """

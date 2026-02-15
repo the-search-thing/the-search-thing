@@ -351,11 +351,9 @@ async def index(dir: str):
 
 @app.get("/api/search")
 async def api_search(q: str):
-    # from search import search_all
     from search import search_file_vids_together
 
     try:
-        # result = await search_all(q, limit=10)
         result = await search_file_vids_together(q)
         return JSONResponse(result)
     except Exception as e:

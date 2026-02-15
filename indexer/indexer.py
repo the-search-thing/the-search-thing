@@ -10,8 +10,6 @@ from pathlib import Path
 from typing import List, Literal
 
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
 from the_search_thing import rust_indexer  # ty:ignore[unresolved-import]
 
 from utils.clients import get_groq_client, get_helix_client
@@ -494,60 +492,6 @@ async def create_frame_summary_embeddings(chunk_id: str, content: str) -> str:
     )
 
 
-async def llm_responses_search(query: str, helix_response: str) -> str:
-    """
-    Format Helix DB search results using Gemini LLM.
-    Returns formatted LLM response, or raw helix_response if LLM call fails.
-    """
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
-    if not gemini_api_key:
-        print("GEMINI_API_KEY environment variable is not set")
-        return helix_response
-
-    gemini_client = genai.Client(api_key=gemini_api_key)
-
-    try:
-        gemini_response = gemini_client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[
-                f"use the user's query: {query} and the semantic search results: {helix_response} & respond to the user's request to the best of your ability, in 3-7 sentences."
-            ],
-            config=types.GenerateContentConfig(temperature=0.5),
-        )
-        gemini_response_text = str(gemini_response.text)
-        return gemini_response_text
-    except Exception as e:
-        print(f"error calling gemini api {e}")
-        print(f"raw helix response: {helix_response}")
-        return helix_response
-
-
-# TODO: need to add a separation of what video the useris asking about
-
-
-# Now we search based on video_id
-async def search_transcript_embeddings(query: str, limit: int, video_id) -> str:
-    helix_client = get_helix_client()
-    search_transcript_params = {"query": query, "limit": limit, "video_id": video_id}
-    response = helix_client.query(
-        "SearchTranscriptEmbeddingsVideo", search_transcript_params
-    )
-    return await llm_responses_search(query, json.dumps(response))
-
-
-# TODO: need to add a separation of what video the user is asking about
-
-
-# Now we search based on video_id
-async def search_frame_summary_embeddings(query: str, limit: int, video_id) -> str:
-    helix_client = get_helix_client()
-    search_frame_summary_params = {"query": query, "limit": limit, "video_id": video_id}
-    response = helix_client.query(
-        "SearchFrameSummaryEmbeddingsVideo", search_frame_summary_params
-    )
-    return await llm_responses_search(query, json.dumps(response))
-
-
 async def indexer_function(
     video_id,
     video_paths: List[str] | str,
@@ -855,24 +799,6 @@ if __name__ == "__main__":
         asyncio.run(test_transcriptions_only())
     elif "--test-frame-summaries" in sys.argv or "-f" in sys.argv:
         asyncio.run(test_frame_only())
-    elif "-st" in sys.argv:
-        result = asyncio.run(
-            search_transcript_embeddings(
-                query="give timestamps to all the parts only when amaan talks",
-                limit=5,
-                video_id="123",
-            )
-        )
-        print(result)
-    elif "-sf" in sys.argv:
-        result = asyncio.run(
-            search_frame_summary_embeddings(
-                query="whats the location of the people in the video?",
-                limit=5,
-                video_id="123",
-            )
-        )
-        print(result)
     # helix helper functions
     elif "-vids" in sys.argv:
         asyncio.run(get_all_vids())

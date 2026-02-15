@@ -7,7 +7,13 @@ import { useConveyor } from '../hooks/use-conveyor'
 
 type ResultItem = SearchResultItem
 
-const Results: React.FC<ResultProps> = ({ searchResults, query, hasSearched, awaitingIndexing }) => {
+const Results: React.FC<ResultProps & { onIndexingCancelled?: () => void }> = ({
+  searchResults,
+  query,
+  hasSearched,
+  awaitingIndexing,
+  onIndexingCancelled,
+}) => {
   const [selectedItem, setSelectedItem] = useState<ResultItem | null>(null)
   const [isIndexing, setIsIndexing] = useState(false)
   const [currentJobId, setCurrentJobId] = useState<string | null>(null)
@@ -47,7 +53,11 @@ const Results: React.FC<ResultProps> = ({ searchResults, query, hasSearched, awa
 
   const handleStartIndexing = useCallback(async () => {
     const res = await search.openFileDialog()
-    if (!res || res.length === 0) return // check to prevent indexing null
+    if (!res || res.length === 0) {
+      // User cancelled the file dialog - reset the awaiting state
+      onIndexingCancelled?.()
+      return
+    }
 
     setIsIndexing(true)
     try {
@@ -61,7 +71,7 @@ const Results: React.FC<ResultProps> = ({ searchResults, query, hasSearched, awa
     } finally {
       setIsIndexing(false)
     }
-  }, [search])
+  }, [search, onIndexingCancelled])
 
   useEffect(() => {
     if (awaitingIndexing && !hasInitiatedIndexing && !hasOpenedDialogRef.current) {

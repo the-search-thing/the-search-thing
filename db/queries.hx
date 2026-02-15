@@ -105,15 +105,13 @@ QUERY SearchFileEmbeddings(search_text: String, limit: I64) =>
 
 // search transcript & frame embeddings
 // #[model("gemini:gemini-embedding-001:RETRIEVAL_DOCUMENT")]
-QUERY SearchTranscriptAndFrameEmbeddings(search_text: String) => 
+QUERY SearchTranscriptAndFrameEmbeddings(search_text: String) =>
     transcript <- SearchV<TranscriptEmbeddings>(Embed(search_text), 100)
+        ::RerankRRF(k: 60)
+        ::RANGE(0, 50)
     frame <- SearchV<FrameSummaryEmbeddings>(Embed(search_text), 100)
-    // combine
-    combined <- transcript
-	::RerankRRF(k: 60)
-    combined_with_frames <- frame
-	::RerankRRF(k: 60)
-	::RANGE(0, 50)
+        ::RerankRRF(k: 60)
+        ::RANGE(0, 50)
     transcript_videos <- transcript::In<HasTranscriptEmbeddings>::In<Has>
     frame_videos <- frame::In<HasFrameSummaryEmbeddings>::In<Has>
     RETURN transcript_videos, frame_videos

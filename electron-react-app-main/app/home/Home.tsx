@@ -21,8 +21,9 @@ export default function Home() {
     const res = await search.search(query)
     setSearchResults(res)
     setHasSearched(true)
-    setPressedEnter(pressedEnter + 1)
-    if (pressedEnter >= 1 && ((res?.results?.length ?? 0) === 0)) {
+    const newPressedEnter = pressedEnter + 1
+    setPressedEnter(newPressedEnter)
+    if (newPressedEnter >= 2 && (res?.results?.length ?? 0) === 0) {
       setAwaitingIndexing(true)
     }
     setIsLoading(false)

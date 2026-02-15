@@ -19,7 +19,9 @@ export default function Footer() {
     try {
       const indexRes = await search.index(res)
       console.error('Index response:', indexRes)
-      if (!indexRes.success && !indexRes.job_id) {
+      if (indexRes.success && indexRes.job_id) {
+        setErrorMessage('') // Success - clear any error message
+      } else if (!indexRes.job_id) {
         setErrorMessage('Indexing started but no job ID was returned')
       } else {
         setErrorMessage('No response from indexing')

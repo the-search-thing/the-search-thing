@@ -95,47 +95,34 @@ QUERY CreateFrameSummaryEmbeddings (chunk_id:String, content: String) =>
     RETURN "Success"
 
 
-// search transcript embeddings
+// search file embeddings separate
 // #[model("gemini:gemini-embedding-001:RETRIEVAL_DOCUMENT")]
-QUERY SearchFileEmbeddings(query: String, limit: I64) =>
-    text <- SearchV<FileEmbeddings>(Embed(query), limit)
-    chunks <- text::In<HasFileEmbeddings>
-    RETURN text
+QUERY SearchFileEmbeddings(search_text: String) =>
+    file_embeddings <- SearchV<FileEmbeddings>(Embed(search_text), 100)
+    chunks <- file_embeddings::In<HasFileEmbeddings>
+    RETURN chunks
 
 
-// search transcript embeddings
+// search transcript & frame embeddings
 // #[model("gemini:gemini-embedding-001:RETRIEVAL_DOCUMENT")]
-QUERY SearchTranscriptEmbeddings(query: String, limit: I64) =>
-    text <- SearchV<TranscriptEmbeddings>(Embed(query), limit)
-    chunks <- text::In<HasTranscriptEmbeddings>
-    RETURN text
+QUERY SearchTranscriptAndFrameEmbeddings(search_text: String) => 
+    transcript <- SearchV(TranscriptEmbeddings>(Embed(search_text), 100)
+    frames <- SearchV<FrameSummaryEmbeddings>(Embed(search_text), 100)
+    // combine
+    combined <- transcripts
+	::RerankRRF(k: 60)
+    combined_with_frames <- frames
+	::RerankRRF(k: 60)
+	::RANGE(0, 50)
+    transcript_videos <- transcripts::In<HasTranscriptEmbeddings>::In<Has>
+    frame_videos <- frames::In<HasFrameSummaryEmbeddings>::In<Has>
+    RETURN transcript_videos, frame_videos
 
-// search transcript embeddings
-// #[model("gemini:gemini-embedding-001:RETRIEVAL_DOCUMENT")]
-QUERY SearchTranscriptEmbeddingsVideo(query: String, limit: I64, video_id: String) =>
-    //video <- N<Video>({video_id: video_id})
-    text <- SearchV<TranscriptEmbeddings>(Embed(query), limit)
-    chunks <- text::In<HasTranscriptEmbeddings>::WHERE(_::{video_id}::EQ(video_id))
-    RETURN text
 
-// search frame summary embeddings
-// #[model("gemini:gemini-embedding-001:RETRIEVAL_DOCUMENT")]
-QUERY SearchFrameSummaryEmbeddings(query:String, limit: I64) =>
-    text <- SearchV<FrameSummaryEmbeddings>(Embed(query), limit)
-    chunks <- text::In<HasFrameSummaryEmbeddings>
-    RETURN text
-
-QUERY SearchFrameSummaryEmbeddingsVideo(query:String, limit: I64,video_id: String) =>
-    //video <- N<Video>({video_id: video_id})
-    text <- SearchV<FrameSummaryEmbeddings>(Embed(query), limit)
-    chunks <- text::In<HasFrameSummaryEmbeddings>::WHERE(_::{video_id}::EQ(video_id))
-    RETURN text
-
-// search transcript keywords
+// search file keywords
 QUERY SearchFileKeyword(keywords: String, limit: I64) =>
     documents <- SearchBM25<File>(keywords, limit)
     RETURN documents
-
 
 // search transcript keywords
 QUERY SearchTranscriptKeyword(keywords: String, limit: I64) =>
@@ -147,39 +134,6 @@ QUERY SearchFrameSummaryKeyword(keywords: String, limit: I64) =>
     documents <- SearchBM25<FrameSummary>(keywords, limit)
     RETURN documents
 
-// combined search
-QUERY CombinedSearch(search_text: String) =>
-    transcripts <- SearchV<TranscriptEmbeddings>(Embed(search_text), 100)
-        ::RerankRRF(k: 60)
-        ::RANGE(0, 50)
-    frames <- SearchV<FrameSummaryEmbeddings>(Embed(search_text), 100)
-        ::RerankRRF(k: 60)
-        ::RANGE(0, 50)
-    transcript_videos <- transcripts::In<HasTranscriptEmbeddings>::In<Has>
-    frame_videos <- frames::In<HasFrameSummaryEmbeddings>::In<Has>
-
-    RETURN transcripts, frames, transcript_videos, frame_videos
-
-// combined search with video_id from parent chunk
-QUERY CombinedSearchWithVideoId(search_text: String) =>
-    transcripts <- SearchV<TranscriptEmbeddings>(Embed(search_text), 100)
-        ::RerankRRF(k: 60)
-        ::RANGE(0, 50)
-    transcript_chunks <- transcripts::In<HasTranscriptEmbeddings>
-    frames <- SearchV<FrameSummaryEmbeddings>(Embed(search_text), 100)
-        ::RerankRRF(k: 60)
-        ::RANGE(0, 50)
-    frame_chunks <- frames::In<HasFrameSummaryEmbeddings>
-    RETURN transcripts, transcript_chunks, frames, frame_chunks
-
-// hybrid search transcript keywords + transcript embedddings
-// this doesnt work as of now
-QUERY SearchTranscriptCombined(search_string: String, keywords: String) =>
-    vec_results <- SearchV<TranscriptEmbeddings>(Embed(search_string), 100)
-    bm25_results <- SearchBM25<Transcript>(keywords, 100)
-    // Use RerankRRF to combine both result sets
-    combined_results <- vec_results::RerankRRF(k: 60)::RANGE(0, 10)
-    RETURN combined_results
 
 // hybrid search frame summary keywords + embeddings
 // this doesnt work as of now
@@ -198,11 +152,6 @@ QUERY GetAllVideos() =>
 QUERY GetAllFiles() =>
     files <- N<File>
     RETURN files
-
-// get video by video id
-//QUERY GetVideoByVideoId(video_id: String) =>
-//    video <- N<Video>({video_id: video_id})
-//    RETURN video
 
 // get all chunks
 QUERY GetAllChunks()=>
@@ -244,7 +193,6 @@ QUERY DeleteOutgoingNeighboursChunkF() =>
 // https://docs.helix-db.com/documentation/hql/updating
 
 
-
 // testing combiend file and vidoe Search
 QUERY CombinedFileAndVideo(search_text: String) =>
     // File search
@@ -271,4 +219,4 @@ QUERY CombinedFileAndVideo(search_text: String) =>
     RETURN combined_with_frames, chunks, transcript_videos, frame_videos
 
 
-// last resort is to have a single vector type for all fiels
+// last resort is to have a single vector type for all fields

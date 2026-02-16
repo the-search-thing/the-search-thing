@@ -393,24 +393,29 @@ async def goated_search(search_query: str) -> dict:
 
     keywords = re.findall(r"\w+", search_query.lower())
 
-    def has_keyword_match(item: dict) -> bool:
+    def keyword_overlap_score(item: dict) -> float:
         if not keywords:
-            return False
+            return 0.0
         content = item.get("content")
         path = item.get("path")
         content_lower = content.lower() if isinstance(content, str) else ""
         path_lower = path.lower() if isinstance(path, str) else ""
-        return any(
-            keyword in content_lower or keyword in path_lower for keyword in keywords
+        matches = sum(
+            1
+            for keyword in keywords
+            if keyword in content_lower or keyword in path_lower
         )
+        return matches / len(keywords)
 
     def attach_rank_score(items: list[dict], source: str) -> None:
         for rank, item in enumerate(items, start=1):
             item["rank"] = rank
             score = 1 / (rank + 60)
-            if has_keyword_match(item):
+            keyword_score = keyword_overlap_score(item)
+            if keyword_score > 0:
                 score *= 1.2
             item["score"] = score
+            item["keyword_score"] = keyword_score
             item["source"] = source
 
     attach_rank_score(file_items, "file")
@@ -441,6 +446,9 @@ async def goated_search(search_query: str) -> dict:
             continue
         seen.add(key)
         deduped.append(item)
+
+    if keywords:
+        deduped = [item for item in deduped if item.get("keyword_score", 0) > 0]
 
     return {
         "query": search_query,

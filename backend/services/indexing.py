@@ -5,6 +5,8 @@ import os
 import uuid
 from pathlib import Path
 
+from backend.utils.content_hash import compute_file_hash
+
 logger = logging.getLogger(__name__)
 
 CONFIG_DIR = Path(__file__).resolve().parents[2] / "config"
@@ -129,11 +131,31 @@ def _load_ignore_config() -> tuple[set[str], set[str]]:
 
 
 async def index_single_file(path: str, content: str, job_id: str) -> bool:
-    from backend.indexer.file_indexer import create_file, create_file_embeddings
+    from backend.indexer.file_indexer import (
+        create_file,
+        create_file_embeddings,
+        get_file_by_hash,
+    )
+
+    try:
+        content_hash = compute_file_hash(path)
+    except Exception as e:
+        logger.error("[job:%s] [ERROR] Hash failed: %s - %s", job_id, path, e)
+        return False
+
+    try:
+        existing = await get_file_by_hash(content_hash)
+    except Exception as e:
+        logger.error("[job:%s] [ERROR] Hash lookup failed: %s - %s", job_id, path, e)
+        existing = None
+
+    if existing:
+        logger.info("[job:%s] [SKIP] Already indexed: %s", job_id, path)
+        return True
 
     file_id = str(uuid.uuid4())
     try:
-        await create_file(file_id, content, path=path)
+        await create_file(file_id, content_hash, content, path=path)
         await create_file_embeddings(file_id, content, path=path)
         logger.info("[job:%s] [OK] Indexed: %s", job_id, path)
         return True
@@ -184,9 +206,11 @@ async def run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None:
     video_found = 0
     video_indexed = 0
     video_errors = 0
+    video_skipped = 0
     image_found = 0
     image_indexed = 0
     image_errors = 0
+    image_skipped = 0
 
     logger.info("[job:%s] Started indexing job for: %s", job_id, dir)
 
@@ -278,12 +302,46 @@ async def run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None:
         )
         video_found = len(video_files)
         if video_files:
-            from backend.indexer.indexer import indexer_function
+            from backend.indexer.indexer import get_video_by_hash, indexer_function
 
             for video_path in video_files:
+                try:
+                    content_hash = compute_file_hash(video_path)
+                except Exception as e:
+                    video_errors += 1
+                    logger.error(
+                        "[job:%s] [ERROR] Video hash failed: %s - %s",
+                        job_id,
+                        video_path,
+                        e,
+                    )
+                    continue
+
+                try:
+                    existing = await get_video_by_hash(content_hash)
+                except Exception as e:
+                    logger.error(
+                        "[job:%s] [ERROR] Video hash lookup failed: %s - %s",
+                        job_id,
+                        video_path,
+                        e,
+                    )
+                    existing = None
+
+                if existing:
+                    video_skipped += 1
+                    logger.info(
+                        "[job:%s] [SKIP] Video already indexed: %s",
+                        job_id,
+                        video_path,
+                    )
+                    continue
+
                 video_id = uuid.uuid4().hex
                 try:
-                    results = await indexer_function(video_id, video_path)
+                    results = await indexer_function(
+                        video_id, content_hash, video_path
+                    )
                     if results:
                         video_indexed += sum(
                             1 for result in results if result.get("indexed")
@@ -316,8 +374,17 @@ async def run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None:
                     image_indexed += sum(
                         1 for result in results if result.get("indexed")
                     )
+                    image_skipped += sum(
+                        1
+                        for result in results
+                        if not result.get("indexed")
+                        and result.get("error") == "Duplicate content hash"
+                    )
                     image_errors += sum(
-                        1 for result in results if not result.get("indexed")
+                        1
+                        for result in results
+                        if not result.get("indexed")
+                        and result.get("error") != "Duplicate content hash"
                     )
                 else:
                     image_errors += 1
@@ -339,17 +406,19 @@ async def run_indexing_job(dir: str, job_id: str, batch_size: int = 10) -> None:
         errors,
     )
     logger.info(
-        "[job:%s] [VIDEO SUMMARY] Found: %d, Indexed: %d, Errors: %d",
+        "[job:%s] [VIDEO SUMMARY] Found: %d, Indexed: %d, Skipped: %d, Errors: %d",
         job_id,
         video_found,
         video_indexed,
+        video_skipped,
         video_errors,
     )
 
     logger.info(
-        "[job:%s] [IMAGE SUMMARY] Found: %d, Indexed: %d, Errors: %d",
+        "[job:%s] [IMAGE SUMMARY] Found: %d, Indexed: %d, Skipped: %d, Errors: %d",
         job_id,
         image_found,
         image_indexed,
+        image_skipped,
         image_errors,
     )

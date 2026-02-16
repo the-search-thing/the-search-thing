@@ -41,8 +41,6 @@ def _log_task_exception(task: "asyncio.Task[None]", job_id: str) -> None:
         logger.exception("[job:%s] Indexing job failed", job_id)
 
 
-
-
 # all indexing tasks need to be non blocking btw
 @app.get("/api/index")
 async def index(dir: str):

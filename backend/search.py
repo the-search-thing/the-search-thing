@@ -194,12 +194,19 @@ async def goated_search(search_query: str) -> dict:
     video_items: list[dict] = []
     image_items: list[dict] = []
 
+    from typing import Any, cast
+
+    JSONDict = dict[str, Any]
+
     def normalize_file_results(response: object) -> None:
+
         if not response:
             return
+
         items: list[object] = []
         if isinstance(response, dict) and "chunks" in response:
-            chunks = response.get("chunks")
+            response_dict = cast(JSONDict, response)
+            chunks = response_dict.get("chunks")
             if isinstance(chunks, list):
                 items = chunks
             else:
@@ -207,7 +214,8 @@ async def goated_search(search_query: str) -> dict:
         elif isinstance(response, list):
             for entry in response:
                 if isinstance(entry, dict) and "chunks" in entry:
-                    chunks = entry.get("chunks")
+                    entry_dict = cast(JSONDict, entry)
+                    chunks = entry_dict.get("chunks")
                     if isinstance(chunks, list):
                         items.extend(chunks)
                     continue
@@ -215,20 +223,22 @@ async def goated_search(search_query: str) -> dict:
         else:
             items = [response]
         for item in items:
-            if (
-                isinstance(item, dict)
-                and "text" in item
-                and isinstance(item.get("text"), list)
-            ):
-                entries = item.get("text", [])
+            if isinstance(item, dict) and "text" in item:
+                item_dict = cast(JSONDict, item)
+                text_val = item_dict.get("text")
+                if isinstance(text_val, list):
+                    entries = text_val
+                else:
+                    entries = [item]
             else:
                 entries = [item]
             for entry in entries:
                 if not isinstance(entry, dict):
                     continue
-                file_id = entry.get("file_id") or entry.get("id")
-                content = entry.get("content")
-                path = entry.get("path")
+                entry_dict = cast(JSONDict, entry)
+                file_id = entry_dict.get("file_id") or entry_dict.get("id")
+                content = entry_dict.get("content")
+                path = entry_dict.get("path")
                 if not (file_id or content or path):
                     continue
                 normalized = {
@@ -259,8 +269,9 @@ async def goated_search(search_query: str) -> dict:
             return
         entries: list[dict] = []
         if isinstance(response, dict):
-            transcript_videos = response.get("transcript_videos")
-            frame_videos = response.get("frame_videos")
+            response_dict = cast(JSONDict, response)
+            transcript_videos = response_dict.get("transcript_videos")
+            frame_videos = response_dict.get("frame_videos")
             if isinstance(transcript_videos, list):
                 entries.extend(transcript_videos)
             if isinstance(frame_videos, list):
@@ -274,11 +285,12 @@ async def goated_search(search_query: str) -> dict:
         for entry in entries:
             if not isinstance(entry, dict):
                 continue
-            chunk_id = entry.get("chunk_id")
-            video_id = entry.get("video_id")
-            file_id = entry.get("file_id") or entry.get("id")
-            content = entry.get("content")
-            path = entry.get("path")
+            entry_dict = cast(JSONDict, entry)
+            chunk_id = entry_dict.get("chunk_id")
+            video_id = entry_dict.get("video_id")
+            file_id = entry_dict.get("file_id") or entry_dict.get("id")
+            content = entry_dict.get("content")
+            path = entry_dict.get("path")
             if not (chunk_id or video_id or file_id or content or path):
                 continue
             normalized = {
@@ -314,7 +326,8 @@ async def goated_search(search_query: str) -> dict:
             return
         items: list[object] = []
         if isinstance(response, dict) and "images" in response:
-            images = response.get("images")
+            response_dict = cast(JSONDict, response)
+            images = response_dict.get("images")
             if isinstance(images, list):
                 items = images
             else:
@@ -322,7 +335,8 @@ async def goated_search(search_query: str) -> dict:
         elif isinstance(response, list):
             for entry in response:
                 if isinstance(entry, dict) and "images" in entry:
-                    images = entry.get("images")
+                    entry_dict = cast(JSONDict, entry)
+                    images = entry_dict.get("images")
                     if isinstance(images, list):
                         items.extend(images)
                     continue
@@ -331,20 +345,22 @@ async def goated_search(search_query: str) -> dict:
             items = [response]
 
         for item in items:
-            if (
-                isinstance(item, dict)
-                and "text" in item
-                and isinstance(item.get("text"), list)
-            ):
-                entries = item.get("text", [])
+            if isinstance(item, dict) and "text" in item:
+                item_dict = cast(JSONDict, item)
+                text_val = item_dict.get("text")
+                if isinstance(text_val, list):
+                    entries = text_val
+                else:
+                    entries = [item]
             else:
                 entries = [item]
             for entry in entries:
                 if not isinstance(entry, dict):
                     continue
-                image_id = entry.get("image_id") or entry.get("id")
-                content = entry.get("content")
-                path = entry.get("path")
+                entry_dict = cast(JSONDict, entry)
+                image_id = entry_dict.get("image_id") or entry_dict.get("id")
+                content = entry_dict.get("content")
+                path = entry_dict.get("path")
                 if not (image_id or content or path):
                     continue
                 normalized = {

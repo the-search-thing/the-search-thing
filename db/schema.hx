@@ -3,18 +3,23 @@
 // not sure if a limit like that exists
 N::File {
     INDEX file_id: String,
+    INDEX content_hash: String,
     content: String,
     path: String
 }
 
 N::Image {
     INDEX image_id: String,
+    INDEX content_hash: String,
+
     content: String,
     path: String
 }
 
 N::Video {
     INDEX video_id: String,
+    INDEX content_hash: String,
+
     no_of_chunks: U8,
     path: String
 }

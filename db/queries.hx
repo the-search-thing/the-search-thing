@@ -1,25 +1,28 @@
 // create file node
-QUERY CreateFile (file_id: String, content: String, path:String) =>
+QUERY CreateFile (file_id: String, content_hash: String, content: String, path:String) =>
     file <- AddN<File>({
     file_id: file_id,
+    content_hash: content_hash,
     content: content,
     path: path,
     })
     RETURN file
 
 // create image node
-QUERY CreateImage (image_id: String, content: String, path:String) =>
+QUERY CreateImage (image_id: String, content_hash: String, content: String, path:String) =>
     image <- AddN<Image>({
         image_id: image_id,
+        content_hash: content_hash,
         content: content,
         path: path,
     })
     RETURN image
 
 // create a video
-QUERY CreateVideo (video_id: String, no_of_chunks: U8, path:String) =>
+QUERY CreateVideo (video_id: String, content_hash: String, no_of_chunks: U8, path:String) =>
     video <- AddN<Video>({
         video_id: video_id,
+        content_hash: content_hash,
         no_of_chunks: no_of_chunks,
         path: path
     })
@@ -163,50 +166,6 @@ QUERY SearchFrameSummaryCombined(search_string: String, keywords: String) =>
     combined_results <- vec_results::RerankRRF(k: 60)::RANGE(0, 10)
     RETURN combined_results
 
-// get all videos
-QUERY GetAllVideos() =>
-    videos <- N<Video>
-    RETURN videos
-
-QUERY GetAllFiles() =>
-    files <- N<File>
-    RETURN files
-
-// get all chunks
-QUERY GetAllChunks()=>
-    chunks <- N<Chunk>
-    RETURN chunks
-
-// get chunks by id
-QUERY GetChunksByChunkID(chunk_id:String)=>
-    chunk <- N<Chunk>({chunk_id: chunk_id})
-    RETURN chunk
-
-// delete all videos
-QUERY DeleteAllVideos() =>
-    videos <- N<Video>
-    DROP N<Video>
-    RETURN "Deleted all video nodes"
-
-QUERY DeleteAllChunks() =>
-    chunks <- N<Chunk>
-    DROP N<Chunk>
-    RETURN "deleted all chunk nodes"
-
-QUERY DeleteOutgoingNeighbours() =>
-    videos <- N<Video>
-    DROP N<Video>::Out<Has>
-    RETURN "Removed outgoing neighbours"
-
-QUERY DeleteOutgoingNeighboursChunkT() =>
-    chunk <- N<Chunk>
-    DROP N<Chunk>::Out<HasTranscriptEmbeddings>
-    RETURN "removed has trasncript emebddings neighbours"
-
-QUERY DeleteOutgoingNeighboursChunkF() =>
-    chunk <- N<Chunk>
-    DROP N<Chunk>::Out<HasFrameSummaryEmbeddings>
-    RETURN "removed has frame summary emebddings neighbours"
 
 // updating nodes
 // https://docs.helix-db.com/documentation/hql/updating
@@ -287,8 +246,8 @@ QUERY TestTranscriptSearch(search_text: String) =>
 QUERY TestFrameSearch(search_text: String) =>
     results <- SearchV<FrameSummaryEmbeddings>(Embed(search_text), 10)
     RETURN results
-=======
->>>>>>> a9aea95c5610f6fd5d649b3492ff48d6d2bb19fe
+
+
 // last resort is to have a single vector type for all fields
 
 // combined search
@@ -303,3 +262,67 @@ QUERY CombinedSearch(search_text: String) =>
     frame_videos <- frames::In<HasFrameSummaryEmbeddings>::In<Has>
 
     RETURN transcripts, frames, transcript_videos, frame_videos
+
+
+
+
+
+
+// get all videos
+QUERY GetAllVideos() =>
+    videos <- N<Video>
+    RETURN videos
+
+QUERY GetAllFiles() =>
+    files <- N<File>
+    RETURN files
+
+// get all chunks
+QUERY GetAllChunks()=>
+    chunks <- N<Chunk>
+    RETURN chunks
+
+// get chunks by id
+QUERY GetChunksByChunkID(chunk_id:String)=>
+    chunk <- N<Chunk>({chunk_id: chunk_id})
+    RETURN chunk
+
+// delete all videos
+QUERY DeleteAllVideos() =>
+    videos <- N<Video>
+    DROP N<Video>
+    RETURN "Deleted all video nodes"
+
+QUERY DeleteAllChunks() =>
+    chunks <- N<Chunk>
+    DROP N<Chunk>
+    RETURN "deleted all chunk nodes"
+
+QUERY DeleteOutgoingNeighbours() =>
+    videos <- N<Video>
+    DROP N<Video>::Out<Has>
+    RETURN "Removed outgoing neighbours"
+
+QUERY DeleteOutgoingNeighboursChunkT() =>
+    chunk <- N<Chunk>
+    DROP N<Chunk>::Out<HasTranscriptEmbeddings>
+    RETURN "removed has trasncript emebddings neighbours"
+
+QUERY DeleteOutgoingNeighboursChunkF() =>
+    chunk <- N<Chunk>
+    DROP N<Chunk>::Out<HasFrameSummaryEmbeddings>
+    RETURN "removed has frame summary emebddings neighbours"
+
+
+
+QUERY GetFileByHash(content_hash: String)=>
+    file <- N<File>({content_hash: content_hash})
+    RETURN file
+
+QUERY GetImageByHash(content_hash: String)=>
+    image <- N<Image>({content_hash: content_hash})
+    RETURN image
+
+QUERY GetVideoByHash(content_hash: String)=>
+    video <- N<Video>({content_hash: content_hash})
+    RETURN video

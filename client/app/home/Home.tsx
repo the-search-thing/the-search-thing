@@ -14,6 +14,7 @@ export default function Home() {
   const [hasSearched, setHasSearched] = useState(false) //temporary logic (pls remove in the future :pray:)
   const [isLoading, setIsLoading] = useState(false)
   const [awaitingIndexing, setAwaitingIndexing] = useState(false)
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null)
   const [pressedEnter, setPressedEnter] = useState(0)
 
   const handleSearch = async () => {
@@ -43,6 +44,7 @@ export default function Home() {
             setQuery(e.target.value)
             setHasSearched(false)
             setAwaitingIndexing(false)
+            setCurrentJobId(null)
             setPressedEnter(0)
           }}
           placeholder="Search for files or folders…"
@@ -70,6 +72,8 @@ export default function Home() {
             query={query}
             hasSearched={hasSearched}
             awaitingIndexing={awaitingIndexing}
+            currentJobId={currentJobId}
+            setCurrentJobId={setCurrentJobId}
             onIndexingCancelled={() => setAwaitingIndexing(false)}
           />
         )}
@@ -82,7 +86,12 @@ export default function Home() {
           'px-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
         )}
       >
-        <Footer />
+        <Footer
+          onIndexStarted={(jobId) => {
+            setCurrentJobId(jobId)
+            setAwaitingIndexing(true)
+          }}
+        />
       </div>
     </div>
   )

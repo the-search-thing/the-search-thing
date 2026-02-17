@@ -17,6 +17,13 @@ export const registerSearchHandlers = () => {
     return { success: response.data.success, job_id: response.data.job_id }
   })
 
+  handle('index-status', async (jobId: string) => {
+    const response = await axios.get('http://localhost:8000/api/index/status', {
+      params: { job_id: jobId },
+    })
+    return response.data
+  })
+
   // System operations
   handle('open-file-dialog', async () => {
     const result = await dialog.showOpenDialog({

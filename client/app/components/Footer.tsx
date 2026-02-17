@@ -3,12 +3,14 @@ import { useConveyor } from '../hooks/use-conveyor'
 import { Button } from './ui/button'
 import about from '@/resources/about.svg'
 import enter from '@/resources/enter.svg'
+import { IndexJobStatus } from '../types/types'
 
 export default function Footer() {
   const search = useConveyor('search')
   const [isIndexing, setIsIndexing] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [isPopoverOpen, setIsPopoverOpen] = useState(false)
+  const [jobStatus, setJobStatus] = useState<IndexJobStatus | null>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
 
   // Close popover when clicking outside

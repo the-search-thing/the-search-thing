@@ -49,6 +49,9 @@ const Results: React.FC<
 }) => {
   const [selectedItem, setSelectedItem] = useState<ResultItem | null>(null)
   const [jobStatus, setJobStatus] = useState<IndexJobStatus | null>(null)
+  const [isIndexing, setIsIndexing] = useState(false)
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null)
+  const [dirIndexed, setDirIndexed] = useState<string | null>(null)
   const [hasInitiatedIndexing, setHasInitiatedIndexing] = useState(false)
   const hasOpenedDialogRef = useRef(false)
   const search = useConveyor('search')
@@ -116,9 +119,14 @@ const Results: React.FC<
     if (!res || res.length === 0) {
       // User cancelled the file dialog - reset the awaiting state
       onIndexingCancelled?.()
+      setHasInitiatedIndexing(false)
+      hasOpenedDialogRef.current = false
       return
     }
 
+    setIsIndexing(true)
+    const filename = getFileName(res)
+    setDirIndexed(filename)
     try {
       const indexRes = await search.index(res)
       console.error('Index response:', indexRes)
@@ -176,6 +184,9 @@ const Results: React.FC<
             <div className="mt-1 text-xs text-emerald-400">Indexing complete</div>
           )}
         </div>
+      <div className="flex flex-col w-full h-full items-center justify-center p-6 gap-4">
+        <div className="text-zinc-300 text-lg font-sm">Indexing ...</div>
+        {currentJobId && <div className="text-zinc-500 text-sm font-mono">Directory: {dirIndexed}</div>}
       </div>
     )
   }

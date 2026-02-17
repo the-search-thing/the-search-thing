@@ -32,21 +32,14 @@ type IndexJobStatus = {
   finished_at: string | null
 }
 
-const Results: React.FC<ResultProps & {
-  currentJobId: string | null
-  setCurrentJobId: (jobId: string | null) => void
-  onIndexingCancelled?: () => void
-}> = ({
-  searchResults,
-  query,
-  hasSearched,
-  awaitingIndexing,
-  currentJobId,
-  setCurrentJobId,
-  onIndexingCancelled,
-}) => {
+const Results: React.FC<
+  ResultProps & {
+    currentJobId: string | null
+    setCurrentJobId: (jobId: string | null) => void
+    onIndexingCancelled?: () => void
+  }
+> = ({ searchResults, query, hasSearched, awaitingIndexing, currentJobId, setCurrentJobId, onIndexingCancelled }) => {
   const [selectedItem, setSelectedItem] = useState<ResultItem | null>(null)
-  const [isIndexing, setIsIndexing] = useState(false)
   const [jobStatus, setJobStatus] = useState<IndexJobStatus | null>(null)
   const [dirIndexed, setDirIndexed] = useState<string | null>(null)
   const [hasInitiatedIndexing, setHasInitiatedIndexing] = useState(false)
@@ -63,12 +56,12 @@ const Results: React.FC<ResultProps & {
     if (!hasSearched) {
       setHasInitiatedIndexing(false)
       setCurrentJobId(null)
-      setIsIndexing(false)
+
       setJobStatus(null)
       hasOpenedDialogRef.current = false
     }
-  }, [hasSearched, query])
-  
+  }, [hasSearched, query, setCurrentJobId])
+
   useEffect(() => {
     if (!currentJobId) {
       setJobStatus(null)
@@ -122,7 +115,6 @@ const Results: React.FC<ResultProps & {
       return
     }
 
-    setIsIndexing(true)
     const filename = getFileName(res)
     setDirIndexed(filename)
     try {
@@ -133,18 +125,11 @@ const Results: React.FC<ResultProps & {
       }
     } catch (error) {
       console.error('Error indexing files:', error)
-    } finally {
-      setIsIndexing(false)
     }
-  }, [search, onIndexingCancelled])
+  }, [search, onIndexingCancelled, setCurrentJobId])
 
   useEffect(() => {
-    if (
-      awaitingIndexing &&
-      !currentJobId &&
-      !hasInitiatedIndexing &&
-      !hasOpenedDialogRef.current
-    ) {
+    if (awaitingIndexing && !currentJobId && !hasInitiatedIndexing && !hasOpenedDialogRef.current) {
       //temporary guardrail for development strict mode
       hasOpenedDialogRef.current = true
       setHasInitiatedIndexing(true)
@@ -152,14 +137,7 @@ const Results: React.FC<ResultProps & {
     }
   }, [awaitingIndexing, currentJobId, hasInitiatedIndexing, handleStartIndexing])
 
-  if (awaitingIndexing) {
-    return (
-      <div className="flex flex-col w-full h-full items-center justify-center p-6 gap-4">
-        <div className="text-zinc-300 text-lg font-sm">Indexing ...</div>
-        {currentJobId && <div className="text-zinc-500 text-sm font-mono">Directory: {dirIndexed}</div>}
-      </div>
-    )
-  }
+  
 
   // Searched but found nothing
   if (hasSearched && allResults.length === 0 && query) {

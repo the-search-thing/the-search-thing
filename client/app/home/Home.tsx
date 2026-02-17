@@ -15,7 +15,6 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [awaitingIndexing, setAwaitingIndexing] = useState(false)
   const [currentJobId, setCurrentJobId] = useState<string | null>(null)
-  const [pressedEnter, setPressedEnter] = useState(0)
   const [hasInteracted, setHasInteracted] = useState(false)
 
   const handleSearch = async () => {
@@ -49,7 +48,6 @@ export default function Home() {
             setHasSearched(false)
             setAwaitingIndexing(false)
             setCurrentJobId(null)
-            setPressedEnter(0)
             setHasInteracted(true)
           }}
           placeholder="Search for files or folders…"
@@ -62,28 +60,6 @@ export default function Home() {
         />
       </div>
 
-      <div
-        className={cn(
-          'flex flex-1 min-h-0',
-          'border-2 border-zinc-700/80 bg-zinc-800/60',
-          'px-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
-        )}
-      >
-        {isLoading ? (
-          <div className="flex items-center justify-center w-full text-zinc-400">Searching...</div>
-        ) : (
-          <Results
-            searchResults={searchResults}
-            query={query}
-            hasSearched={hasSearched}
-            awaitingIndexing={awaitingIndexing}
-            currentJobId={currentJobId}
-            setCurrentJobId={setCurrentJobId}
-            onIndexingCancelled={() => setAwaitingIndexing(false)}
-          />
-        )}
-      </div>
-      
       {hasInteracted ? (
         <div
           className={cn(
@@ -100,6 +76,8 @@ export default function Home() {
               query={query}
               hasSearched={hasSearched}
               awaitingIndexing={awaitingIndexing}
+              currentJobId={currentJobId}
+              setCurrentJobId={setCurrentJobId}
               onIndexingCancelled={() => setAwaitingIndexing(false)}
             />
           )}

@@ -34,6 +34,11 @@ app.whenReady().then(() => {
       createAppWindow()
     }
   })
+  
+  app.on('browser-window-blur', function () {
+    const win = getMainWindow() || null
+    win?.hide()
+  })
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common

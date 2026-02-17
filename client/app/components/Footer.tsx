@@ -126,7 +126,7 @@ export default function Footer() {
       if (e.altKey && e.key.toLowerCase() === 'f') {
         const target = e.target as HTMLElement | null
         const tagName = target?.tagName?.toLowerCase()
-        const isEditable = tagName === 'input' || tagName === 'textarea' || target?.isContentEditable
+        const isEditable = tagName === 'textarea' || target?.isContentEditable
 
         if (isEditable || isIndexing) return
 

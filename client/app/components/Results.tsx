@@ -151,12 +151,18 @@ const Results: React.FC<
   }, [awaitingIndexing, currentJobId, hasInitiatedIndexing, handleStartIndexing])
 
   if (awaitingIndexing) {
-    const textProgress =
-      jobStatus && jobStatus.text_found > 0
-        ? Math.min(100, Math.round((jobStatus.text_indexed / jobStatus.text_found) * 100))
-        : null
+    const totalFound =
+      (jobStatus?.text_found ?? 0) + (jobStatus?.video_found ?? 0) + (jobStatus?.image_found ?? 0)
+    const totalIndexed =
+      (jobStatus?.text_indexed ?? 0) + (jobStatus?.video_indexed ?? 0) + (jobStatus?.image_indexed ?? 0)
+    const overallProgress =
+      jobStatus && totalFound > 0 ? Math.min(100, Math.round((totalIndexed / totalFound) * 100)) : null
+    const progressLabel =
+      jobStatus && (jobStatus.video_found > 0 || jobStatus.image_found > 0)
+        ? 'Overall progress'
+        : 'Text indexing progress'
     const statusText = jobStatus
-      ? `${jobStatus.phase} • text ${jobStatus.text_indexed}/${jobStatus.text_found} • videos ${jobStatus.video_indexed}/${jobStatus.video_found} • images ${jobStatus.image_indexed}/${jobStatus.image_found}`
+      ? `${progressLabel} • ${jobStatus.phase} • text ${jobStatus.text_indexed}/${jobStatus.text_found} • videos ${jobStatus.video_indexed}/${jobStatus.video_found} • images ${jobStatus.image_indexed}/${jobStatus.image_found}`
       : 'Waiting for status...'
 
     return (
@@ -165,10 +171,10 @@ const Results: React.FC<
         {currentJobId && <div className="text-zinc-500 text-sm font-mono">Job ID: {currentJobId}</div>}
         <div className="w-full max-w-xl">
           <div className="h-2 w-full rounded-full bg-zinc-800 overflow-hidden">
-            {textProgress === null ? (
+            {overallProgress === null ? (
               <div className="h-full w-1/3 bg-zinc-500 animate-pulse" />
             ) : (
-              <div className="h-full bg-zinc-500" style={{ width: `${textProgress}%` }} />
+              <div className="h-full bg-zinc-500" style={{ width: `${overallProgress}%` }} />
             )}
           </div>
           <div className="mt-2 text-xs text-zinc-500">{statusText}</div>

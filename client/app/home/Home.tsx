@@ -14,19 +14,20 @@ export default function Home() {
   const [hasSearched, setHasSearched] = useState(false) //temporary logic (pls remove in the future :pray:)
   const [isLoading, setIsLoading] = useState(false)
   const [awaitingIndexing, setAwaitingIndexing] = useState(false)
-  const [pressedEnter, setPressedEnter] = useState(0)
 
   const handleSearch = async () => {
+    const lastResultsEmpty = (searchResults?.results?.length ?? 0) === 0
+
+    if (hasSearched && lastResultsEmpty) {
+      setAwaitingIndexing(true)
+      return
+    }
+
     setIsLoading(true)
     try {
       const res = await search.search(query)
       setSearchResults(res)
       setHasSearched(true)
-      const newPressedEnter = pressedEnter + 1
-      setPressedEnter(newPressedEnter)
-      if (newPressedEnter >= 2 && (res?.results?.length ?? 0) === 0) {
-        setAwaitingIndexing(true)
-      }
     } catch (error) {
       console.error('Search failed:', error)
     } finally {
@@ -43,7 +44,6 @@ export default function Home() {
             setQuery(e.target.value)
             setHasSearched(false)
             setAwaitingIndexing(false)
-            setPressedEnter(0)
           }}
           placeholder="Search for files or folders…"
           onKeyDown={(e) => {

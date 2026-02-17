@@ -38,15 +38,7 @@ const Results: React.FC<
     setCurrentJobId: (jobId: string | null) => void
     onIndexingCancelled?: () => void
   }
-> = ({
-  searchResults,
-  query,
-  hasSearched,
-  awaitingIndexing,
-  currentJobId,
-  setCurrentJobId,
-  onIndexingCancelled,
-}) => {
+> = ({ searchResults, query, hasSearched, awaitingIndexing, currentJobId, setCurrentJobId, onIndexingCancelled }) => {
   const [selectedItem, setSelectedItem] = useState<ResultItem | null>(null)
   const [jobStatus, setJobStatus] = useState<IndexJobStatus | null>(null)
   const [hasInitiatedIndexing, setHasInitiatedIndexing] = useState(false)
@@ -136,12 +128,7 @@ const Results: React.FC<
   }, [currentJobId, search, onIndexingCancelled])
 
   useEffect(() => {
-    if (
-      awaitingIndexing &&
-      !currentJobId &&
-      !hasInitiatedIndexing &&
-      !hasOpenedDialogRef.current
-    ) {
+    if (awaitingIndexing && !currentJobId && !hasInitiatedIndexing && !hasOpenedDialogRef.current) {
       //temporary guardrail for development strict mode
       hasOpenedDialogRef.current = true
       setHasInitiatedIndexing(true)
@@ -152,10 +139,7 @@ const Results: React.FC<
   if (awaitingIndexing) {
     const textProgress =
       jobStatus && jobStatus.text_found > 0
-        ? Math.min(
-            100,
-            Math.round((jobStatus.text_indexed / jobStatus.text_found) * 100)
-          )
+        ? Math.min(100, Math.round((jobStatus.text_indexed / jobStatus.text_found) * 100))
         : null
     const statusText = jobStatus
       ? `${jobStatus.phase} • text ${jobStatus.text_indexed}/${jobStatus.text_found} • videos ${jobStatus.video_indexed}/${jobStatus.video_found} • images ${jobStatus.image_indexed}/${jobStatus.image_found}`
@@ -177,9 +161,7 @@ const Results: React.FC<
           {jobStatus?.status === 'failed' && (
             <div className="mt-1 text-xs text-red-400">{jobStatus.error || 'Indexing failed'}</div>
           )}
-          {jobStatus?.status === 'completed' && (
-            <div className="mt-1 text-xs text-emerald-400">Indexing complete</div>
-          )}
+          {jobStatus?.status === 'completed' && <div className="mt-1 text-xs text-emerald-400">Indexing complete</div>}
         </div>
       </div>
     )

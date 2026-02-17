@@ -17,6 +17,7 @@ const Results: React.FC<ResultProps & { onIndexingCancelled?: () => void }> = ({
   const [selectedItem, setSelectedItem] = useState<ResultItem | null>(null)
   const [isIndexing, setIsIndexing] = useState(false)
   const [currentJobId, setCurrentJobId] = useState<string | null>(null)
+  const [dirIndexed, setDirIndexed] = useState<string | null>(null)
   const [hasInitiatedIndexing, setHasInitiatedIndexing] = useState(false)
   const hasOpenedDialogRef = useRef(false)
   const search = useConveyor('search')
@@ -62,6 +63,8 @@ const Results: React.FC<ResultProps & { onIndexingCancelled?: () => void }> = ({
     }
 
     setIsIndexing(true)
+    const filename = getFileName(res)
+    setDirIndexed(filename)
     try {
       const indexRes = await search.index(res)
       console.error('Index response:', indexRes)
@@ -87,8 +90,8 @@ const Results: React.FC<ResultProps & { onIndexingCancelled?: () => void }> = ({
   if (awaitingIndexing) {
     return (
       <div className="flex flex-col w-full h-full items-center justify-center p-6 gap-4">
-        <div className="text-zinc-300 text-lg font-sm">Indexing directories...</div>
-        {currentJobId && <div className="text-zinc-500 text-sm font-mono">Job ID: {currentJobId}</div>}
+        <div className="text-zinc-300 text-lg font-sm">Indexing ...</div>
+        {currentJobId && <div className="text-zinc-500 text-sm font-mono">Directory: {dirIndexed}</div>}
       </div>
     )
   }

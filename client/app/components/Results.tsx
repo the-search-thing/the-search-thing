@@ -81,7 +81,8 @@ const Results: React.FC<
     const fetchStatus = async () => {
       try {
         const status = await search.indexStatus(currentJobId)
-        if (!isActive) return
+    let intervalId: ReturnType<typeof setInterval> | undefined
+    const fetchStatus = async () => {
         setJobStatus(status)
         if (status.status === 'completed' || status.status === 'failed') {
           clearInterval(intervalId)

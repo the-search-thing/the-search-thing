@@ -137,7 +137,105 @@ const Results: React.FC<
     }
   }, [awaitingIndexing, currentJobId, hasInitiatedIndexing, handleStartIndexing])
 
-  
+  if (awaitingIndexing) {
+    const phaseLabels: Record<string, string> = {
+      scan_text: 'Scanning text files',
+      index_text: 'Indexing text files',
+      scan_video: 'Scanning videos',
+      index_video: 'Indexing videos',
+      scan_image: 'Scanning images',
+      index_image: 'Indexing images',
+      done: 'Done',
+    }
+
+    const progressSection = (label: string, found: number, indexed: number, errors: number, skipped: number) => {
+      const total = found || 1
+      const pct = found > 0 ? Math.round((indexed / total) * 100) : 0
+      if (found === 0 && indexed === 0) return null
+      return (
+        <div className="w-full">
+          <div className="flex justify-between text-xs text-zinc-400 mb-1">
+            <span>{label}</span>
+            <span>
+              {indexed}/{found}
+              {errors > 0 && <span className="text-red-400 ml-1">({errors} errors)</span>}
+              {skipped > 0 && <span className="text-yellow-400 ml-1">({skipped} skipped)</span>}
+            </span>
+          </div>
+          <div className="w-full h-1.5 bg-zinc-700 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-blue-500 rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex flex-col w-full h-full items-center justify-center p-6 gap-5">
+        {/* Spinner + phase label */}
+        <div className="flex items-center gap-3">
+          {(!jobStatus || jobStatus.status === 'running') && (
+            <svg className="animate-spin h-5 w-5 text-blue-400" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          )}
+          <div className="text-zinc-200 text-lg font-medium">
+            {jobStatus ? phaseLabels[jobStatus.phase] || jobStatus.phase : 'Starting indexing…'}
+          </div>
+        </div>
+
+        {currentJobId && dirIndexed && <div className="text-zinc-500 text-xs font-mono">Directory: {dirIndexed}</div>}
+
+        {/* Progress bars */}
+        {jobStatus && (
+          <div className="flex flex-col gap-3 w-full max-w-sm">
+            {progressSection(
+              'Text files',
+              jobStatus.text_found,
+              jobStatus.text_indexed,
+              jobStatus.text_errors,
+              jobStatus.text_skipped
+            )}
+            {progressSection(
+              'Videos',
+              jobStatus.video_found,
+              jobStatus.video_indexed,
+              jobStatus.video_errors,
+              jobStatus.video_skipped
+            )}
+            {progressSection(
+              'Images',
+              jobStatus.image_found,
+              jobStatus.image_indexed,
+              jobStatus.image_errors,
+              jobStatus.image_skipped
+            )}
+
+            {/* Status message */}
+            {jobStatus.message && <div className="text-zinc-400 text-xs text-center mt-1">{jobStatus.message}</div>}
+
+            {/* Error */}
+            {jobStatus.error && (
+              <div className="text-red-400 text-xs text-center mt-1 bg-red-950/30 rounded px-3 py-2">
+                {jobStatus.error}
+              </div>
+            )}
+
+            {/* Completed / failed badge */}
+            {jobStatus.status === 'completed' && (
+              <div className="text-green-400 text-sm text-center mt-2 font-medium">Indexing complete!</div>
+            )}
+            {jobStatus.status === 'failed' && (
+              <div className="text-red-400 text-sm text-center mt-2 font-medium">Indexing failed</div>
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }
 
   // Searched but found nothing
   if (hasSearched && allResults.length === 0 && query) {

@@ -1,3 +1,4 @@
+import calendar
 import threading
 import time
 from typing import Any
@@ -7,13 +8,34 @@ from typing import Any
 
 _job_store_lock = threading.Lock()
 _job_store: dict[str, dict[str, Any]] = {}
+JOB_RETENTION_SECONDS = 6 * 60 * 60
 
 
 def _now_iso() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
+def _parse_iso(iso_value: str) -> float | None:
+    try:
+        return calendar.timegm(time.strptime(iso_value, "%Y-%m-%dT%H:%M:%SZ"))
+    except ValueError:
+        return None
+
+
+def _prune_jobs() -> None:
+    cutoff = time.time() - JOB_RETENTION_SECONDS
+    with _job_store_lock:
+        for job_id, record in list(_job_store.items()):
+            finished_at = record.get("finished_at")
+            if not finished_at:
+                continue
+            finished_epoch = _parse_iso(finished_at)
+            if finished_epoch is not None and finished_epoch < cutoff:
+                del _job_store[job_id]
+
+
 def create_job(job_id: str, dir_path: str, batch_size: int) -> dict[str, Any]:
+    _prune_jobs()
     record = {
         "job_id": job_id,
         "dir": dir_path,
@@ -44,6 +66,7 @@ def create_job(job_id: str, dir_path: str, batch_size: int) -> dict[str, Any]:
 
 
 def update_job(job_id: str, **fields: Any) -> dict[str, Any] | None:
+    _prune_jobs()
     with _job_store_lock:
         record = _job_store.get(job_id)
         if record is None:
@@ -74,6 +97,7 @@ def fail_job(job_id: str, error: str) -> None:
 
 
 def get_job(job_id: str) -> dict[str, Any] | None:
+    _prune_jobs()
     with _job_store_lock:
         record = _job_store.get(job_id)
         return dict(record) if record is not None else None

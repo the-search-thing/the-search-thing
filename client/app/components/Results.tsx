@@ -43,6 +43,7 @@ const Results: React.FC<
   const [jobStatus, setJobStatus] = useState<IndexJobStatus | null>(null)
   const [hasInitiatedIndexing, setHasInitiatedIndexing] = useState(false)
   const hasOpenedDialogRef = useRef(false)
+  const intervalRef = useRef<number | null>(null)
   const search = useConveyor('search')
 
   const allResults = searchResults?.results || []
@@ -58,11 +59,15 @@ const Results: React.FC<
       setJobStatus(null)
       hasOpenedDialogRef.current = false
     }
-  }, [hasSearched, query])
+  }, [hasSearched, query, setCurrentJobId])
 
   useEffect(() => {
     if (!currentJobId) {
       setJobStatus(null)
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
       return
     }
 
@@ -73,7 +78,10 @@ const Results: React.FC<
         if (!isActive) return
         setJobStatus(status)
         if (status.status === 'completed' || status.status === 'failed') {
-          clearInterval(intervalId)
+          if (intervalRef.current !== null) {
+            clearInterval(intervalRef.current)
+            intervalRef.current = null
+          }
         }
       } catch (error) {
         console.error('Error fetching index status:', error)
@@ -81,10 +89,16 @@ const Results: React.FC<
     }
 
     fetchStatus()
-    const intervalId = window.setInterval(fetchStatus, 1500)
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current)
+    }
+    intervalRef.current = window.setInterval(fetchStatus, 1500)
     return () => {
       isActive = false
-      clearInterval(intervalId)
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
     }
   }, [currentJobId, search])
 

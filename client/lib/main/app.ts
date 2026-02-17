@@ -6,12 +6,18 @@ import { registerWindowHandlers } from '@/lib/conveyor/handlers/window-handler'
 import { registerAppHandlers } from '@/lib/conveyor/handlers/app-handler'
 import { registerSearchHandlers } from '@/lib/conveyor/handlers/search-handler'
 
-export function createAppWindow(): void {
+let mainWindow: BrowserWindow | null = null
+
+export function getMainWindow() {
+  return mainWindow
+}
+
+export function createAppWindow(): BrowserWindow {
   // Register custom protocol for resources
   registerResourcesProtocol()
 
   // Create the main window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 900,
     height: 470,
     show: false,
@@ -34,12 +40,11 @@ export function createAppWindow(): void {
   registerSearchHandlers()
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+    mainWindow?.show()
   })
-
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
+  
+  mainWindow.on('closed', () => {
+    mainWindow = null
   })
 
   // HMR for renderer base on electron-vite cli.
@@ -49,4 +54,6 @@ export function createAppWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+  
+  return mainWindow
 }

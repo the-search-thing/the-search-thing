@@ -3,15 +3,33 @@ import { createContext, useContext, useState, ReactNode } from 'react'
 interface AppContextType {
   isIndexed: boolean
   setIsIndexed: (value: boolean) => void
+  awaitingIndexing: boolean
+  setAwaitingIndexing: (value: boolean) => void
+  currentJobId: string | null
+  setCurrentJobId: (id: string | null) => void
+  indexingLocation: 'results' | 'footer' | null
+  setIndexingLocation: (loc: 'results' | 'footer' | null) => void
+  dirIndexed: string | null
+  setDirIndexed: (dir: string | null) => void
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined)
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isIndexed, setIsIndexed] = useState(false)
+  const [awaitingIndexing, setAwaitingIndexing] = useState(false)
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null)
+  const [indexingLocation, setIndexingLocation] = useState<'results' | 'footer' | null>(null)
+  const [dirIndexed, setDirIndexed] = useState<string | null>(null)
 
   return (
-      <AppContext.Provider value={{ isIndexed, setIsIndexed }}>
+    <AppContext.Provider value={{
+      isIndexed, setIsIndexed,
+      awaitingIndexing, setAwaitingIndexing,
+      currentJobId, setCurrentJobId,
+      indexingLocation, setIndexingLocation,
+      dirIndexed, setDirIndexed
+    }}>
         {children}
       </AppContext.Provider>
     )

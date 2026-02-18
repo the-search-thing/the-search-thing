@@ -425,6 +425,31 @@ def _cache_thumbnail(source: Path, dest: Path) -> bool:
         return False
 
 
+async def _cache_video_thumbnail_for_hash(
+    content_hash: str,
+    video_path: str,
+    rust_results: list[str],
+    chunks_root: str,
+    thumbnails_cache_dir: Path,
+) -> Path | None:
+    chunk_thumb = _select_video_thumbnail_path(rust_results, video_path, chunks_root)
+    if not chunk_thumb:
+        return None
+
+    thumb_dest = thumbnails_cache_dir / f"{content_hash}.jpg"
+
+    def _copy_if_exists() -> bool:
+        if not chunk_thumb.exists():
+            return False
+        return _cache_thumbnail(chunk_thumb, thumb_dest)
+
+    copied = await asyncio.to_thread(_copy_if_exists)
+    if copied:
+        add_thumbnail(content_hash)
+        return thumb_dest
+    return None
+
+
 # create video node
 async def create_video(
     video_id: str, content_hash: str, no_of_chunks: int, path: str
@@ -666,14 +691,15 @@ async def indexer_function(
 
         # Cache a representative thumbnail for this video
         if isinstance(content_hash, str) and content_hash:
-            chunk_thumb = _select_video_thumbnail_path(
-                results, video_path, chunks_dir.as_posix()
+            cached_thumb = await _cache_video_thumbnail_for_hash(
+                content_hash,
+                video_path,
+                results,
+                chunks_dir.as_posix(),
+                thumbnails_cache_dir,
             )
-            if chunk_thumb and chunk_thumb.exists():
-                thumb_dest = thumbnails_cache_dir / f"{content_hash}.jpg"
-                if _cache_thumbnail(chunk_thumb, thumb_dest):
-                    add_thumbnail(content_hash)
-                    print(f"[OK] Cached thumbnail: {thumb_dest}")
+            if cached_thumb:
+                print(f"[OK] Cached thumbnail: {cached_thumb}")
 
         # Create video node
         await create_video(video_id, content_hash, num_of_chunks, path=video_path)

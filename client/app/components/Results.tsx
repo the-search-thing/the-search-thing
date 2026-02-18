@@ -267,6 +267,9 @@ const Results: React.FC<ResultsWithContextProps> = ({ searchResults, query, hasS
                     alt=""
                     className="w-full max-h-[360px] object-contain rounded-xl bg-zinc-950"
                   />
+                  <div className="text-zinc-300 whitespace-pre-wrap overflow-y-auto max-h-[calc(100vh-260px)] mt-4">
+                    {selectedItem.content ?? 'No preview available for this result.'}
+                  </div>
                   <div className="text-zinc-400 text-xs mt-3 truncate" title={selectedItem.path}>
                     {selectedItem.path}
                   </div>

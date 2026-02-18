@@ -176,18 +176,8 @@ async def search_images(search_query: str, limit: int = 10) -> dict:
 # async def search_file_vids_together(search_query: str) -> dict:
 async def goated_search(search_query: str) -> dict:
     file_search_params = {"search_text": search_query}
-    file_search_results = get_helix_client().query(
-        "SearchFileEmbeddings", file_search_params
-    )
-
     video_search_params = {"search_text": search_query}
-    video_search_results = get_helix_client().query(
-        "SearchTranscriptAndFrameEmbeddings", video_search_params
-    )
-
     image_search_params = {"search_text": search_query}
-    image_search_results = get_helix_client().query(
-        "SearchImageEmbeddings", image_search_params
     )
 
     file_items: list[dict] = []

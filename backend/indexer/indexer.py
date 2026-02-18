@@ -8,6 +8,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import List, Literal
+import shutil
 
 from dotenv import load_dotenv
 from the_search_thing import rust_indexer  # ty:ignore[unresolved-import]
@@ -556,10 +557,12 @@ async def indexer_function(
     chunks_dir = output_dir / "chunks"
     audio_dir = output_dir / "audio"
     thumbnails_dir = output_dir / "thumbnails"
+    thumbnails_cache_dir = repo_root / "videos" / "thumbnails"
 
     chunks_dir.mkdir(parents=True, exist_ok=True)
     audio_dir.mkdir(parents=True, exist_ok=True)
     thumbnails_dir.mkdir(parents=True, exist_ok=True)
+    thumbnails_cache_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"Indexing {len(video_items)} video(s)")
     print(f"Output dir: {output_dir}")
@@ -589,6 +592,45 @@ async def indexer_function(
         traceback.print_exc()
         raise
 
+    def _matches_video_chunk(
+        chunk_path: str, video_path: str, base_name: str, chunks_root: str
+    ) -> bool:
+        normalized_chunk = chunk_path.replace("\\", "/")
+        normalized_video = video_path.replace("\\", "/")
+        if normalized_chunk == normalized_video:
+            return True
+        if normalized_chunk.startswith(f"{chunks_root}/"):
+            chunk_stem = Path(normalized_chunk).stem
+            return chunk_stem.startswith(f"{base_name}_chunk_")
+        return False
+
+    def _select_video_thumbnail_path(
+        rust_results: list[str], video_path: str, chunks_root: str
+    ) -> Path | None:
+        base_name = Path(video_path).stem
+        for entry in rust_results:
+            try:
+                chunk_path, _audio_path, thumbnails_str = entry.split("|")
+            except ValueError:
+                continue
+            if not _matches_video_chunk(chunk_path, video_path, base_name, chunks_root):
+                continue
+            thumb_paths = [p.strip() for p in thumbnails_str.split(",") if p.strip()]
+            if len(thumb_paths) >= 2:
+                return Path(thumb_paths[1])
+            if thumb_paths:
+                return Path(thumb_paths[0])
+        return None
+
+    def _cache_thumbnail(source: Path, dest: Path) -> bool:
+        try:
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, dest)
+            return True
+        except Exception as exc:
+            print(f"[WARN] Failed to cache thumbnail: {source} -> {dest}: {exc}")
+            return False
+
     # Build in-memory dicts from Rust output (one-time read)
     audio_data: dict[str, bytes] = {}
     thumbnails_data: dict[str, list[bytes]] = {}
@@ -617,6 +659,16 @@ async def indexer_function(
     for item in video_items:
         video_id = item["video_id"]
         video_path = item["path"]
+
+        # Cache a representative thumbnail for this video
+        if isinstance(content_hash, str) and content_hash:
+            chunk_thumb = _select_video_thumbnail_path(
+                results, video_path, chunks_dir.as_posix()
+            )
+            if chunk_thumb and chunk_thumb.exists():
+                thumb_dest = thumbnails_cache_dir / f"{content_hash}.jpg"
+                if _cache_thumbnail(chunk_thumb, thumb_dest):
+                    print(f"[OK] Cached thumbnail: {thumb_dest}")
 
         # Create video node
         await create_video(video_id, content_hash, num_of_chunks, path=video_path)

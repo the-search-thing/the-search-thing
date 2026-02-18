@@ -1,4 +1,4 @@
-import asyncio
+import asyncio 
 import re
 import sys
 
@@ -173,22 +173,38 @@ async def search_images(search_query: str, limit: int = 10) -> dict:
     return {"response": helix_response, "results": results, "query": search_query}
 
 
-# async def search_file_vids_together(search_query: str) -> dict:
 async def goated_search(search_query: str) -> dict:
     file_search_params = {"search_text": search_query}
-    file_search_results = get_helix_client().query(
-        "SearchFileEmbeddings", file_search_params
-    )
-
     video_search_params = {"search_text": search_query}
-    video_search_results = get_helix_client().query(
-        "SearchTranscriptAndFrameEmbeddings", video_search_params
+    image_search_params = {"search_text": search_query}
+    helix_client = get_helix_client()
+
+    (
+        file_search_results,
+        video_search_results,
+        image_search_results,
+    ) = await asyncio.gather(
+        asyncio.to_thread(
+            helix_client.query, "SearchFileEmbeddings", file_search_params
+        ),
+        asyncio.to_thread(
+            helix_client.query,
+            "SearchTranscriptAndFrameEmbeddings",
+            video_search_params,
+        ),
+        asyncio.to_thread(
+            helix_client.query, "SearchImageEmbeddings", image_search_params
+        ),
+        return_exceptions=True,
     )
 
-    image_search_params = {"search_text": search_query}
-    image_search_results = get_helix_client().query(
-        "SearchImageEmbeddings", image_search_params
-    )
+    for label, result in (
+        ("file", file_search_results),
+        ("video", video_search_results),
+        ("image", image_search_results),
+    ):
+        if isinstance(result, BaseException):
+            print(f"{label} search failed: {result}")
 
     file_items: list[dict] = []
     video_items: list[dict] = []
@@ -387,9 +403,12 @@ async def goated_search(search_query: str) -> dict:
         image_items.clear()
         image_items.extend(deduped)
 
-    normalize_file_results(file_search_results)
-    normalize_video_results(video_search_results)
-    normalize_image_results(image_search_results)
+    if not isinstance(file_search_results, BaseException):
+        normalize_file_results(file_search_results)
+    if not isinstance(video_search_results, BaseException):
+        normalize_video_results(video_search_results)
+    if not isinstance(image_search_results, BaseException):
+        normalize_image_results(image_search_results)
 
     keywords = re.findall(r"\w+", search_query.lower())
 

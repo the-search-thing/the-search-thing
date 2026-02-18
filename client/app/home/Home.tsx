@@ -6,6 +6,7 @@ import './styles.css'
 import Results from '../components/Results'
 import Footer from '../components/Footer'
 import { SearchResponse } from '../types/types'
+import { useAppContext } from '../AppContext'
 
 export default function Home() {
   const [query, setQuery] = useState('')
@@ -13,9 +14,14 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState<SearchResponse>()
   const [hasSearched, setHasSearched] = useState(false) //temporary logic (pls remove in the future :pray:)
   const [isLoading, setIsLoading] = useState(false)
-  const [awaitingIndexing, setAwaitingIndexing] = useState(false)
+  const { 
+    awaitingIndexing, 
+    setAwaitingIndexing,
+    currentJobId,
+    setIndexingLocation,
+    indexingLocation
+  } = useAppContext()
   const [hasInteracted, setHasInteracted] = useState(false)
-  const [currentJobId, setCurrentJobId] = useState<string | null>(null)
 
   const handleSearch = async () => {
     const lastResultsEmpty = (searchResults?.results?.length ?? 0) === 0
@@ -44,10 +50,17 @@ export default function Home() {
         <Searchbar
           value={query}
           onChange={(e) => {
-            setQuery(e.target.value)
+            const newQuery = e.target.value
+            setQuery(newQuery)
             setHasSearched(false)
             setAwaitingIndexing(false)
             setHasInteracted(true)
+            
+            // If user starts typing a new query and there's an active indexing job in results,
+            // move it to the footer
+            if (currentJobId && indexingLocation === 'results' && newQuery.length > 0) {
+              setIndexingLocation('footer')
+            }
           }}
           placeholder="Search for files or folders…"
           onKeyDown={(e) => {
@@ -74,9 +87,6 @@ export default function Home() {
               searchResults={searchResults}
               query={query}
               hasSearched={hasSearched}
-              awaitingIndexing={awaitingIndexing}
-              currentJobId={currentJobId}
-              setCurrentJobId={setCurrentJobId}
               onIndexingCancelled={() => setAwaitingIndexing(false)}
             />
           )}

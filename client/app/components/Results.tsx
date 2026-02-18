@@ -1,25 +1,44 @@
 import * as React from 'react'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import noFiles from '@/resources/no-files-found.svg'
-import { ResultProps, SearchResultItem, IndexJobStatus } from '../types/types'
+import { ResultProps, SearchResultItem } from '../types/types'
 import * as fileIcons from '@/resources/filetype icons'
 import { useConveyor } from '../hooks/use-conveyor'
+import { useAppContext } from '../AppContext'
 
 type ResultItem = SearchResultItem
 
-const Results: React.FC<
-  ResultProps & {
-    currentJobId: string | null
-    setCurrentJobId: (jobId: string | null) => void
-    onIndexingCancelled?: () => void
-  }
-> = ({ searchResults, query, hasSearched, awaitingIndexing, currentJobId, setCurrentJobId, onIndexingCancelled }) => {
+const phaseLabels: Record<string, string> = {
+  scan_text: 'Scanning text files',
+  index_text: 'Indexing text files',
+  scan_video: 'Scanning videos',
+  index_video: 'Indexing videos',
+  scan_image: 'Scanning images',
+  index_image: 'Indexing images',
+  done: 'Done',
+}
+
+interface ResultsWithContextProps extends ResultProps {
+  onIndexingCancelled?: () => void
+}
+
+const Results: React.FC<ResultsWithContextProps> = ({ searchResults, query, hasSearched, onIndexingCancelled }) => {
   const [selectedItem, setSelectedItem] = useState<ResultItem | null>(null)
-  const [jobStatus, setJobStatus] = useState<IndexJobStatus | null>(null)
-  const [dirIndexed, setDirIndexed] = useState<string | null>(null)
   const [hasInitiatedIndexing, setHasInitiatedIndexing] = useState(false)
   const hasOpenedDialogRef = useRef(false)
   const search = useConveyor('search')
+
+  const {
+    awaitingIndexing,
+    currentJobId,
+    setCurrentJobId,
+    indexingLocation,
+    setIndexingLocation,
+    dirIndexed,
+    setDirIndexed,
+    setAwaitingIndexing,
+    jobStatus,
+  } = useAppContext()
 
   const allResults = searchResults?.results || []
 
@@ -30,40 +49,9 @@ const Results: React.FC<
   useEffect(() => {
     if (!hasSearched) {
       setHasInitiatedIndexing(false)
-      setCurrentJobId(null)
-
-      setJobStatus(null)
       hasOpenedDialogRef.current = false
     }
-  }, [hasSearched, query, setCurrentJobId])
-
-  useEffect(() => {
-    if (!currentJobId) {
-      setJobStatus(null)
-      return
-    }
-
-    let isActive = true
-    const fetchStatus = async () => {
-      try {
-        const status = await search.indexStatus(currentJobId)
-        if (!isActive) return
-        setJobStatus(status)
-        if (status.status === 'completed' || status.status === 'failed') {
-          clearInterval(intervalId)
-        }
-      } catch (error) {
-        console.error('Error fetching index status:', error)
-      }
-    }
-
-    fetchStatus()
-    const intervalId = window.setInterval(fetchStatus, 1500)
-    return () => {
-      isActive = false
-      clearInterval(intervalId)
-    }
-  }, [currentJobId, search])
+  }, [hasSearched, query])
 
   const handleOpen = (filePath: string) => {
     search.openFile(filePath)
@@ -85,23 +73,24 @@ const Results: React.FC<
     if (!res || res.length === 0) {
       // User cancelled the file dialog - reset the awaiting state
       onIndexingCancelled?.()
+      setAwaitingIndexing(false)
       setHasInitiatedIndexing(false)
       hasOpenedDialogRef.current = false
       return
     }
 
-    const filename = getFileName(res)
-    setDirIndexed(filename)
+    setDirIndexed(res)
     try {
       const indexRes = await search.index(res)
       console.error('Index response:', indexRes)
       if (indexRes.success && indexRes.job_id) {
         setCurrentJobId(indexRes.job_id)
+        setIndexingLocation('results')
       }
     } catch (error) {
       console.error('Error indexing files:', error)
     }
-  }, [search, onIndexingCancelled, setCurrentJobId])
+  }, [search, onIndexingCancelled, setCurrentJobId, setIndexingLocation, setDirIndexed, setAwaitingIndexing])
 
   useEffect(() => {
     if (awaitingIndexing && !currentJobId && !hasInitiatedIndexing && !hasOpenedDialogRef.current) {
@@ -112,59 +101,49 @@ const Results: React.FC<
     }
   }, [awaitingIndexing, currentJobId, hasInitiatedIndexing, handleStartIndexing])
 
-  if (awaitingIndexing) {
-    const phaseLabels: Record<string, string> = {
-      scan_text: 'Scanning text files',
-      index_text: 'Indexing text files',
-      scan_video: 'Scanning videos',
-      index_video: 'Indexing videos',
-      scan_image: 'Scanning images',
-      index_image: 'Indexing images',
-      done: 'Done',
-    }
-
-    const progressSection = (label: string, found: number, indexed: number, errors: number, skipped: number) => {
-      const total = found || 1
-      const pct = found > 0 ? Math.round((indexed / total) * 100) : 0
-      if (found === 0 && indexed === 0) return null
-      return (
-        <div className="w-full">
-          <div className="flex justify-between text-xs text-zinc-400 mb-1">
-            <span>{label}</span>
-            <span>
-              {indexed}/{found}
-              {errors > 0 && <span className="text-red-400 ml-1">({errors} errors)</span>}
-              {skipped > 0 && <span className="text-yellow-400 ml-1">({skipped} skipped)</span>}
-            </span>
-          </div>
-          <div className="w-full h-1.5 bg-zinc-700 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-blue-500 rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
+  const progressSection = (label: string, found: number, indexed: number, errors: number, skipped: number) => {
+    const total = found || 1
+    const pct = found > 0 ? Math.round((indexed / total) * 100) : 0
+    if (found === 0 && indexed === 0) return null
+    return (
+      <div className="w-full">
+        <div className="flex justify-between text-xs text-zinc-400 mb-1">
+          <span>{label}</span>
+          <span>
+            {indexed}/{found}
+            {errors > 0 && <span className="text-red-400 ml-1">({errors} errors)</span>}
+            {skipped > 0 && <span className="text-yellow-400 ml-1">({skipped} skipped)</span>}
+          </span>
         </div>
-      )
-    }
+        <div className="w-full h-1.5 bg-zinc-700 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-blue-500 rounded-full transition-all duration-500 ease-out"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
+    )
+  }
 
+  // Show full indexing UI when actively indexing in results view
+  if (indexingLocation === 'results' && awaitingIndexing) {
     return (
       <div className="flex flex-col w-full h-full items-center justify-center p-6 gap-5">
         {/* Spinner + phase label */}
         <div className="flex items-center gap-3">
-          {(!jobStatus || jobStatus.status === 'running') && (
+          {(!jobStatus || (jobStatus.status !== 'completed' && jobStatus.status !== 'failed')) && (
             <svg className="animate-spin h-5 w-5 text-blue-400" viewBox="0 0 24 24" fill="none">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
           )}
           <div className="text-zinc-200 text-lg font-medium">
-            {jobStatus ? phaseLabels[jobStatus.phase] || jobStatus.phase : 'Starting indexing…'}
+            {jobStatus ? phaseLabels[jobStatus.phase] || jobStatus.phase : 'Starting indexing...'}
           </div>
         </div>
 
         {currentJobId && dirIndexed && <div className="text-zinc-500 text-xs font-mono">Directory: {dirIndexed}</div>}
 
-        {/* Progress bars */}
         {jobStatus && (
           <div className="flex flex-col gap-3 w-full max-w-sm">
             {progressSection(

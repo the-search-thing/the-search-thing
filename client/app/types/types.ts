@@ -12,7 +12,6 @@ export interface ResultProps {
   searchResults?: SearchResponse
   query: string
   hasSearched: boolean
-  awaitingIndexing?: boolean
 }
 
 export type IndexJobStatus = {

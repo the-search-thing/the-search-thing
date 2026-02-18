@@ -3,7 +3,6 @@ import { useConveyor } from '../hooks/use-conveyor'
 import { Button } from './ui/button'
 import about from '@/resources/about.svg'
 import enter from '@/resources/enter.svg'
-import { IndexJobStatus } from '../types/types'
 import { useAppContext } from '../AppContext'
 
 const phaseLabels: Record<string, string> = {
@@ -21,7 +20,6 @@ export default function Footer() {
   const [isIndexing, setIsIndexing] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [isPopoverOpen, setIsPopoverOpen] = useState(false)
-  const [jobStatus, setJobStatus] = useState<IndexJobStatus | null>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
   
   const { 
@@ -30,7 +28,9 @@ export default function Footer() {
     indexingLocation, 
     setIndexingLocation,
     setDirIndexed,
-    dirIndexed
+    dirIndexed,
+    jobStatus,
+    setJobStatus
   } = useAppContext()
 
   // Close popover when clicking outside
@@ -71,6 +71,7 @@ export default function Footer() {
               setCurrentJobId(null)
               setIndexingLocation(null)
               setDirIndexed(null)
+              setJobStatus(null)
             }, 3000)
           }
         }
@@ -85,7 +86,7 @@ export default function Footer() {
       isActive = false
       clearInterval(intervalId)
     }
-  }, [currentJobId, search, setCurrentJobId, setIndexingLocation, setDirIndexed])
+  }, [currentJobId, search, setCurrentJobId, setIndexingLocation, setDirIndexed, setJobStatus])
 
   const handleStartIndexing = async () => {
     const res = await search.openFileDialog()

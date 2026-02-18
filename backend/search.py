@@ -178,6 +178,24 @@ async def goated_search(search_query: str) -> dict:
     file_search_params = {"search_text": search_query}
     video_search_params = {"search_text": search_query}
     image_search_params = {"search_text": search_query}
+    helix_client = get_helix_client()
+
+    (
+        file_search_results,
+        video_search_results,
+        image_search_results,
+    ) = await asyncio.gather(
+        asyncio.to_thread(
+            helix_client.query, "SearchFileEmbeddings", file_search_params
+        ),
+        asyncio.to_thread(
+            helix_client.query,
+            "SearchTranscriptAndFrameEmbeddings",
+            video_search_params,
+        ),
+        asyncio.to_thread(
+            helix_client.query, "SearchImageEmbeddings", image_search_params
+        ),
     )
 
     file_items: list[dict] = []

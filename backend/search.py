@@ -1,6 +1,8 @@
-import asyncio 
+import asyncio
+import os
 import re
 import sys
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -307,6 +309,7 @@ async def goated_search(search_query: str) -> dict:
             file_id = entry_dict.get("file_id") or entry_dict.get("id")
             content = entry_dict.get("content")
             path = entry_dict.get("path")
+            content_hash = entry_dict.get("content_hash")
             if not (chunk_id or video_id or file_id or content or path):
                 continue
             normalized = {
@@ -316,6 +319,7 @@ async def goated_search(search_query: str) -> dict:
                 "file_id": file_id,
                 "content": content,
                 "path": path,
+                "content_hash": content_hash,
             }
             video_items.append(normalized)
 
@@ -460,6 +464,19 @@ async def goated_search(search_query: str) -> dict:
             continue
         seen.add(key)
         deduped.append(item)
+
+    repo_root = Path(__file__).resolve().parents[1]
+    thumbnails_dir = repo_root / "videos" / "thumbnails"
+    backend_origin = os.getenv("BACKEND_ORIGIN", "http://localhost:8000")
+
+    for item in deduped:
+        if item.get("label") != "video":
+            continue
+        content_hash = item.get("content_hash")
+        if isinstance(content_hash, str) and content_hash:
+            thumb_path = thumbnails_dir / f"{content_hash}.jpg"
+            if thumb_path.exists():
+                item["thumbnail_url"] = f"{backend_origin}/api/thumbnails/{content_hash}"
 
     return {
         "query": search_query,

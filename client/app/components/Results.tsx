@@ -27,9 +27,9 @@ const Results: React.FC<ResultsWithContextProps> = ({ searchResults, query, hasS
   const [hasInitiatedIndexing, setHasInitiatedIndexing] = useState(false)
   const hasOpenedDialogRef = useRef(false)
   const search = useConveyor('search')
-  
+
   const {
-    awaitingIndexing, 
+    awaitingIndexing,
     currentJobId,
     setCurrentJobId,
     indexingLocation,
@@ -37,7 +37,7 @@ const Results: React.FC<ResultsWithContextProps> = ({ searchResults, query, hasS
     dirIndexed,
     setDirIndexed,
     setAwaitingIndexing,
-    jobStatus
+    jobStatus,
   } = useAppContext()
 
   const allResults = searchResults?.results || []
@@ -79,8 +79,7 @@ const Results: React.FC<ResultsWithContextProps> = ({ searchResults, query, hasS
       return
     }
 
-    const filename = getFileName(res)
-    setDirIndexed(filename)
+    setDirIndexed(res)
     try {
       const indexRes = await search.index(res)
       console.error('Index response:', indexRes)
@@ -132,17 +131,19 @@ const Results: React.FC<ResultsWithContextProps> = ({ searchResults, query, hasS
       <div className="flex flex-col w-full h-full items-center justify-center p-6 gap-5">
         {/* Spinner + phase label */}
         <div className="flex items-center gap-3">
-          <svg className="animate-spin h-5 w-5 text-blue-400" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
+          {(!jobStatus || (jobStatus.status !== 'completed' && jobStatus.status !== 'failed')) && (
+            <svg className="animate-spin h-5 w-5 text-blue-400" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          )}
           <div className="text-zinc-200 text-lg font-medium">
             {jobStatus ? phaseLabels[jobStatus.phase] || jobStatus.phase : 'Starting indexing...'}
           </div>
         </div>
 
         {currentJobId && dirIndexed && <div className="text-zinc-500 text-xs font-mono">Directory: {dirIndexed}</div>}
-        
+
         {jobStatus && (
           <div className="flex flex-col gap-3 w-full max-w-sm">
             {progressSection(

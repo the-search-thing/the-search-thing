@@ -1,11 +1,13 @@
 import asyncio
 import logging
 import os
+import re
 import uuid
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 
 from backend.services.indexing import run_indexing_job
@@ -20,6 +22,9 @@ frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
 PORT = os.getenv("PORT")
 
 app = FastAPI(title="the search thing")
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+THUMBNAILS_DIR = REPO_ROOT / "videos" / "thumbnails"
 
 app.add_middleware(
     CORSMiddleware,  # type: ignore[ arg-type ]
@@ -71,6 +76,18 @@ async def api_search(q: str):
     except Exception as e:
         logger.error("Error searching videos: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/thumbnails/{content_hash}")
+async def get_thumbnail(content_hash: str):
+    if not re.fullmatch(r"[a-fA-F0-9]{64}", content_hash):
+        raise HTTPException(status_code=400, detail="Invalid thumbnail id")
+
+    thumbnail_path = THUMBNAILS_DIR / f"{content_hash}.jpg"
+    if not thumbnail_path.exists():
+        raise HTTPException(status_code=404, detail="Thumbnail not found")
+
+    return FileResponse(str(thumbnail_path), media_type="image/jpeg")
 
 
 if __name__ == "__main__":

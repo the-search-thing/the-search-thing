@@ -233,7 +233,20 @@ const Results: React.FC<ResultsWithContextProps> = ({ searchResults, query, hasS
                 }`}
               >
                 <div className="pr-2">
-                  <img src={fileIcons[getFileExt(result.path).toLowerCase()] || fileIcons.txt} className="w-5 h-5" />
+                  {result.label === 'video' && result.thumbnail_url ? (
+                    <img
+                      src={result.thumbnail_url}
+                      alt=""
+                      className="w-7 h-7 rounded-md object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <img
+                      src={fileIcons[getFileExt(result.path).toLowerCase()] || fileIcons.txt}
+                      className="w-5 h-5"
+                      alt=""
+                    />
+                  )}
                 </div>
                 <div className="text-white truncate" title={result.path}>
                   {getFileName(result.path)}
@@ -247,11 +260,24 @@ const Results: React.FC<ResultsWithContextProps> = ({ searchResults, query, hasS
         <div className="flex-1 h-full ">
           {selectedItem ? (
             <div className="p-4 h-full">
-              <div className="p-5 rounded-2xl min-h-[320px] bg-zinc-900 overflow-hidden">
-                <div className="text-zinc-300 whitespace-pre-wrap overflow-y-auto max-h-[calc(100vh-200px)]">
-                  {selectedItem.content ?? 'No preview available for this result.'}
+              {selectedItem.label === 'video' && selectedItem.thumbnail_url ? (
+                <div className="p-5 rounded-2xl min-h-[320px] bg-zinc-900 overflow-hidden">
+                  <img
+                    src={selectedItem.thumbnail_url}
+                    alt=""
+                    className="w-full max-h-[360px] object-contain rounded-xl bg-zinc-950"
+                  />
+                  <div className="text-zinc-400 text-xs mt-3 truncate" title={selectedItem.path}>
+                    {selectedItem.path}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="p-5 rounded-2xl min-h-[320px] bg-zinc-900 overflow-hidden">
+                  <div className="text-zinc-300 whitespace-pre-wrap overflow-y-auto max-h-[calc(100vh-200px)]">
+                    {selectedItem.content ?? 'No preview available for this result.'}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex items-center justify-center h-full text-zinc-500">

@@ -2,6 +2,7 @@ export interface SearchResultItem {
   label: string
   content?: string | null
   path: string
+  thumbnail_url?: string | null
 }
 
 export interface SearchResponse {

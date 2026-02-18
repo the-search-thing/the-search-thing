@@ -19,7 +19,6 @@ N::Image {
 N::Video {
     INDEX video_id: String,
     INDEX content_hash: String,
-
     no_of_chunks: U8,
     path: String
 }

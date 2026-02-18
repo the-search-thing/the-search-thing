@@ -40,6 +40,7 @@ export const searchIpcSchema = {
           label: z.string(),
           content: z.string().nullable().optional(),
           path: z.string(),
+          thumbnail_url: z.string().nullable().optional(),
         })
       ),
     }),

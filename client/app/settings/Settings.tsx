@@ -6,13 +6,14 @@ export default function Settings() {
   const navigate = useNavigate()
 
   return (
-    <div className="flex flex-col gap-5 h-screen">
-      {/* Header */}
+    <div className="flex gap-5 h-screen">
+
+      {/* Placeholder body */}
       <div
         className={cn(
-          'flex flex-row items-center gap-3 flex-none min-h-[55px]',
-          'bg-zinc-800/60 px-4',
-          'shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
+          'flex flex-1 min-h-0 flex-col items-center justify-center gap-3',
+          'border-2 border-zinc-700/80 bg-zinc-800/60',
+          'px-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
         )}
       >
         <button
@@ -28,19 +29,6 @@ export default function Settings() {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-
-        <SettingsIcon className="h-5 w-5 text-zinc-400" />
-        <span className="text-lg font-medium text-zinc-100">Settings</span>
-      </div>
-
-      {/* Placeholder body */}
-      <div
-        className={cn(
-          'flex flex-1 min-h-0 flex-col items-center justify-center gap-3',
-          'border-2 border-zinc-700/80 bg-zinc-800/60',
-          'px-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
-        )}
-      >
         <SettingsIcon className="h-12 w-12 text-zinc-600" />
         <p className="text-lg text-zinc-400">Settings coming soon</p>
         <p className="text-sm text-zinc-600">This page is a placeholder.</p>

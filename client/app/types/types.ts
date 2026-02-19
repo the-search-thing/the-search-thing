@@ -22,6 +22,8 @@ export interface ResultProps {
   searchResults?: SearchResponse
   query: string
   hasSearched: boolean
+  recentSearches?: SearchHistoryEntry[]
+  onRecentSearchSelect?: (query: string) => void
 }
 
 export type IndexJobStatus = {

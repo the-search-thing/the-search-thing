@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Searchbar } from '../components/ui/searchbar'
 import { useConveyor } from '@/app/hooks/use-conveyor'
 import { cn } from '@/lib/utils'
 import './styles.css'
 import Results from '../components/Results'
 import Footer from '../components/Footer'
-import { SearchResponse } from '../types/types'
+import { SearchHistoryEntry, SearchResponse } from '../types/types'
 import { useAppContext } from '../AppContext'
 
 export default function Home() {
@@ -14,16 +14,33 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState<SearchResponse>()
   const [hasSearched, setHasSearched] = useState(false) //temporary logic (pls remove in the future :pray:)
   const [isLoading, setIsLoading] = useState(false)
-  const { 
-    awaitingIndexing, 
-    setAwaitingIndexing,
-    currentJobId,
-    setIndexingLocation,
-    indexingLocation
-  } = useAppContext()
+  const [recentSearches, setRecentSearches] = useState<SearchHistoryEntry[]>([])
+  const { setAwaitingIndexing, currentJobId, setIndexingLocation, indexingLocation } = useAppContext()
   const [hasInteracted, setHasInteracted] = useState(false)
 
-  const handleSearch = async () => {
+  const refreshRecentSearches = async () => {
+    try {
+      const recent = await search.getRecentSearches(10)
+      setRecentSearches(recent)
+    } catch (error) {
+      console.error('Failed to load recent searches:', error)
+    }
+  }
+
+  useEffect(() => {
+    refreshRecentSearches()
+  }, [])
+
+  const handleSearch = async (nextQuery?: string) => {
+    const effectiveQuery = (nextQuery ?? query).trim()
+    if (!effectiveQuery) {
+      return
+    }
+
+    if (nextQuery !== undefined) {
+      setQuery(effectiveQuery)
+    }
+
     const lastResultsEmpty = (searchResults?.results?.length ?? 0) === 0
     setHasInteracted(true)
 
@@ -34,9 +51,14 @@ export default function Home() {
 
     setIsLoading(true)
     try {
-      const res = await search.search(query)
+      const res = await search.search(effectiveQuery)
       setSearchResults(res)
       setHasSearched(true)
+      await search.addSearchHistory({
+        search_string: effectiveQuery,
+        timestamp: Date.now(),
+      })
+      refreshRecentSearches()
     } catch (error) {
       console.error('Search failed:', error)
     } finally {
@@ -55,7 +77,7 @@ export default function Home() {
             setHasSearched(false)
             setAwaitingIndexing(false)
             setHasInteracted(true)
-            
+
             // If user starts typing a new query and there's an active indexing job in results,
             // move it to the footer
             if (currentJobId && indexingLocation === 'results' && newQuery.length > 0) {
@@ -87,6 +109,8 @@ export default function Home() {
               searchResults={searchResults}
               query={query}
               hasSearched={hasSearched}
+              recentSearches={recentSearches}
+              onRecentSearchSelect={(searchQuery) => handleSearch(searchQuery)}
               onIndexingCancelled={() => setAwaitingIndexing(false)}
             />
           )}

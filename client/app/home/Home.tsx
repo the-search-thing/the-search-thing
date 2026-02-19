@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Settings } from 'lucide-react'
 import { Searchbar } from '../components/ui/searchbar'
 import { useConveyor } from '@/app/hooks/use-conveyor'
 import { cn } from '@/lib/utils'
@@ -22,6 +24,8 @@ export default function Home() {
     indexingLocation
   } = useAppContext()
   const [hasInteracted, setHasInteracted] = useState(false)
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   const handleSearch = async () => {
     const lastResultsEmpty = (searchResults?.results?.length ?? 0) === 0
@@ -46,7 +50,7 @@ export default function Home() {
 
   return (
     <div className="welcome-content flex flex-col gap-5 h-screen">
-      <div className="flex items-center flex-none min-h-[55px]">
+      <div className="flex flex-row items-center flex-none min-h-[55px]">
         <Searchbar
           value={query}
           onChange={(e) => {
@@ -70,6 +74,13 @@ export default function Home() {
             }
           }}
         />
+        <button
+          onClick={() => navigate('/settings')}
+          className="flex items-center justify-center h-8 w-8 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/60 transition-colors duration-150 flex-none mx-2"
+          aria-label="Open settings"
+        >
+          <Settings className="h-5 w-5" />
+        </button>
       </div>
 
       {hasInteracted ? (

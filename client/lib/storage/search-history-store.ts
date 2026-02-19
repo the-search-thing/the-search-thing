@@ -120,5 +120,6 @@ export const createSearchHistoryStore = (adapter: SqliteAdapter) => {
     addSearch,
     getRecentSearches,
     pruneHistory,
+    close: () => adapter.close(),
   }
 }

@@ -108,6 +108,10 @@ Ignored extensions/files live in `config/ignore.json`.
 
 - If you change Rust code, rebuild with `maturin develop --release`.
 - Electron UI uses IPC to FastAPI calls (see `client/lib/conveyor/handlers/search-handler.ts`).
+- Local search history is stored in a SQLite DB at `app.getPath('userData')/search-history.db` (schema in `client/lib/storage/search-history-store.ts`).
+  - Windows: `C:\Users\<you>\AppData\Roaming\<YourApp>\search-history.db`
+  - macOS: `~/Library/Application Support/<YourApp>/search-history.db`
+  - Linux: `~/.config/<YourApp>/search-history.db`
 
 ## Frontend website (Next.js)
 

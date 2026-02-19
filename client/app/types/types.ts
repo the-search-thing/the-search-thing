@@ -9,6 +9,15 @@ export interface SearchResponse {
   results: SearchResultItem[]
 }
 
+export type SearchHistoryEntry = {
+  id: number
+  search_string: string
+  timestamp: number
+  file_types: string[] | null
+  filters: Record<string, unknown> | null
+  path_scope: string | null
+}
+
 export interface ResultProps {
   searchResults?: SearchResponse
   query: string

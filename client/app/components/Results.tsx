@@ -22,7 +22,14 @@ interface ResultsWithContextProps extends ResultProps {
   onIndexingCancelled?: () => void
 }
 
-const Results: React.FC<ResultsWithContextProps> = ({ searchResults, query, hasSearched, onIndexingCancelled }) => {
+const Results: React.FC<ResultsWithContextProps> = ({
+  searchResults,
+  query,
+  hasSearched,
+  onIndexingCancelled,
+  recentSearches = [],
+  onRecentSearchSelect,
+}) => {
   const [selectedItem, setSelectedItem] = useState<ResultItem | null>(null)
   const [hasInitiatedIndexing, setHasInitiatedIndexing] = useState(false)
   const hasOpenedDialogRef = useRef(false)
@@ -204,55 +211,89 @@ const Results: React.FC<ResultsWithContextProps> = ({ searchResults, query, hasS
     )
   }
 
+  const showRecentSearches = !hasSearched
+
   return (
     <div className="flex items-center w-full h-full">
       <div className="flex w-full h-full">
         {/* Files & its paths */}
         <div className="w-1/3 min-w-[200px] max-w-[300px] h-full border-r border-zinc-700 flex flex-col">
           <div className="p-1 flex-none">
-            <h3 className="text-zinc-400 text-[0.8rem] font-medium">Recently Used</h3>
+            <h3 className="text-zinc-400 text-[0.8rem] font-medium">
+              {showRecentSearches ? 'Recent Searches' : 'Results'}
+            </h3>
           </div>
           <div className="flex-1 min-h-0 flex flex-col overflow-y-auto pr-2">
-            {allResults.map((result, index) => (
-              <div
-                key={`${result.path}-${result.label}-${index}`}
-                tabIndex={0}
-                onClick={() => setSelectedItem(result)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleOpen(result.path)
-                  }
-                }}
-                onMouseDown={(e) => {
-                  if (e.metaKey || e.ctrlKey) {
-                    handleOpen(result.path)
-                  }
-                }}
-                className={`flex flex-row p-2 rounded-xl cursor-pointer hover:bg-zinc-800 transition-colors border-b border-zinc-800 ${
-                  selectedItem?.path === result.path ? 'bg-zinc-700' : ''
-                }`}
-              >
-                <div className="pr-2">
-                  {result.label === 'video' && result.thumbnail_url ? (
-                    <img
-                      src={result.thumbnail_url}
-                      alt=""
-                      className="w-7 h-7 rounded-md object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <img
-                      src={fileIcons[getFileExt(result.path).toLowerCase()] || fileIcons.txt}
-                      className="w-5 h-5"
-                      alt=""
-                    />
-                  )}
+            {showRecentSearches ? (
+              recentSearches.length > 0 ? (
+                recentSearches.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => onRecentSearchSelect?.(item.search_string)}
+                    className="flex items-center gap-2 p-2 rounded-xl cursor-pointer hover:bg-zinc-800 transition-colors border-b border-zinc-800 text-left"
+                  >
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      className="h-4 w-4 text-zinc-400"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="m21 21-4.3-4.3" />
+                      <circle cx="11" cy="11" r="7" />
+                    </svg>
+                    <span className="text-white truncate" title={item.search_string}>
+                      {item.search_string}
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <div className="text-zinc-500 text-sm p-2">No recent searches yet.</div>
+              )
+            ) : (
+              allResults.map((result, index) => (
+                <div
+                  key={`${result.path}-${result.label}-${index}`}
+                  tabIndex={0}
+                  onClick={() => setSelectedItem(result)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleOpen(result.path)
+                    }
+                  }}
+                  onMouseDown={(e) => {
+                    if (e.metaKey || e.ctrlKey) {
+                      handleOpen(result.path)
+                    }
+                  }}
+                  className={`flex flex-row p-2 rounded-xl cursor-pointer hover:bg-zinc-800 transition-colors border-b border-zinc-800 ${
+                    selectedItem?.path === result.path ? 'bg-zinc-700' : ''
+                  }`}
+                >
+                  <div className="pr-2">
+                    {result.label === 'video' && result.thumbnail_url ? (
+                      <img
+                        src={result.thumbnail_url}
+                        alt=""
+                        className="w-7 h-7 rounded-md object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <img
+                        src={fileIcons[getFileExt(result.path).toLowerCase()] || fileIcons.txt}
+                        className="w-5 h-5"
+                        alt=""
+                      />
+                    )}
+                  </div>
+                  <div className="text-white truncate" title={result.path}>
+                    {getFileName(result.path)}
+                  </div>
                 </div>
-                <div className="text-white truncate" title={result.path}>
-                  {getFileName(result.path)}
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 

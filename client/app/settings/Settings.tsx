@@ -6,7 +6,29 @@ export default function Settings() {
   const navigate = useNavigate()
 
   return (
-    <div className="flex gap-5 h-screen">
+    <div className="flex flex-col h-screen">
+      {/* Header */}
+      <div
+        className={cn(
+          'flex flex-row items-center flex-none min-h-[35px]',
+          'bg-zinc-800/60 px-4',
+          'shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
+        )}
+      >
+        <button
+          onClick={() => navigate('/')}
+          className={cn(
+            'flex items-center justify-center',
+            'h-5 w-5 rounded-md',
+            'text-zinc-400 hover:text-zinc-100',
+            'hover:bg-zinc-700/60',
+            'transition-colors duration-150'
+          )}
+          aria-label="Back to search"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+      </div>
 
       {/* Placeholder body */}
       <div
@@ -16,19 +38,6 @@ export default function Settings() {
           'px-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
         )}
       >
-        <button
-          onClick={() => navigate('/')}
-          className={cn(
-            'flex items-center justify-center',
-            'h-8 w-8 rounded-md',
-            'text-zinc-400 hover:text-zinc-100',
-            'hover:bg-zinc-700/60',
-            'transition-colors duration-150'
-          )}
-          aria-label="Back to search"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
         <SettingsIcon className="h-12 w-12 text-zinc-600" />
         <p className="text-lg text-zinc-400">Settings coming soon</p>
         <p className="text-sm text-zinc-600">This page is a placeholder.</p>

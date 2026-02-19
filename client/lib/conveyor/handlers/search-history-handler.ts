@@ -20,6 +20,10 @@ const getStore = () => {
 }
 
 export const registerSearchHistoryHandlers = () => {
+  app.on('before-quit', () => {
+    store?.close?.()
+  })
+
   handle('search-history/add', async (input) => {
     const id = getStore().addSearch(input)
     return { id }

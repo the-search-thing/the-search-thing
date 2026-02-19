@@ -263,11 +263,6 @@ QUERY CombinedSearch(search_text: String) =>
 
     RETURN transcripts, frames, transcript_videos, frame_videos
 
-
-
-
-
-
 // get all videos
 QUERY GetAllVideos() =>
     videos <- N<Video>

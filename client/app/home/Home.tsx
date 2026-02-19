@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Searchbar } from '../components/ui/searchbar'
 import { useConveyor } from '@/app/hooks/use-conveyor'
 import { cn } from '@/lib/utils'
@@ -18,18 +18,18 @@ export default function Home() {
   const { setAwaitingIndexing, currentJobId, setIndexingLocation, indexingLocation } = useAppContext()
   const [hasInteracted, setHasInteracted] = useState(false)
 
-  const refreshRecentSearches = async () => {
+  const refreshRecentSearches = useCallback(async () => {
     try {
       const recent = await search.getRecentSearches(10)
       setRecentSearches(recent)
     } catch (error) {
       console.error('Failed to load recent searches:', error)
     }
-  }
+  }, [search])
 
   useEffect(() => {
     refreshRecentSearches()
-  }, [])
+  }, [refreshRecentSearches])
 
   const handleSearch = async (nextQuery?: string) => {
     const effectiveQuery = (nextQuery ?? query).trim()

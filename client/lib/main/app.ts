@@ -21,12 +21,6 @@ export function getMainWindow(): BrowserWindow | null {
  * protocol.handle() do not allow duplicate channel registrations.
  */
 export function initializeApp(): void {
-export function getMainWindow() {
-  return mainWindow
-}
-
-export function createAppWindow(): BrowserWindow {
-  // Register custom protocol for resources
   registerResourcesProtocol()
   registerWindowHandlers(getMainWindow)
   registerAppHandlers(app)
@@ -40,39 +34,39 @@ export function createAppWindow(): BrowserWindow {
  * IPC handlers and protocol registration are NOT performed here — call
  * initializeApp() once at startup instead.
  */
-  export function createAppWindow(): BrowserWindow {
-    // Create the main window.
-    mainWindow = new BrowserWindow({
-      width: 900,
-      height: 470,
-      show: false,
-      backgroundColor: '#1c1c1c',
-      icon: appIcon,
-      frame: false,
-      titleBarStyle: 'hiddenInset',
-      title: 'Electron React App',
-      maximizable: false,
-      resizable: false,
-      webPreferences: {
-        preload: join(__dirname, '../preload/preload.js'),
-        sandbox: false,
-      },
-    })
+export function createAppWindow(): BrowserWindow {
+  mainWindow = new BrowserWindow({
+    width: 900,
+    height: 470,
+    show: false,
+    backgroundColor: '#1c1c1c',
+    icon: appIcon,
+    frame: false,
+    titleBarStyle: 'hiddenInset',
+    title: 'Electron React App',
+    maximizable: false,
+    resizable: false,
+    webPreferences: {
+      preload: join(__dirname, '../preload/preload.js'),
+      sandbox: false,
+    },
+  })
 
-    mainWindow.on('ready-to-show', () => {
-      mainWindow?.show()
-    })
-    mainWindow.on('closed', () => {
-      mainWindow = null
-    })
+  mainWindow.on('ready-to-show', () => {
+    mainWindow?.show()
+  })
 
-    // HMR for renderer base on electron-vite cli.
-    // Load the remote URL for development or the local html file for production.
-    if (!app.isPackaged && process.env['ELECTRON_RENDERER_URL']) {
-      mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
-    } else {
-      mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
-    }
-    return mainWindow
+  mainWindow.on('closed', () => {
+    mainWindow = null
+  })
+
+  // HMR for renderer base on electron-vite cli.
+  // Load the remote URL for development or the local html file for production.
+  if (!app.isPackaged && process.env['ELECTRON_RENDERER_URL']) {
+    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+  } else {
+    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  return mainWindow
 }

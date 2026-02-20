@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react'
 import { cn } from '@/lib/utils'
 import About from './About'
 import General from './General'
@@ -7,7 +8,11 @@ type SettingsContentProps = {
   item: string
 }
 
-const components = {About, General, Keybinds}
+const components: Record<string, ComponentType> = {
+  About,
+  General,
+  Keybinds,
+}
 
 export default function SettingsContent({ item }: SettingsContentProps) {
   const ComponentToRender = components[item as keyof typeof components];
@@ -24,7 +29,7 @@ export default function SettingsContent({ item }: SettingsContentProps) {
         'shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
       )}
     >
-      <ComponentToRender />
+      {ComponentToRender ? <ComponentToRender /> : null}
     </div>
   )
 }

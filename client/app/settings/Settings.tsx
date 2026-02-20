@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Settings as SettingsIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import SettingsSidebar from '../components/SettingsSidebar'
+import SettingsContent from '../components/SettingsContent'
 
 export default function Settings() {
   const navigate = useNavigate()
@@ -30,17 +32,19 @@ export default function Settings() {
         </button>
       </div>
 
-      {/* Placeholder body */}
       <div
         className={cn(
-          'flex flex-1 min-h-0 flex-col items-center justify-center gap-3',
+          'flex flex-1 min-h-0 flex-row items-center justify-center gap-3',
           'border-2 border-zinc-700/80 bg-zinc-800/60',
           'px-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
         )}
       >
-        <SettingsIcon className="h-12 w-12 text-zinc-600" />
-        <p className="text-lg text-zinc-400">Settings coming soon</p>
-        <p className="text-sm text-zinc-600">This page is a placeholder.</p>
+        <div>
+          <SettingsSidebar />
+        </div>
+        <div>
+          <SettingsContent />
+        </div>
       </div>
     </div>
   )

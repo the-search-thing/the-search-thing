@@ -6,7 +6,7 @@ export default function General() {
       className={cn(
         'flex flex-col gap-4',
         'w-full h-full',
-        'border-1 border-zinc-700/80 bg-zinc-800/60',
+        'border-2 border-zinc-700/80 bg-zinc-800/60',
         'p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
       )}
     >

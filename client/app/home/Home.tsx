@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Settings } from 'lucide-react'
 import { Searchbar } from '../components/ui/searchbar'
@@ -40,6 +40,34 @@ export default function Home() {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem('home-state')
+    if (!raw) return
+    try {
+      const state = JSON.parse(raw) as {
+        query?: string
+        hasInteracted?: boolean
+        hasSearched?: boolean
+        searchResults?: SearchResponse
+        awaitingIndexing?: boolean
+        currentJobId?: string | null
+      }
+      if (typeof state.query === 'string') setQuery(state.query)
+      if (typeof state.hasInteracted === 'boolean') setHasInteracted(state.hasInteracted)
+      if (typeof state.hasSearched === 'boolean') setHasSearched(state.hasSearched)
+      if (state.searchResults !== undefined) setSearchResults(state.searchResults)
+      if (typeof state.awaitingIndexing === 'boolean') setAwaitingIndexing(state.awaitingIndexing)
+      if (typeof state.currentJobId !== 'undefined') setCurrentJobId(state.currentJobId ?? null)
+    } catch {
+      // ignore malformed storage
+    }
+  }, [])
+
+  useEffect(() => {
+    const state = { query, hasInteracted, hasSearched, searchResults, awaitingIndexing, currentJobId }
+    sessionStorage.setItem('home-state', JSON.stringify(state))
+  }, [query, hasInteracted, hasSearched, searchResults, awaitingIndexing, currentJobId])
 
   return (
     <div className="welcome-content flex flex-col gap-5 h-screen">

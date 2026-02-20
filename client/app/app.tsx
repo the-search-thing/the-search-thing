@@ -15,9 +15,6 @@ function GlobalHotkeys() {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase()
-      const target = event.target as HTMLElement | null
-      const tagName = target?.tagName?.toLowerCase()
-      const isEditable = tagName === 'input' || tagName === 'textarea' || target?.isContentEditable
 
       if (event.ctrlKey && key === 'f') {
         event.preventDefault()
@@ -33,7 +30,6 @@ function GlobalHotkeys() {
       }
 
       if (event.altKey && key === 'f') {
-        if (isEditable) return
         event.preventDefault()
         navigate('/')
         runAfterRouteChange(() => {

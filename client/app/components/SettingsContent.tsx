@@ -9,7 +9,7 @@ export default function SettingsContent({ item }: SettingsContentProps) {
     <div
       className={cn(
         'flex flex-1 min-h-0 flex-col items-start justify-start gap-3',
-        'border-2 border-zinc-700/80 bg-zinc-800/60',
+        'border-1 border-zinc-700/80 bg-zinc-800/60',
         'p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
       )}
     >

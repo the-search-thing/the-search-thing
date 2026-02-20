@@ -23,6 +23,9 @@ function GlobalHotkeys() {
       if (document.body.dataset.keybindRecording === 'true') {
         return
       }
+      const target = event.target as HTMLElement | null
+      const tagName = target?.tagName?.toLowerCase()
+      const isEditable = tagName === 'input' || tagName === 'textarea' || target?.isContentEditable
 
       if (matchesCombo(event, keybinds.search)) {
         event.preventDefault()
@@ -38,6 +41,7 @@ function GlobalHotkeys() {
       }
 
       if (matchesCombo(event, keybinds.index)) {
+        if (isEditable) return
         event.preventDefault()
         navigate('/')
         runAfterRouteChange(() => {

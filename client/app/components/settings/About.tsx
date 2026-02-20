@@ -1,17 +1,21 @@
 import { cn } from '@/lib/utils'
+import logo from '../../../../branding/logo-white-bg.webp'
 
 export default function About() {
   return (
     <div
       className={cn(
-        'flex flex-1 min-h-0 flex-col items-start justify-start gap-3 w-full h-full',
+        'flex flex-1 min-h-0 flex-col items-center justify-center gap-3 w-full h-full',
         'border-1 border-zinc-700/80 bg-zinc-800/60',
         'p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
       )}
     >
-      <div className="text-xs uppercase tracking-wider text-zinc-500">Section</div>
-      <div className="text-xl text-zinc-200">About</div>
-      <p className="text-sm text-zinc-500">This is temporary content for the About settings section.</p>
+      <img src={logo} alt="Logo" className="w-[75px] h-[75px]" />
+      <div className="items-center flex flex-col">
+        <p className="text-lg text-zinc-200">the-search-thing</p>
+        <p className="text-sm text-zinc-500 font-semibold">v0.1.0</p>
+        <p className="text-xs text-zinc-500 py-2">by Karthik & Amaan</p>
+      </div>
     </div>
   )
 }

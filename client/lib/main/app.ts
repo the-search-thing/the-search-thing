@@ -1,4 +1,4 @@
-import { BrowserWindow, shell, app } from 'electron'
+import { BrowserWindow, app } from 'electron'
 import { join } from 'path'
 import appIcon from '@/resources/build/logo-white-bg.webp'
 import { registerResourcesProtocol } from './protocols'
@@ -8,15 +8,29 @@ import { registerSearchHandlers } from '@/lib/conveyor/handlers/search-handler'
 
 let mainWindow: BrowserWindow | null = null
 
-export function getMainWindow() {
+export function getMainWindow(): BrowserWindow | null {
   return mainWindow
 }
 
-export function createAppWindow(): BrowserWindow {
-  // Register custom protocol for resources
+/**
+ * One-time initialization of IPC handlers and protocol registration.
+ * Must be called once after app.whenReady() resolves, before any window is created.
+ * Calling this more than once will throw because ipcMain.handle() and
+ * protocol.handle() do not allow duplicate channel registrations.
+ */
+export function initializeApp(): void {
   registerResourcesProtocol()
+  registerWindowHandlers(getMainWindow)
+  registerAppHandlers(app)
+  registerSearchHandlers()
+}
 
-  // Create the main window.
+/**
+ * Creates (or re-creates) the main application window.
+ * IPC handlers and protocol registration are NOT performed here — call
+ * initializeApp() once at startup instead.
+ */
+export function createAppWindow(): BrowserWindow {
   mainWindow = new BrowserWindow({
     width: 900,
     height: 470,
@@ -34,15 +48,10 @@ export function createAppWindow(): BrowserWindow {
     },
   })
 
-  // Register IPC events for the main window.
-  registerWindowHandlers(mainWindow)
-  registerAppHandlers(app)
-  registerSearchHandlers()
-
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()
   })
-  
+
   mainWindow.on('closed', () => {
     mainWindow = null
   })
@@ -54,6 +63,6 @@ export function createAppWindow(): BrowserWindow {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
-  
+
   return mainWindow
 }

@@ -184,7 +184,7 @@ export default function Footer() {
         variant="transparent"
         size="sm"
         onClick={handleStartIndexing}
-        disabled={isIndexing}
+        disabled={isIndexing || !!currentJobId}
         data-index-button="true"
       >
         Index <img src={enter} alt="index File" className="w-5 h-6 opacity-75" />

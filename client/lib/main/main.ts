@@ -1,6 +1,6 @@
 import { app, BrowserWindow, globalShortcut } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
-import { createAppWindow, getMainWindow } from './app'
+import { createAppWindow, getMainWindow, initializeApp } from './app'
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -8,9 +8,12 @@ import { createAppWindow, getMainWindow } from './app'
 app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
+  // Register IPC handlers and custom protocols once, before any window is created.
+  // This must not be called again — ipcMain.handle() throws on duplicate registrations.
+  initializeApp()
   // Create app window
   createAppWindow()
-  
+
   globalShortcut.register('Alt+Space', () => {
     const win = getMainWindow() ?? createAppWindow()
     if (win.isVisible()) {
@@ -33,11 +36,6 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createAppWindow()
     }
-  })
-  
-  app.on('browser-window-blur', function () {
-    const win = getMainWindow() || null
-    win?.hide()
   })
 })
 

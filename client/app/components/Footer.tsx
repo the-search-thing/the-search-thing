@@ -121,24 +121,6 @@ export default function Footer() {
     }
   }, [search])
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.altKey && e.key.toLowerCase() === 'f') {
-        const target = e.target as HTMLElement | null
-        const tagName = target?.tagName?.toLowerCase()
-        const isEditable = tagName === 'textarea' || target?.isContentEditable
-
-        if (isEditable || isIndexing) return
-
-        e.preventDefault()
-        handleStartIndexing()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleStartIndexing, isIndexing])
-
   const renderStatus = () => {
     // Show simple status when job is in results or just status message
     if (indexingLocation === 'footer' && jobStatus && currentJobId) {
@@ -198,7 +180,13 @@ export default function Footer() {
 
       <div className="text-sm flex items-center flex-1 justify-center px-4">{renderStatus()}</div>
 
-      <Button variant="transparent" size="sm" onClick={handleStartIndexing} disabled={isIndexing || !!currentJobId}>
+      <Button
+        variant="transparent"
+        size="sm"
+        onClick={handleStartIndexing}
+        disabled={isIndexing}
+        data-index-button="true"
+      >
         Index <img src={enter} alt="index File" className="w-5 h-6 opacity-75" />
       </Button>
     </div>

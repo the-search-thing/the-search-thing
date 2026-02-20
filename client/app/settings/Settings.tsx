@@ -3,9 +3,15 @@ import { ArrowLeft, Settings as SettingsIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import SettingsSidebar from '../components/SettingsSidebar'
 import SettingsContent from '../components/SettingsContent'
+import { useState } from 'react'
 
 export default function Settings() {
   const navigate = useNavigate()
+  const [selectedItem, setSelectedItem] = useState<string>('General')
+
+  const handleSelect = (item: string) => {
+    setSelectedItem(item)
+  }
 
   return (
     <div className="flex flex-col h-screen">
@@ -34,17 +40,13 @@ export default function Settings() {
 
       <div
         className={cn(
-          'flex flex-1 min-h-0 flex-row items-center justify-center gap-3',
-          'border-2 border-zinc-700/80 bg-zinc-800/60',
-          'px-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
+          'flex flex-1 min-h-0 flex-row items-stretch ',
+          'border-1 border-zinc-700/80 bg-zinc-800/60',
+          ' sadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
         )}
       >
-        <div>
-          <SettingsSidebar />
-        </div>
-        <div>
-          <SettingsContent />
-        </div>
+        <SettingsSidebar selectedItem={selectedItem} onSelect={handleSelect} />
+        <SettingsContent item={selectedItem} />
       </div>
     </div>
   )

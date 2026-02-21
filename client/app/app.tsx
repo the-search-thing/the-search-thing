@@ -26,6 +26,7 @@ function GlobalHotkeys() {
       const target = event.target as HTMLElement | null
       const tagName = target?.tagName?.toLowerCase()
       const isEditable = tagName === 'input' || tagName === 'textarea' || target?.isContentEditable
+      const isSearchInput = !!target?.closest?.('[data-search-input="true"]')
 
       if (matchesCombo(event, keybinds.search)) {
         event.preventDefault()
@@ -41,7 +42,8 @@ function GlobalHotkeys() {
       }
 
       if (matchesCombo(event, keybinds.index)) {
-        if (isEditable) return
+        // Allow indexing from the search bar even while typing.
+        if (isEditable && !isSearchInput) return
         event.preventDefault()
         navigate('/')
         runAfterRouteChange(() => {

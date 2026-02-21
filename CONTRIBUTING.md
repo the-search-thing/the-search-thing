@@ -112,6 +112,10 @@ Ignored extensions/files live in `config/ignore.json`.
   - Windows: `C:\Users\<you>\AppData\Roaming\<YourApp>\search-history.db`
   - macOS: `~/Library/Application Support/<YourApp>/search-history.db`
   - Linux: `~/.config/<YourApp>/search-history.db`
+- Keybinds are stored in a separate SQLite DB at `app.getPath('userData')/keybinds.db` (schema in `client/lib/storage/keybinds-db-store.ts`).
+  - Windows: `C:\Users\<you>\AppData\Roaming\<YourApp>\keybinds.db`
+  - macOS: `~/Library/Application Support/<YourApp>/keybinds.db`
+  - Linux: `~/.config/<YourApp>/keybinds.db`
 
 ## Frontend website (Next.js)
 

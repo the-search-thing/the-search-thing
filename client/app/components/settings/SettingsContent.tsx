@@ -15,8 +15,8 @@ const components: Record<string, ComponentType> = {
 }
 
 export default function SettingsContent({ item }: SettingsContentProps) {
-  const ComponentToRender = components[item as keyof typeof components];
-  
+  const ComponentToRender = components[item as keyof typeof components]
+
   if (!ComponentToRender) {
     return null
   }
@@ -29,7 +29,7 @@ export default function SettingsContent({ item }: SettingsContentProps) {
         'shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
       )}
     >
-      {ComponentToRender ? <ComponentToRender /> : null}
+      <ComponentToRender />
     </div>
   )
 }

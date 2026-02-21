@@ -26,7 +26,6 @@ export default function Home() {
     indexingLocation,
   } = useAppContext()
   const [hasInteracted, setHasInteracted] = useState(false)
-  const [recentSearches, setRecentSearches] = useState<SearchHistoryEntry[]>([])
   const navigate = useNavigate()
 
   const refreshRecentSearches = useCallback(async () => {

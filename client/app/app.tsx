@@ -17,7 +17,6 @@ function GlobalHotkeys() {
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-<<<<<<< HEAD
       if (event.defaultPrevented) {
         return
       }
@@ -28,8 +27,6 @@ function GlobalHotkeys() {
       const tagName = target?.tagName?.toLowerCase()
       const isEditable = tagName === 'input' || tagName === 'textarea' || target?.isContentEditable
 
-=======
->>>>>>> 05c805f (implement(Keybinds, App): implement keybinds from local storage into app)
       if (matchesCombo(event, keybinds.search)) {
         event.preventDefault()
         navigate('/')
@@ -44,10 +41,7 @@ function GlobalHotkeys() {
       }
 
       if (matchesCombo(event, keybinds.index)) {
-<<<<<<< HEAD
         if (isEditable) return
-=======
->>>>>>> 05c805f (implement(Keybinds, App): implement keybinds from local storage into app)
         event.preventDefault()
         navigate('/')
         runAfterRouteChange(() => {

@@ -82,22 +82,22 @@ function KeybindRow({
     <div
       className={cn(
         'flex items-center justify-between gap-4 px-3 py-2 rounded-md transition-colors',
-        isRecording && 'bg-zinc-700/40 ring-1 ring-gray-500/50',
+        isRecording && 'bg-zinc-700/40 ring-1 ring-amber-500/50',
         conflict && 'bg-rose-500/10 ring-1 ring-rose-400/40'
-        isRecording && 'bg-zinc-700/40 ring-1 ring-amber-500/50'
       )}
     >
       <div className="flex flex-col gap-0.5 min-w-0">
         <div className="text-sm text-zinc-200">{label}</div>
         <div className="text-xs text-zinc-500">{description}</div>
         {conflict && <div className="text-xs text-rose-300/80 mt-0.5">Conflicts with: {conflict}</div>}
-        {conflict && <div className="text-xs text-amber-400 mt-0.5">Conflicts with: {conflict}</div>}
       </div>
 
       <div className="flex items-center gap-3 flex-shrink-0">
         {isRecording ? (
+          <div className="flex items-center gap-2">
             <span className="text-xs text-amber-400 animate-pulse">Press keys…</span>
             <button
+              type="button"
               onClick={onCancelRecording}
               className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors px-1.5 py-0.5 rounded border border-zinc-600/50 hover:border-zinc-500"
             >
@@ -106,6 +106,7 @@ function KeybindRow({
           </div>
         ) : (
           <button
+            type="button"
             onClick={onStartRecording}
             className={cn(
               'flex items-center gap-2 group cursor-pointer',

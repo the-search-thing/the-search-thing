@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Settings } from 'lucide-react'
 import { Searchbar } from '../components/ui/searchbar'
@@ -25,6 +25,7 @@ export default function Home() {
     indexingLocation,
   } = useAppContext()
   const [hasInteracted, setHasInteracted] = useState(false)
+  const [recentSearches, setRecentSearches] = useState<SearchHistoryEntry[]>([])
   const navigate = useNavigate()
 
   const refreshRecentSearches = useCallback(async () => {

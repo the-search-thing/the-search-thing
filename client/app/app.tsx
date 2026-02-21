@@ -17,6 +17,13 @@ function GlobalHotkeys() {
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) {
+        return
+      }
+      if (document.body.dataset.keybindRecording === 'true') {
+        return
+      }
+
       if (matchesCombo(event, keybinds.search)) {
         event.preventDefault()
         navigate('/')

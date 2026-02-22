@@ -10,8 +10,8 @@ from backend.services.search import (
     _extract_list_response,
     build_chunk_to_video_map,
 )
-from backend.utils.clients import get_helix_client
 from backend.services.thumbnails_cache import has_thumbnail
+from backend.utils.clients import get_helix_client
 
 load_dotenv()
 

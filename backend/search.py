@@ -1,6 +1,9 @@
 import asyncio
+import json
 import os
 import re
+import shutil
+import subprocess
 import sys
 
 from dotenv import load_dotenv
@@ -18,6 +21,8 @@ load_dotenv()
 
 class RipgrepNotFoundError(RuntimeError):
     pass
+
+
 def _get_filesystem_roots_home_first() -> list[str]:
     home = os.path.expanduser("~")
     roots: list[str] = []
@@ -59,6 +64,53 @@ def _get_filesystem_roots_home_first() -> list[str]:
         ordered.append(root)
 
     return ordered
+
+
+def _rg_exclusion_globs() -> list[str]:
+    globs = [
+        "**/.git/**",
+        "**/node_modules/**",
+        "**/.venv/**",
+        "**/.cache/**",
+        "**/dist/**",
+        "**/build/**",
+    ]
+
+    if os.name == "nt":
+        globs.extend(
+            [
+                "**/Windows/**",
+                "**/Program Files/**",
+                "**/Program Files (x86)/**",
+                "**/ProgramData/**",
+                "**/AppData/**",
+                "**/$Recycle.Bin/**",
+                "**/System Volume Information/**",
+            ]
+        )
+    elif sys.platform == "darwin":
+        globs.extend(
+            [
+                "**/Library/**",
+                "**/System/**",
+                "**/Applications/**",
+                "**/private/**",
+            ]
+        )
+    else:
+        globs.extend(
+            [
+                "**/proc/**",
+                "**/sys/**",
+                "**/dev/**",
+                "**/run/**",
+                "**/var/lib/**",
+                "**/var/log/**",
+            ]
+        )
+
+    return globs
+
 
 def _run_ripgrep(
     query: str,
@@ -130,6 +182,7 @@ def _run_ripgrep(
             break
 
     return results
+
 
 async def search_ripgrep(search_query: str, limit: int = 100) -> dict:
     if not shutil.which("rg"):
@@ -372,7 +425,6 @@ async def goated_search(search_query: str) -> dict:
     JSONDict = dict[str, Any]
 
     def normalize_file_results(response: object) -> None:
-
         if not response:
             return
 

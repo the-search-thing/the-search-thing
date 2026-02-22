@@ -65,14 +65,26 @@ async def index_status(job_id: str):
 
 
 @app.get("/api/search")
-async def api_search(q: str):
+async def api_search(q: str, mode: str | None = None, limit: int = 100):
     # from backend.search import search_files_vids_together
-    from backend.search import goated_search
+    from backend.search import RipgrepNotFoundError, goated_search, search_ripgrep
+
+    query = q.strip()
+    if query.lower().startswith("rg:"):
+        query = query[3:].lstrip()
+        mode = "rg"
 
     try:
+        if mode and mode.lower() in {"rg", "ripgrep"}:
+            safe_limit = max(1, min(int(limit), 200))
+            result = await search_ripgrep(query, limit=safe_limit)
+            return JSONResponse(result)
+
         # result = await search_file_vids_together(q)
-        result = await goated_search(q)
+        result = await goated_search(query)
         return JSONResponse(result)
+    except RipgrepNotFoundError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error("Error searching videos: %s", e)
         raise HTTPException(status_code=500, detail=str(e))

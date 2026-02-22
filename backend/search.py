@@ -131,6 +131,46 @@ def _run_ripgrep(
 
     return results
 
+async def search_ripgrep(search_query: str, limit: int = 100) -> dict:
+    if not shutil.which("rg"):
+        raise RipgrepNotFoundError("ripgrep (rg) is not installed or not on PATH")
+
+    if not search_query:
+        return {"query": search_query, "results": []}
+
+    roots = _get_filesystem_roots_home_first()
+    exclusion_globs = _rg_exclusion_globs()
+    timeout_s = float(os.getenv("RG_TIMEOUT_SEC", "2.5"))
+
+    results: list[dict] = []
+    seen: set[tuple] = set()
+
+    for root in roots:
+        remaining = limit - len(results)
+        if remaining <= 0:
+            break
+        root_results = await asyncio.to_thread(
+            _run_ripgrep,
+            search_query,
+            root,
+            remaining,
+            timeout_s,
+            exclusion_globs,
+        )
+        for item in root_results:
+            key = (item.get("path"), item.get("content"))
+            if key in seen:
+                continue
+            seen.add(key)
+            results.append(item)
+            if len(results) >= limit:
+                break
+        if len(results) >= limit:
+            break
+
+    return {"query": search_query, "results": results}
+
+
 async def search_videos(search_query: str, limit: int = 5) -> dict:
     """
     Search across transcript + frame summary embeddings and return file-style results.

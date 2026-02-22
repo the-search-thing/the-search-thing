@@ -16,6 +16,8 @@ from backend.utils.clients import get_helix_client
 load_dotenv()
 
 
+class RipgrepNotFoundError(RuntimeError):
+    pass
 async def search_videos(search_query: str, limit: int = 5) -> dict:
     """
     Search across transcript + frame summary embeddings and return file-style results.

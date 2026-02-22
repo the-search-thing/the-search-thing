@@ -60,6 +60,77 @@ def _get_filesystem_roots_home_first() -> list[str]:
 
     return ordered
 
+def _run_ripgrep(
+    query: str,
+    root: str,
+    limit: int,
+    timeout_s: float,
+    exclusion_globs: list[str],
+) -> list[dict]:
+    if not query or limit <= 0:
+        return []
+
+    cmd = [
+        "rg",
+        "--json",
+        "--max-count",
+        "1",
+        "--smart-case",
+        "--fixed-strings",
+        query,
+        root,
+    ]
+
+    for pattern in exclusion_globs:
+        cmd.extend(["--glob", f"!{pattern}"])
+
+    results: list[dict] = []
+    try:
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+    except Exception:
+        return []
+
+    stdout_data = ""
+    try:
+        stdout_data, _ = process.communicate(timeout=timeout_s)
+    except subprocess.TimeoutExpired as e:
+        stdout_data = e.output or ""
+        process.kill()
+        try:
+            remaining_out, _ = process.communicate(timeout=1)
+            stdout_data += remaining_out or ""
+        except Exception:
+            pass
+
+    for line in stdout_data.splitlines():
+        try:
+            payload = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if payload.get("type") != "match":
+            continue
+        data = payload.get("data", {})
+        path = data.get("path", {}).get("text")
+        lines_text = data.get("lines", {}).get("text")
+        line_number = data.get("line_number")
+        if not path or not lines_text:
+            continue
+        snippet = lines_text.rstrip("\n")
+        if isinstance(line_number, int):
+            snippet = f"{line_number}: {snippet}"
+        results.append({"label": "file", "path": path, "content": snippet})
+        if len(results) >= limit:
+            break
+
+    return results
+
 async def search_videos(search_query: str, limit: int = 5) -> dict:
     """
     Search across transcript + frame summary embeddings and return file-style results.

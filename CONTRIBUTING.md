@@ -93,6 +93,36 @@ curl.exe --get "http://localhost:8000/api/index" --data-urlencode "dir=C:\path w
 curl "http://localhost:8000/api/search?q=meeting notes"
 ```
 
+## Experimental features
+
+### Ripgrep filesystem search (experimental)
+
+You can trigger a lexical search across the local filesystem using ripgrep. This is
+intended to be fast and low-noise, so it searches the home directory first and applies
+exclusions for common system and dependency folders.
+
+Requirements:
+
+- `rg` (ripgrep) installed and available on PATH
+
+Usage (prefix):
+
+```bash
+curl "http://localhost:8000/api/search?q=rg:todo"
+```
+
+Usage (mode param):
+
+```bash
+curl "http://localhost:8000/api/search?q=todo&mode=rg"
+```
+
+Notes:
+
+- The API caps results at 200 for ripgrep and stops once the cap is hit.
+- Set `RG_TIMEOUT_SEC` to adjust the per-root timeout (default: 2.5s). Partial results may return when a timeout is hit.
+- Default exclusions include system folders and common build/cache directories.
+
 ## Supported types
 
 File types are defined in `config/file_types.json`.

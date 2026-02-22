@@ -18,6 +18,48 @@ load_dotenv()
 
 class RipgrepNotFoundError(RuntimeError):
     pass
+def _get_filesystem_roots_home_first() -> list[str]:
+    home = os.path.expanduser("~")
+    roots: list[str] = []
+
+    if os.name == "nt":
+        try:
+            import ctypes
+
+            drive_bits = ctypes.windll.kernel32.GetLogicalDrives()
+            for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+                if drive_bits & 1:
+                    drive = f"{letter}:\\"
+                    drive_type = ctypes.windll.kernel32.GetDriveTypeW(drive)
+                    if drive_type == 3:
+                        roots.append(drive)
+                drive_bits >>= 1
+        except Exception:
+            roots = []
+
+        home_drive = os.path.splitdrive(home)[0]
+        if home_drive:
+            home_drive_root = f"{home_drive}\\"
+            if home_drive_root in roots:
+                roots.remove(home_drive_root)
+                roots.insert(0, home_drive_root)
+        roots.insert(0, home)
+    else:
+        roots = [home, "/"]
+
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for root in roots:
+        if not root:
+            continue
+        normalized = os.path.normpath(root)
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        ordered.append(root)
+
+    return ordered
+
 async def search_videos(search_query: str, limit: int = 5) -> dict:
     """
     Search across transcript + frame summary embeddings and return file-style results.

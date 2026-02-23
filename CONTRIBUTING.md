@@ -117,6 +117,46 @@ Ignored extensions/files live in `config/ignore.json`.
   - macOS: `~/Library/Application Support/<YourApp>/keybinds.db`
   - Linux: `~/.config/<YourApp>/keybinds.db`
 
+## Windows packaging (Electron + backend)
+
+The Windows app bundles a FastAPI backend compiled into a single exe via PyInstaller, plus ffmpeg binaries.
+
+### Build steps
+
+From `client/`:
+
+```bash
+npm run backend:build:win
+npm run build:win
+```
+
+`backend:build:win` runs `maturin develop --release`, builds the backend exe via PyInstaller, and copies it into `client/resources/backend/backend.exe`. `build:win` packages the Electron app and includes the backend + ffmpeg in `resources/`.
+
+### ffmpeg binaries
+
+Place Windows binaries here before packaging:
+
+- `client/resources/ffmpeg/ffmpeg.exe`
+- `client/resources/ffmpeg/ffprobe.exe`
+
+The Electron main process adds this folder to `PATH` and passes `FFMPEG_PATH` / `FFPROBE_PATH` to the backend.
+
+### Port selection
+
+We default to port `49000` because some Windows installs cannot bind to `47xxx` ports (WinError 10048). The Electron main process probes `49000–49099` and picks the first free port.
+
+- Port logic lives in `client/lib/main/backend.ts`.
+- The chosen backend URL is written to `backend-url.txt` at `app.getPath('userData')`.
+- Backend stdout/stderr is logged to `backend.log` in the same directory.
+
+### Environment passthrough
+
+Packaged apps do not load `.env` by default. The Electron main process explicitly sets backend env values when spawning the exe. See `client/lib/main/backend.ts`:
+
+- `HOST`, `PORT`, `BACKEND_URL`
+- `HELIX_PORT`, `HELIX_LOCAL`
+- `FFMPEG_PATH`, `FFPROBE_PATH`
+
 ## Frontend website (Next.js)
 
 The marketing site lives in `website/`. It is a standalone Next.js app.

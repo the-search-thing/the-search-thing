@@ -10,8 +10,8 @@ from backend.services.search import (
     _extract_list_response,
     build_chunk_to_video_map,
 )
-from backend.utils.clients import get_helix_client
 from backend.services.thumbnails_cache import has_thumbnail
+from backend.utils.clients import get_helix_client
 
 load_dotenv()
 
@@ -465,7 +465,7 @@ async def goated_search(search_query: str) -> dict:
         seen.add(key)
         deduped.append(item)
 
-    backend_origin = os.getenv("BACKEND_ORIGIN", "http://localhost:8000")
+    backend_origin = os.getenv("BACKEND_URL")
 
     for item in deduped:
         if item.get("label") != "video":
@@ -473,7 +473,9 @@ async def goated_search(search_query: str) -> dict:
         content_hash = item.get("content_hash")
         if isinstance(content_hash, str) and content_hash:
             if has_thumbnail(content_hash):
-                item["thumbnail_url"] = f"{backend_origin}/api/thumbnails/{content_hash}"
+                item["thumbnail_url"] = (
+                    f"{backend_origin}/api/thumbnails/{content_hash}"
+                )
 
     return {
         "query": search_query,

@@ -84,9 +84,9 @@ export default function General() {
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="text-xs uppercase tracking-wider text-zinc-500">General</div>
-          {hasUnsavedChanges && <div className="text-[11px] text-amber-700/80 dark:text-amber-300/80">Unsaved changes</div>}
-          {status === 'saved' && <div className="text-[11px] text-emerald-700/80 dark:text-emerald-300/80">Saved</div>}
-          {status === 'cleared' && <div className="text-[11px] text-emerald-700/80 dark:text-emerald-300/80">Cleared</div>}
+          {hasUnsavedChanges && <div className="text-[11px] text-amber-700/80 dark:text-amber-600/80">Unsaved changes</div>}
+          {status === 'saved' && <div className="text-[11px] text-emerald-700/80 dark:text-emerald-600/80">Saved</div>}
+          {status === 'cleared' && <div className="text-[11px] text-emerald-700/80 dark:text-emerald-600/80">Cleared</div>}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -109,7 +109,7 @@ export default function General() {
             className={cn(
               'text-xs transition-colors px-2 py-1 rounded border',
               hasUnsavedChanges
-                ? 'text-emerald-700 border-emerald-700/70 hover:border-emerald-600 dark:text-emerald-200 dark:border-emerald-500/60 dark:hover:border-emerald-400'
+                ? 'text-emerald-700 border-emerald-700/70 hover:border-emerald-600 dark:text-emerald-600 dark:border-emerald-600/60 dark:hover:border-emerald-600'
                 : 'text-zinc-500 border-zinc-700 cursor-not-allowed dark:text-zinc-600 dark:border-zinc-800'
             )}
           >
@@ -184,7 +184,7 @@ export default function General() {
                 font: event.target.value as 'sans-serif' | 'serif' | 'mono',
               }))
             }
-            className="h-7 rounded-md bg-zinc-800/60 border-1 border-zinc-700/80 text-xs text-zinc-200 px-2"
+            className="h-7 rounded-md bg-zinc-800/60 border-1 border-zinc-600/80 text-xs text-zinc-200 px-2"
           >
             <option value="sans-serif">Sans-Serif</option>
             <option value="serif">Serif</option>
@@ -205,7 +205,7 @@ export default function General() {
                 scope: event.target.value as 'both' | 'files' | 'folders',
               }))
             }
-            className="h-7 rounded-md bg-zinc-800/60 border-1 border-zinc-700/80 text-xs text-zinc-200 px-2"
+            className="h-7 rounded-md bg-zinc-800/60 border-1 border-zinc-600/80 text-xs text-zinc-200 px-2"
           >
             <option value="both">Everything</option>
             <option value="files">Files Only</option>

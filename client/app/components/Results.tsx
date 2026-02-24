@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import noFiles from '@/resources/no-files-found.svg'
+import { FileX } from 'lucide-react'
 import { ResultProps, SearchResultItem } from '../types/types'
 import * as fileIcons from '@/resources/filetype icons'
 import { useConveyor } from '../hooks/use-conveyor'
@@ -119,7 +120,7 @@ const Results: React.FC<ResultsWithContextProps> = ({
           <span>
             {indexed}/{found}
             {errors > 0 && <span className="text-red-400 ml-1">({errors} errors)</span>}
-            {skipped > 0 && <span className="text-yellow-400 ml-1">({skipped} skipped)</span>}
+            {skipped > 0 && <span className="text-yellow-600 ml-1">({skipped} skipped)</span>}
           </span>
         </div>
         <div className="w-full h-1.5 bg-zinc-700 rounded-full overflow-hidden">
@@ -180,17 +181,17 @@ const Results: React.FC<ResultsWithContextProps> = ({
 
             {/* Error */}
             {jobStatus.error && (
-              <div className="text-red-400 text-xs text-center mt-1 bg-red-950/30 rounded px-3 py-2">
+              <div className="text-red-500 text-xs text-center mt-1 bg-red-950/30 rounded px-3 py-2">
                 {jobStatus.error}
               </div>
             )}
 
             {/* Completed / failed badge */}
             {jobStatus.status === 'completed' && (
-              <div className="text-green-400 text-sm text-center mt-2 font-medium">Indexing complete!</div>
+              <div className="text-green-600 text-sm text-center mt-2 font-medium">Indexing complete!</div>
             )}
             {jobStatus.status === 'failed' && (
-              <div className="text-red-400 text-sm text-center mt-2 font-medium">Indexing failed</div>
+              <div className="text-red-600 text-sm text-center mt-2 font-medium">Indexing failed</div>
             )}
           </div>
         )}
@@ -202,7 +203,7 @@ const Results: React.FC<ResultsWithContextProps> = ({
   if (hasSearched && allResults.length === 0 && query) {
     return (
       <div className="flex flex-col items-center gap-4 w-full h-full pt-30">
-        <img src={noFiles} alt="No files" className="w-15 h-15 opacity-75" />
+        <FileX className="w-15 h-15 opacity-55" />
         <div className="flex flex-col items-center">
           <div className="text-zinc-500">No results for "{query}"</div>
           <div className="text-zinc-500">Press Enter to index directories.</div>
@@ -272,7 +273,7 @@ const Results: React.FC<ResultsWithContextProps> = ({
                      selectedItem?.path === result.path ? 'bg-zinc-700' : ''
                    }`}
                 >
-                  <div className="pr-2">
+                  <div className="pr-2 shrink-0">
                     {result.label === 'video' && result.thumbnail_url ? (
                       <img
                         src={result.thumbnail_url}
@@ -288,7 +289,7 @@ const Results: React.FC<ResultsWithContextProps> = ({
                       />
                     )}
                   </div>
-                  <div className="text-zinc-100 truncate" title={result.path}>
+                  <div className="min-w-0 flex-1 text-zinc-100 truncate" title={result.path}>
                     {getFileName(result.path)}
                   </div>
                 </div>
@@ -298,11 +299,11 @@ const Results: React.FC<ResultsWithContextProps> = ({
         </div>
 
         {/* Content preview */}
-        <div className="flex-1 h-full ">
+        <div className="flex-1 h-full">
           {selectedItem ? (
-            <div className="p-4 h-full">
+            <div className="pl-4 py-2 h-full">
               {selectedItem.label === 'video' && selectedItem.thumbnail_url ? (
-                <div className="p-5 rounded-2xl min-h-[320px] bg-zinc-900 overflow-hidden">
+                <div className="p-5 rounded-2xl min-h-[320px] bg-zinc-900/60 overflow-hidden">
                   <img
                     src={selectedItem.thumbnail_url}
                     alt=""
@@ -316,7 +317,7 @@ const Results: React.FC<ResultsWithContextProps> = ({
                   </div>
                 </div>
               ) : (
-                <div className="p-5 rounded-2xl min-h-[320px] bg-zinc-900 overflow-hidden">
+                <div className="p-5 rounded-2xl min-h-[320px] bg-zinc-700/60 overflow-hidden">
                   <div className="text-zinc-300 whitespace-pre-wrap overflow-y-auto max-h-[calc(100vh-200px)]">
                     {selectedItem.content ?? 'No preview available for this result.'}
                   </div>

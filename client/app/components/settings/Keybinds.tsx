@@ -95,7 +95,7 @@ function KeybindRow({
       <div className="flex items-center gap-3 flex-shrink-0">
         {isRecording ? (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-amber-700 dark:text-amber-400 animate-pulse">Press keys...</span>
+            <span className="text-xs text-amber-600 dark:text-amber-600 animate-pulse">Press keys...</span>
             <button
               type="button"
               onClick={onCancelRecording}
@@ -247,7 +247,7 @@ export default function Keybinds() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="text-xs uppercase tracking-wider text-zinc-500">Keybinds</div>
-          {hasUnsavedChanges && <div className="text-[11px] text-amber-700/80 dark:text-amber-300/80">Unsaved changes</div>}
+          {hasUnsavedChanges && <div className="text-[11px] text-amber-700/80 dark:text-amber-600/80">Unsaved changes</div>}
           {conflictItems.length > 0 && <div className="text-[11px] text-rose-700/80 dark:text-rose-300/80">Conflicting keybinds</div>}
         </div>
         <div className="flex items-center gap-2">

@@ -145,7 +145,7 @@ export default function Home() {
         <div
           className={cn(
             'flex flex-1 min-h-0',
-            'border-2 border-zinc-700/80 bg-zinc-800/60',
+            'border-2 border-zinc-700/80 bg-zinc-800/75',
             'px-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
           )}
         >
@@ -166,7 +166,7 @@ export default function Home() {
         <div
           className={cn(
             'flex flex-1 min-h-0 gap-1 flex-col items-center justify-center',
-            'border-2 border-zinc-700/80 bg-zinc-800/60',
+            'border-2 border-zinc-700/80 bg-zinc-800/85',
             'px-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]'
           )}
         >

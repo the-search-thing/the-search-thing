@@ -17,7 +17,7 @@ export const WindowContextProvider = ({
   children,
   titlebar = {
     title: 'the-search-thing',
-    icon: 'logo-no-bg.webp',
+    icon: 'logo-white-bg.webp',
     titleCentered: false,
     menuItems: [],
   },

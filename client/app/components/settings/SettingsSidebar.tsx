@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import type { ComponentType } from 'react'
+import { useEffect, useRef, type ComponentType, type KeyboardEvent } from 'react'
 import { Settings, Command } from 'lucide-react'
 import about from '@/resources/about.svg'
 
@@ -21,6 +21,57 @@ type SettingsSideBarProps = {
 }
 
 export default function SettingsSidebar({ selectedItem, onSelect }: SettingsSideBarProps) {
+  const buttonRefs = useRef<Array<HTMLButtonElement | null>>([])
+
+  useEffect(() => {
+    const rafId = window.requestAnimationFrame(() => {
+      buttonRefs.current[0]?.focus()
+    })
+
+    return () => window.cancelAnimationFrame(rafId)
+  }, [])
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number, label: string) => {
+    const lastIndex = items.length - 1
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      const nextIndex = index === lastIndex ? 0 : index + 1
+      const nextLabel = items[nextIndex]
+      onSelect(nextLabel)
+      buttonRefs.current[nextIndex]?.focus()
+      return
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      const prevIndex = index === 0 ? lastIndex : index - 1
+      const prevLabel = items[prevIndex]
+      onSelect(prevLabel)
+      buttonRefs.current[prevIndex]?.focus()
+      return
+    }
+
+    if (event.key === 'Home') {
+      event.preventDefault()
+      onSelect(items[0])
+      buttonRefs.current[0]?.focus()
+      return
+    }
+
+    if (event.key === 'End') {
+      event.preventDefault()
+      onSelect(items[lastIndex])
+      buttonRefs.current[lastIndex]?.focus()
+      return
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      onSelect(label)
+    }
+  }
+
   return (
     <div
       className={cn(
@@ -31,21 +82,29 @@ export default function SettingsSidebar({ selectedItem, onSelect }: SettingsSide
       )}
     >
       <div className="text-xs uppercase tracking-wider text-zinc-500 px-1">Settings</div>
-      <nav className="flex flex-col gap-1">
-        {items.map((label) => {
+      <nav className="flex flex-col gap-1" role="tablist" aria-label="Settings sections">
+        {items.map((label, index) => {
           const icon = icons[label]
 
           return (
             <button
               key={label}
               type="button"
+              ref={(el) => {
+                buttonRefs.current[index] = el
+              }}
               onClick={() => onSelect(label)}
+              onKeyDown={(event) => handleKeyDown(event, index, label)}
+              role="tab"
+              aria-selected={selectedItem === label}
+              tabIndex={selectedItem === label ? 0 : -1}
               className={cn(
                 'flex items-center justify-start gap-2',
                 'h-9 w-full rounded-md px-2',
                 selectedItem === label ? 'bg-zinc-700/60 text-zinc-100' : 'text-zinc-300 hover:text-zinc-100',
                 'hover:bg-zinc-700/60',
-                'transition-colors duration-150 opacity-95'
+                'transition-colors duration-150 opacity-95',
+                'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400/80'
               )}
             >
               {icon.type === 'lucide' ? (

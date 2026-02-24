@@ -69,16 +69,22 @@ function GlobalHotkeys() {
   return null
 }
 
-function GlobalFontPreference() {
+function GlobalAppearancePreference() {
   const { settings } = useGeneralSettings()
 
   useEffect(() => {
+    const root = document.documentElement
+    const isDark = settings.theme === 'dark'
+
+    root.classList.toggle('dark', isDark)
+    root.classList.toggle('light', !isDark)
     document.body.dataset.font = settings.font
 
     return () => {
+      root.classList.remove('dark', 'light')
       delete document.body.dataset.font
     }
-  }, [settings.font])
+  }, [settings.font, settings.theme])
 
   return null
 }
@@ -87,7 +93,7 @@ export default function App() {
   return (
     <AppProvider>
       <MemoryRouter initialEntries={['/']} initialIndex={0}>
-        <GlobalFontPreference />
+        <GlobalAppearancePreference />
         <GlobalHotkeys />
         <Routes>
           <Route path="/" element={<Home />} />

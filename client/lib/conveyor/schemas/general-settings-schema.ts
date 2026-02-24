@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 const themeSetting = z.enum(['dark', 'light'])
-const fontSetting = z.enum(['sans-serif', 'serif', 'mono'])
+const fontSetting = z.enum(['sans-serif', 'mono'])
 const searchScopeSetting = z.enum(['both', 'files', 'folders'])
 
 const generalSettingsState = z.object({

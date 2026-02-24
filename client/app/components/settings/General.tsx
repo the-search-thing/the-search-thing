@@ -36,6 +36,28 @@ export default function General() {
     return () => window.clearTimeout(timeoutId)
   }, [status])
 
+  useEffect(() => {
+    const root = document.documentElement
+    const isDark = draftSettings.theme === 'dark'
+
+    root.classList.toggle('dark', isDark)
+    root.classList.toggle('light', !isDark)
+
+    return () => {
+      const isDarkSetting = settings.theme === 'dark'
+      root.classList.toggle('dark', isDarkSetting)
+      root.classList.toggle('light', !isDarkSetting)
+    }
+  }, [draftSettings.theme, settings.theme])
+
+  useEffect(() => {
+    document.body.dataset.font = draftSettings.font
+
+    return () => {
+      document.body.dataset.font = settings.font
+    }
+  }, [draftSettings.font, settings.font])
+
   const hasUnsavedChanges = useMemo(() => {
     return (
       draftSettings['launch-on-startup'] !== settings['launch-on-startup'] ||
@@ -174,20 +196,19 @@ export default function General() {
         <div className="flex items-center justify-between gap-4">
           <div>
             <div className="text-sm text-zinc-200">Font</div>
-            <div className="text-xs text-zinc-500">Choose Sans-Serif, Serif or Mono.</div>
+            <div className="text-xs text-zinc-500">Choose Sans-Serif or Mono.</div>
           </div>
           <select
             value={draftSettings.font}
             onChange={(event) =>
               setDraftSettings((prev) => ({
                 ...prev,
-                font: event.target.value as 'sans-serif' | 'serif' | 'mono',
+                font: event.target.value as 'sans-serif' | 'mono',
               }))
             }
             className="h-7 rounded-md bg-zinc-800/60 border-1 border-zinc-600/80 text-xs text-zinc-200 px-2"
           >
             <option value="sans-serif">Sans-Serif</option>
-            <option value="serif">Serif</option>
             <option value="mono">Mono</option>
           </select>
         </div>

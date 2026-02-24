@@ -4,6 +4,7 @@ import { appIpcSchema } from './app-schema'
 import { searchIpcSchema } from './search-schema'
 import { searchHistoryIpcSchema } from './search-history-schema'
 import { keybindsIpcSchema } from './keybinds-schema'
+import { generalSettingsIpcSchema } from './general-settings-schema'
 
 // Define all IPC channel schemas in one place
 export const ipcSchemas = {
@@ -12,6 +13,7 @@ export const ipcSchemas = {
   ...searchIpcSchema,
   ...searchHistoryIpcSchema,
   ...keybindsIpcSchema,
+  ...generalSettingsIpcSchema,
 } as const
 
 // Extract types from Zod schemas

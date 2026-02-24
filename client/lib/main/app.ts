@@ -7,6 +7,7 @@ import { registerAppHandlers } from '@/lib/conveyor/handlers/app-handler'
 import { registerSearchHandlers } from '@/lib/conveyor/handlers/search-handler'
 import { registerSearchHistoryHandlers } from '@/lib/conveyor/handlers/search-history-handler'
 import { registerKeybindsHandlers } from '@/lib/conveyor/handlers/keybinds-handler'
+import { registerGeneralSettingsHandlers } from '@/lib/conveyor/handlers/general-settings-handler'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -27,12 +28,13 @@ export function initializeApp(): void {
   registerSearchHandlers()
   registerSearchHistoryHandlers()
   registerKeybindsHandlers()
+  registerGeneralSettingsHandlers()
 }
 
 export function createAppWindow(): BrowserWindow {
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 470,
+    width: 800,
+    height: 450,
     show: false,
     backgroundColor: '#1c1c1c',
     icon: appIcon,

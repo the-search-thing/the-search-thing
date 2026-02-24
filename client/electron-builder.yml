@@ -2,6 +2,10 @@ appId: com.guasam.era
 productName: the-search-thing
 directories:
   buildResources: resources/build
+compression: maximum
+electronLanguages:
+  - en-US
+asar: true
 files:
   - '!**/.vscode/*'
   - '!src/*'
@@ -10,10 +14,10 @@ files:
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
-  - resources/**
+  - '**/*.node'
 win:
   executableName: the-search-thing
-  icon: resources/build/logo-white-bg.ico
+  icon: resources/build/logo-256.ico
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

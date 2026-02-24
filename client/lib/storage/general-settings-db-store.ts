@@ -32,7 +32,7 @@ const parseTheme = (value: string, fallback: ThemeSetting): ThemeSetting => {
 }
 
 const parseFont = (value: string, fallback: FontSetting): FontSetting => {
-  return value === 'sans-serif' || value === 'serif' || value === 'mono' ? value : fallback
+  return value === 'sans-serif' || value === 'mono' ? value : fallback
 }
 
 const parseScope = (value: string, fallback: SearchScopeSetting): SearchScopeSetting => {

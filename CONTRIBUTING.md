@@ -132,6 +132,29 @@ npm run build:win
 
 `backend:build:win` runs `maturin develop --release`, builds the backend exe via PyInstaller, and copies it into `client/resources/backend/backend.exe`. `build:win` packages the Electron app and includes the backend + ffmpeg in `resources/`.
 
+### Troubleshooting (Windows)
+
+If the installed app's `backend.log` shows `ModuleNotFoundError: No module named 'fastapi'`, the backend exe was likely built with global Python instead of the project `.venv`.
+
+From repo root in PowerShell:
+
+```powershell
+taskkill /IM backend.exe /F
+\.venv\Scripts\Activate.ps1
+python -m pip install -U pip pyinstaller fastapi uvicorn starlette
+Remove-Item -Recurse -Force .\backend\build, .\backend\dist, .\client\resources\backend -ErrorAction SilentlyContinue
+npm --prefix client run backend:build:win
+npm --prefix client run build:win
+```
+
+Optional sanity check:
+
+```powershell
+python -c "import sys; print(sys.executable)"
+```
+
+This should print a path under `.venv\Scripts\python.exe`.
+
 ### ffmpeg binaries
 
 Place Windows binaries here before packaging:

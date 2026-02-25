@@ -15,6 +15,11 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
   - '**/*.node'
+extraResources:
+  - from: resources/backend
+    to: backend
+  - from: resources/ffmpeg
+    to: ffmpeg
 win:
   executableName: the-search-thing
   icon: resources/build/logo-256.ico

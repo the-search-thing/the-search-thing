@@ -5,7 +5,7 @@
   "main": "./out/main/main.js",
   "license": "MIT",
   "author": {
-    "name": "karthik",
+    "name": "the-search-thing",
     "url": "https://github.com/AmaanBilwar/the-search-thing"
   },
   "scripts": {
@@ -15,12 +15,13 @@
     "start": "electron-vite preview",
     "postinstall": "electron-builder install-app-deps",
     "vite:build:app": "electron-vite build",
+    "backend:build:win": "node build-backend-win.mjs",
     "electron:build:win": "electron-builder --win",
     "electron:build:mac": "electron-builder --mac",
     "electron:build:linux": "electron-builder --linux",
     "electron:build:dir": "electron-builder --dir",
-    "build:unpack": "run-s vite:build:app electron:build:dir",
-    "build:win": "run-s vite:build:app electron:build:win",
+    "build:unpack": "run-s backend:build:win vite:build:app electron:build:dir",
+    "build:win": "run-s backend:build:win vite:build:app electron:build:win",
     "build:mac": "run-s vite:build:app electron:build:mac",
     "build:linux": "run-s vite:build:app electron:build:linux"
   },
@@ -39,6 +40,7 @@
     "better-sqlite3": "^12.4.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.3.1",
     "lucide-react": "^0.541.0",
     "react-router-dom": "^7.13.0",
     "tailwind-merge": "^3.3.1",

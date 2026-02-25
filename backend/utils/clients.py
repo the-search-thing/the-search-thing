@@ -20,7 +20,7 @@ def get_helix_client() -> Helix_Client:
         with _helix_client_lock:
             if _helix_client is None:
                 helix_is_local = os.getenv("HELIX_LOCAL", "true").lower() == "true"
-                helix_port = int(os.getenv("HELIX_PORT", "7002"))
+                helix_port = int(os.getenv("HELIX_PORT", "7003"))
                 _helix_client = Helix_Client(local=helix_is_local, port=helix_port)
     if _helix_client is None:
         raise RuntimeError("Failed to init HELIX client")

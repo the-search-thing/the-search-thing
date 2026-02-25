@@ -40,3 +40,9 @@ videos/thumbnails/
 backend.spec
 backend/build/backend/
 lazygit
+
+
+backend/build/backend/
+client/resources/ffmpeg/
+client/resources/backend/
+backend.spec

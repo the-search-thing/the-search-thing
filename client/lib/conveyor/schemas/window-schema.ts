@@ -35,6 +35,10 @@ export const windowIpcSchema = {
     args: z.tuple([]),
     return: z.void(),
   },
+  'window-apply-placement': {
+    args: z.tuple([z.enum(['center', 'center-above', 'center-below', 'cursor'])]),
+    return: z.void(),
+  },
 
   // Web content operations
   'web-undo': {

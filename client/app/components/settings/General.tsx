@@ -4,16 +4,21 @@ import { useConveyor } from '@/app/hooks/use-conveyor'
 import { useGeneralSettings } from '@/app/hooks/use-general-settings'
 import type { GeneralSettingsState } from '@/lib/storage/general-settings'
 
-type DraftGeneralSettings = Pick<GeneralSettingsState,'launch-on-startup' | 'theme' | 'font' | 'scope'>
+type DraftGeneralSettings = Pick<
+  GeneralSettingsState,
+  'launch-on-startup' | 'theme' | 'font' | 'scope' | 'window-placement'
+>
 
 export default function General() {
   const { settings, setAllSettings } = useGeneralSettings()
   const searchApi = useConveyor('search')
+  const windowApi = useConveyor('window')
   const [draftSettings, setDraftSettings] = useState<DraftGeneralSettings>({
     "launch-on-startup": settings['launch-on-startup'],
     theme: settings.theme,
     font: settings.font,
     scope: settings.scope,
+    'window-placement': settings['window-placement'],
   })
   const [status, setStatus] = useState<'idle' | 'saved' | 'cleared'>('idle')
 
@@ -23,8 +28,15 @@ export default function General() {
       theme: settings.theme,
       font: settings.font,
       scope: settings.scope,
+      'window-placement': settings['window-placement'],
     })
-  }, [settings['launch-on-startup'], settings.theme, settings.font, settings.scope])
+  }, [
+    settings['launch-on-startup'],
+    settings.theme,
+    settings.font,
+    settings.scope,
+    settings['window-placement'],
+  ])
 
   useEffect(() => {
     if (status === 'idle') return
@@ -63,7 +75,8 @@ export default function General() {
       draftSettings['launch-on-startup'] !== settings['launch-on-startup'] ||
       draftSettings.theme !== settings.theme ||
       draftSettings.font !== settings.font ||
-      draftSettings.scope !== settings.scope
+      draftSettings.scope !== settings.scope ||
+      draftSettings['window-placement'] !== settings['window-placement']
     )
   }, [draftSettings, settings])
 
@@ -73,7 +86,9 @@ export default function General() {
       theme: settings.theme,
       font: settings.font,
       scope: settings.scope,
+      'window-placement': settings['window-placement'],
     })
+    void windowApi.windowApplyPlacement(settings['window-placement'])
   }
 
   const handleSave = () => {
@@ -232,6 +247,42 @@ export default function General() {
             <option value="files">Files Only</option>
             <option value="folders">Folders Only</option>
           </select> 
+        </div>
+
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className="text-sm text-zinc-200">Window placement</div>
+            <div className="text-xs text-zinc-500">Choose where the window appears.</div>
+          </div>
+          <select
+            value={draftSettings['window-placement']}
+            onChange={(event) => {
+              const nextValue = event.target.value as
+                | 'center'
+                | 'center-above'
+                | 'center-below'
+                | 'cursor'
+              setDraftSettings((prev) => ({
+                ...prev,
+                'window-placement': nextValue,
+              }))
+              void windowApi.windowApplyPlacement(nextValue)
+            }}
+            className="h-7 rounded-md bg-zinc-800/60 border-1 border-zinc-600/80 text-xs text-zinc-200 px-2"
+          >
+            <option value="center" title="Center the window on the active display.">
+              Centered
+            </option>
+            <option value="center-above" title="Center the window 80px higher on the active display.">
+              Centered (slightly higher)
+            </option>
+            <option value="center-below" title="Center the window 80px lower on the active display.">
+              Centered (slightly lower)
+            </option>
+            <option value="cursor" title="Center the window around your mouse cursor.">
+              Cursor
+            </option>
+          </select>
         </div>
 
         <div className="flex items-center justify-between gap-4">

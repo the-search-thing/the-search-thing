@@ -1,12 +1,14 @@
 export type ThemeSetting = 'dark' | 'light'
 export type SearchScopeSetting = 'both' | 'files' | 'folders'
 export type FontSetting = 'sans-serif' | 'mono'
+export type WindowPlacementSetting = 'center' | 'center-above' | 'center-below' | 'cursor'
 
 export type GeneralSettingKey =
   | 'launch-on-startup'
   | 'theme'
   | 'font'
   | 'scope'
+  | 'window-placement'
   | 'clear-search'
 
 export type GeneralSettingsState = {
@@ -14,6 +16,7 @@ export type GeneralSettingsState = {
   theme: ThemeSetting
   font: FontSetting
   scope: SearchScopeSetting
+  'window-placement': WindowPlacementSetting
 }
 
 export const DEFAULT_GENERAL_SETTINGS: GeneralSettingsState = {
@@ -21,6 +24,7 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettingsState = {
   theme: 'dark',
   font: 'sans-serif',
   scope: 'both',
+  'window-placement': 'center',
 }
 
 export const GENERAL_SETTINGS_CHANGE_EVENT = 'general-settings:change'
@@ -39,5 +43,6 @@ export const SETTINGS_ACTIONS: GeneralMeta[] = [
   { action: 'theme', label: 'Theme', description: 'Choose Light or Dark mode.' },
   { action: 'font', label: 'Font', description: 'Choose Sans-Serif or Mono.' },
   { action: 'scope', label: 'Search Scope', description: 'Files, Folders, or Both.' },
+  { action: 'window-placement', label: 'Window placement', description: 'Choose where the window appears.' },
   { action: 'clear-search', label: 'Clear recent searches', description: 'Remove cached query history.' },
 ]

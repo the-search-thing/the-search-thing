@@ -3,6 +3,7 @@ import { join } from 'path'
 import { handle } from '@/lib/main/shared'
 import { createBetterSqliteAdapter } from '@/lib/storage/sqlite-adapter'
 import { createGeneralSettingsStore } from '@/lib/storage/general-settings-db-store'
+import type { GeneralSettingsState } from '@/lib/storage/general-settings'
 
 const applyLaunchOnStartup = (enabled: boolean) => {
   app.setLoginItemSettings({
@@ -29,9 +30,10 @@ const getStore = () => {
   return store
 }
 
-export const registerGeneralSettingsHandlers = () => {
+export const registerGeneralSettingsHandlers = (onChange?: (settings: GeneralSettingsState) => void) => {
   const initialSettings = getStore().getGeneralSettings()
   applyLaunchOnStartup(initialSettings['launch-on-startup'])
+  onChange?.(initialSettings)
 
   app.on('before-quit', () => {
     store?.close?.()
@@ -44,6 +46,7 @@ export const registerGeneralSettingsHandlers = () => {
   handle('general-settings/set', async (settings) => {
     const next = getStore().setGeneralSettings(settings)
     applyLaunchOnStartup(next['launch-on-startup'])
+    onChange?.(next)
     return next
   })
 
@@ -52,12 +55,14 @@ export const registerGeneralSettingsHandlers = () => {
     if (key === 'launch-on-startup') {
       applyLaunchOnStartup(next['launch-on-startup'])
     }
+    onChange?.(next)
     return next
   })
 
   handle('general-settings/reset', async () => {
     const next = getStore().resetGeneralSettings()
     applyLaunchOnStartup(next['launch-on-startup'])
+    onChange?.(next)
     return next
   })
 }

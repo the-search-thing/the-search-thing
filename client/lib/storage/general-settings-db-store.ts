@@ -5,6 +5,7 @@ import {
   type GeneralSettingsState,
   type SearchScopeSetting,
   type ThemeSetting,
+  type WindowPlacementSetting,
 } from './general-settings'
 
 type PersistedGeneralSettingKey = keyof GeneralSettingsState
@@ -37,6 +38,15 @@ const parseFont = (value: string, fallback: FontSetting): FontSetting => {
 
 const parseScope = (value: string, fallback: SearchScopeSetting): SearchScopeSetting => {
   return value === 'both' || value === 'files' || value === 'folders' ? value : fallback
+}
+
+const parseWindowPlacement = (
+  value: string,
+  fallback: WindowPlacementSetting
+): WindowPlacementSetting => {
+  return value === 'center' || value === 'center-above' || value === 'center-below' || value === 'cursor'
+    ? value
+    : fallback
 }
 
 const valueToStorage = (value: GeneralSettingsState[PersistedGeneralSettingKey]): string => {
@@ -82,6 +92,12 @@ export const createGeneralSettingsStore = (adapter: SqliteAdapter) => {
           break
         case 'scope':
           settings.scope = parseScope(row.setting_value, DEFAULT_GENERAL_SETTINGS.scope)
+          break
+        case 'window-placement':
+          settings['window-placement'] = parseWindowPlacement(
+            row.setting_value,
+            DEFAULT_GENERAL_SETTINGS['window-placement']
+          )
           break
       }
     }

@@ -3,16 +3,24 @@ import { z } from 'zod'
 const themeSetting = z.enum(['dark', 'light'])
 const fontSetting = z.enum(['sans-serif', 'mono'])
 const searchScopeSetting = z.enum(['both', 'files', 'folders'])
+const windowPlacementSetting = z.enum(['center', 'center-above', 'center-below', 'cursor'])
 
 const generalSettingsState = z.object({
   'launch-on-startup': z.boolean(),
   theme: themeSetting,
   font: fontSetting,
   scope: searchScopeSetting,
+  'window-placement': windowPlacementSetting,
 })
 
-const generalSettingKey = z.enum(['launch-on-startup', 'theme', 'font', 'scope'])
-const generalSettingValue = z.union([z.boolean(), themeSetting, fontSetting, searchScopeSetting])
+const generalSettingKey = z.enum(['launch-on-startup', 'theme', 'font', 'scope', 'window-placement'])
+const generalSettingValue = z.union([
+  z.boolean(),
+  themeSetting,
+  fontSetting,
+  searchScopeSetting,
+  windowPlacementSetting,
+])
 
 export const generalSettingsIpcSchema = {
   'general-settings/get': {

@@ -1,3 +1,4 @@
+import { startBackend, stopBackend } from './backend'
 import { app, BrowserWindow, globalShortcut } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { join } from 'path'

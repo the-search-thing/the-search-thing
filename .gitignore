@@ -35,3 +35,7 @@ videos/output_indexer/
 videos/thumbnails/
 
 lazygit
+backend/build/backend/
+client/resources/backend/
+client/resources/ffmpeg/
+backend.spec

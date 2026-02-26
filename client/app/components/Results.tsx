@@ -1,6 +1,5 @@
 import * as React from 'react'
-import { useState, useEffect, useRef, useCallback } from 'react'
-import noFiles from '@/resources/no-files-found.svg'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { FileX } from 'lucide-react'
 import { ResultProps, SearchResultItem } from '../types/types'
 import * as fileIcons from '@/resources/filetype icons'
@@ -21,6 +20,50 @@ const phaseLabels: Record<string, string> = {
 
 interface ResultsWithContextProps extends ResultProps {
   onIndexingCancelled?: () => void
+}
+
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+const getQueryTerms = (value: string): string[] => {
+  const matches = value.toLowerCase().match(/\w+/g) ?? []
+  return Array.from(new Set(matches)).filter(Boolean)
+}
+
+const buildSnippet = (content: string, queryTerms: string[], maxChars = 140): string => {
+  const normalized = content.replace(/\s+/g, ' ').trim()
+  if (!normalized) return ''
+
+  const truncate = (text: string) => (text.length > maxChars ? `${text.slice(0, maxChars)}...` : text)
+
+  if (queryTerms.length === 0) {
+    return truncate(normalized)
+  }
+
+  const normalizedLower = normalized.toLowerCase()
+  let firstMatchIndex = -1
+  for (const term of queryTerms) {
+    const index = normalizedLower.indexOf(term)
+    if (index === -1) continue
+    if (firstMatchIndex === -1 || index < firstMatchIndex) {
+      firstMatchIndex = index
+    }
+  }
+
+  if (firstMatchIndex === -1) {
+    return truncate(normalized)
+  }
+
+  const contextBefore = 45
+  let start = Math.max(0, firstMatchIndex - contextBefore)
+  const end = Math.min(normalized.length, start + maxChars)
+  if (end - start < maxChars && start > 0) {
+    start = Math.max(0, end - maxChars)
+  }
+
+  let snippet = normalized.slice(start, end).trim()
+  if (start > 0) snippet = `...${snippet}`
+  if (end < normalized.length) snippet = `${snippet}...`
+  return snippet
 }
 
 const Results: React.FC<ResultsWithContextProps> = ({
@@ -49,6 +92,38 @@ const Results: React.FC<ResultsWithContextProps> = ({
   } = useAppContext()
 
   const allResults = searchResults?.results || []
+
+  const queryTerms = useMemo(() => getQueryTerms(query), [query])
+  const queryTermSet = useMemo(() => new Set(queryTerms), [queryTerms])
+  const highlightRegex = useMemo(() => {
+    if (queryTerms.length === 0) return null
+    const pattern = queryTerms
+      .slice()
+      .sort((a, b) => b.length - a.length)
+      .map((term) => escapeRegExp(term))
+      .join('|')
+    return new RegExp(`(${pattern})`, 'gi')
+  }, [queryTerms])
+
+  const renderHighlightedText = useCallback(
+    (text: string) => {
+      if (!highlightRegex) return text
+      const parts = text.split(highlightRegex)
+      if (parts.length <= 1) return text
+
+      return parts.map((part, index) => {
+        if (queryTermSet.has(part.toLowerCase())) {
+          return (
+            <mark key={`hl-${index}`} className="rounded bg-amber-200 px-0.5 text-zinc-950">
+              {part}
+            </mark>
+          )
+        }
+        return <React.Fragment key={`tx-${index}`}>{part}</React.Fragment>
+      })
+    },
+    [highlightRegex, queryTermSet]
+  )
 
   useEffect(() => {
     setSelectedItem(null)
@@ -289,8 +364,13 @@ const Results: React.FC<ResultsWithContextProps> = ({
                       />
                     )}
                   </div>
-                  <div className="min-w-0 flex-1 text-zinc-100 truncate" title={result.path}>
-                    {getFileName(result.path)}
+                  <div className="min-w-0 flex-1" title={result.path}>
+                    <div className="text-zinc-100 truncate">{getFileName(result.path)}</div>
+                    {result.label === 'file' && typeof result.content === 'string' && result.content.trim() ? (
+                      <div className="text-zinc-400 text-xs truncate">
+                        {renderHighlightedText(buildSnippet(result.content, queryTerms))}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               ))
@@ -319,7 +399,9 @@ const Results: React.FC<ResultsWithContextProps> = ({
               ) : (
                 <div className="p-5 rounded-2xl min-h-[320px] bg-zinc-700/60 overflow-hidden">
                   <div className="text-zinc-300 whitespace-pre-wrap overflow-y-auto max-h-[calc(100vh-200px)]">
-                    {selectedItem.content ?? 'No preview available for this result.'}
+                    {selectedItem.label === 'file' && typeof selectedItem.content === 'string' && selectedItem.content
+                      ? renderHighlightedText(selectedItem.content)
+                      : selectedItem.content ?? 'No preview available for this result.'}
                   </div>
                 </div>
               )}

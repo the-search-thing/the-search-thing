@@ -77,6 +77,7 @@ const Results: React.FC<ResultsWithContextProps> = ({
   const [selectedItem, setSelectedItem] = useState<ResultItem | null>(null)
   const [hasInitiatedIndexing, setHasInitiatedIndexing] = useState(false)
   const hasOpenedDialogRef = useRef(false)
+  const firstResultRef = useRef<HTMLDivElement | null>(null)
   const search = useConveyor('search')
 
   const {
@@ -126,7 +127,14 @@ const Results: React.FC<ResultsWithContextProps> = ({
   )
 
   useEffect(() => {
-    setSelectedItem(null)
+    const firstResult = searchResults?.results?.[0] ?? null
+    setSelectedItem(firstResult)
+
+    if (firstResult) {
+      requestAnimationFrame(() => {
+        firstResultRef.current?.focus()
+      })
+    }
   }, [searchResults])
 
   useEffect(() => {
@@ -332,6 +340,7 @@ const Results: React.FC<ResultsWithContextProps> = ({
               allResults.map((result, index) => (
                 <div
                   key={`${result.path}-${result.label}-${index}`}
+                  ref={index === 0 ? firstResultRef : null}
                   tabIndex={0}
                   onClick={() => setSelectedItem(result)}
                   onKeyDown={(e) => {

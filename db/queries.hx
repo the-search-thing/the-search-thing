@@ -104,9 +104,9 @@ QUERY CreateImageEmbeddings (image_id: String, content: String, path: String) =>
     RETURN "Success"
 
 // create pdf embeddings vector and connect to pdf node
-QUERY CreatePdfEmbeddings (pdf_id: String, content: String, path: String) => 
+QUERY CreatePdfEmbeddings (pdf_id: String, content: String, path: String, chunk_id: String, chunk_word_count: U32) => 
     pdf <- N<Pdf>({pdf_id: pdf_id})
-    pdf_embeddings <- AddV<PdfEmbeddings>(Embed(content), {pdf_id: pdf_id, content: content, path: path})
+    pdf_embeddings <- AddV<PdfEmbeddings>(Embed(content), {pdf_id: pdf_id, content: content, path: path, chunk_id: chunk_id, chunk_word_count: chunk_word_count})
     edge <- AddE<HasPdfEmbeddings>::From(pdf)::To(pdf_embeddings)
     RETURN "Success"
 
@@ -145,7 +145,7 @@ QUERY SearchImageEmbeddings(search_text: String) =>
 QUERY SearchPdfEmbeddings(search_text: String) =>
     pdf_embeddings <- SearchV<PdfEmbeddings>(Embed(search_text), 100)
     pdfs <- pdf_embeddings::In<HasPdfEmbeddings>
-    RETURN pdfs
+    RETURN pdf_embeddings, pdfs
 
 // search transcript & frame embeddings
 // #[model("gemini:gemini-embedding-001:RETRIEVAL_DOCUMENT")]

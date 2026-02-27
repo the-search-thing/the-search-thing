@@ -119,6 +119,8 @@ V::PdfEmbeddings{
     INDEX pdf_id: String,
     content: String,
     path: String,
+    chunk_id: String,
+    chunk_word_count: U32,
 }
 
 

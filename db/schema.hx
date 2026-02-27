@@ -16,6 +16,14 @@ N::Image {
     path: String
 }
 
+N::Pdf {
+    INDEX pdf_id: String,
+    INDEX content_hash: String,
+    
+    content: String,
+    path: String
+}
+
 N::Video {
     INDEX video_id: String,
     INDEX content_hash: String,
@@ -79,6 +87,11 @@ E::HasImageEmbeddings{
     To: ImageEmbeddings
 }
 
+E::HasPdfEmbeddings{
+    From: Pdf,
+    To: PdfEmbeddings
+}
+
 V::TranscriptEmbeddings {
     chunk_id: String,
     content: String
@@ -98,6 +111,12 @@ V::FileEmbeddings{
 
 V::ImageEmbeddings{
     INDEX image_id: String,
+    content: String,
+    path: String,
+}
+
+V::PdfEmbeddings{
+    INDEX pdf_id: String,
     content: String,
     path: String,
 }

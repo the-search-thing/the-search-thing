@@ -18,6 +18,15 @@ QUERY CreateImage (image_id: String, content_hash: String, content: String, path
     })
     RETURN image
 
+QUERY CreatePdf (pdf_id: String, content_hash: String, content: String, path:String) => 
+    pdf <- AddN<Pdf>({
+        pdf_id: pdf_id,
+        content_hash: content_hash,
+        content: content,
+        path: path,
+    })
+    RETURN pdf
+
 // create a video
 QUERY CreateVideo (video_id: String, content_hash: String, no_of_chunks: U8, path:String) =>
     video <- AddN<Video>({
@@ -94,6 +103,12 @@ QUERY CreateImageEmbeddings (image_id: String, content: String, path: String) =>
     edge <- AddE<HasImageEmbeddings>::From(image)::To(image_embeddings)
     RETURN "Success"
 
+// create pdf embeddings vector and connect to pdf node
+QUERY CreatePdfEmbeddings (pdf_id: String, content: String, path: String) => 
+    pdf <- N<Pdf>({pdf_id: pdf_id})
+    pdf_embeddings <- AddV<PdfEmbeddings>(Embed(content), {pdf_id: pdf_id, content: content, path: path})
+    edge <- AddE<HasPdfEmbeddings>::From(pdf)::To(pdf_embeddings)
+    RETURN "Success"
 
 // create a vector and connect to chunk node for transcript embeddings
 // #[model("gemini:gemini-embedding-001:RETRIEVAL_DOCUMENT")]
@@ -126,6 +141,11 @@ QUERY SearchImageEmbeddings(search_text: String) =>
     images <- image_embeddings::In<HasImageEmbeddings>
     RETURN images
 
+// search pdf embeddings
+QUERY SearchPdfEmbeddings(search_text: String) =>
+    pdf_embeddings <- SearchV<PdfEmbeddings>(Embed(search_text), 100)
+    pdfs <- pdf_embeddings::In<HasPdfEmbeddings>
+    RETURN pdfs
 
 // search transcript & frame embeddings
 // #[model("gemini:gemini-embedding-001:RETRIEVAL_DOCUMENT")]
@@ -272,6 +292,10 @@ QUERY GetAllFiles() =>
     files <- N<File>
     RETURN files
 
+QUERY GetAllPdfs() =>
+    pdfs <- N<Pdf>
+    RETURN pdfs
+
 // get all chunks
 QUERY GetAllChunks()=>
     chunks <- N<Chunk>
@@ -321,3 +345,7 @@ QUERY GetImageByHash(content_hash: String)=>
 QUERY GetVideoByHash(content_hash: String)=>
     video <- N<Video>({content_hash: content_hash})
     RETURN video
+
+QUERY GetPdfByHash(content_hash: String) =>
+    pdf <- N<Pdf>({content_hash: content_hash})
+    RETURN pdf

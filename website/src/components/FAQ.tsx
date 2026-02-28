@@ -13,25 +13,30 @@ const items = [
   },
   {
     value: "item-2",
+    trigger: "is it only for windows?",
+    content: "nope, currently windows is stable, but we plan to release for every OS",
+  },
+  {
+    value: "item-3",
     trigger: "is my data safe?",
     content:
       "Yes. we are currently not hosting anything ourselves, this is built as a fully-local system. When we eventually provide hosting, we will encrypt all user data.",
   },
   {
-    value: "item-3",
+    value: "item-4",
     trigger: "is it fast?",
     content:
       "Yes. Can it be faster? Definitely. That's the goal. We will keep building it till it's the fastest it can be.",
   },
   {
-    value: "item-4",
+    value: "item-5",
     trigger: "ew but this is electron!",
     content:
       "We are aware. We know it sucks. This started as something we wanted to use and wanted to ship ASAP. We will eventually write it in GPUI - Zed's GPU UI Framework Library ",
   },
 ];
 
-export function Features() {
+export function FAQ() {
   return (
     <Accordion type="single" collapsible className="max-w-lg">
       {items.map((item) => (

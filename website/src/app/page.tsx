@@ -1,4 +1,4 @@
-import { Features } from "@/components/Features";
+import { FAQ } from "@/components/FAQ";
 
 export default function Home() {
   return (
@@ -31,15 +31,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features section - full viewport */}
+      {/* FAQ section - full viewport */}
       <section
         id="features"
         className="min-h-screen w-full flex flex-col items-center justify-center"
       >
         <div className="w-full max-w-8xl px-12 py-16 grid grid-cols-1 md:grid-cols-2 gap-x-24 items-center">
           <div className="md:text-left flex flex-col">
-            <h2 className="text-2xl font-bold mb-8">Features</h2>
-            <Features />
+            <h2 className="text-2xl font-bold mb-8">FAQ</h2>
+            <FAQ />
           </div>
           <div className="flex justify-center md:justify-end">
             <div className="aspect-video w-full max-w-xl bg-neutral-200 dark:bg-neutral-700 rounded-lg flex items-center justify-center text-neutral-500 dark:text-neutral-400 text-sm">

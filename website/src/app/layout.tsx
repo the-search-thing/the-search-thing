@@ -28,7 +28,7 @@ export default function RootLayout({
             <div className="flex items-center gap-6">
               <a
                 className="underline underline-offset-4 hover:cursor-pointer"
-                href="https://github.com/amaanBilwar/the-search-thing"
+                href="https://github.com/the-search-thing/the-search-thing"
                 target="_blank"
                 rel="noopener noreferrer"
               >

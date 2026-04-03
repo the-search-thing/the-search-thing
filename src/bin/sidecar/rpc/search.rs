@@ -1,7 +1,6 @@
 use helix_rs::{HelixDB, HelixDBClient};
 use serde::Deserialize;
 use serde_json::{json, Value};
-use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::env;
 use std::path::PathBuf;
@@ -26,66 +25,21 @@ struct SearchItem {
     chunk_id: Option<String>,
     image_id: Option<String>,
     content_hash: Option<String>,
-    score: f64,
-    source: String,
 }
 
 fn search_mode() -> String {
-    env::var("SIDECAR_SEARCH_MODE").unwrap_or_else(|_| "python-proxy".to_string())
-}
-
-fn extract_keywords(query: &str) -> Vec<String> {
-    query
-        .split(|c: char| !c.is_alphanumeric() && c != '_')
-        .map(|s| s.trim().to_lowercase())
-        .filter(|s| !s.is_empty())
-        .collect()
-}
-
-fn has_keyword_match(item: &SearchItem, keywords: &[String]) -> bool {
-    if keywords.is_empty() {
-        return false;
-    }
-
-    let content_lower = item
-        .content
-        .as_ref()
-        .map(|c| c.to_lowercase())
-        .unwrap_or_default();
-    let path_lower = item.path.to_lowercase();
-
-    keywords
-        .iter()
-        .any(|kw| content_lower.contains(kw) || path_lower.contains(kw))
+    let mode = env::var("SIDECAR_SEARCH_MODE").unwrap_or_else(|_| "python-proxy".to_string());
+    eprintln!("[DEBUG] search_mode: {}", mode);
+    mode
 }
 
 fn value_as_string(value: Option<&Value>) -> Option<String> {
     value.and_then(Value::as_str).map(ToString::to_string)
 }
 
-fn gather_objects(value: &Value, out: &mut Vec<Value>) {
-    match value {
-        Value::Object(map) => {
-            out.push(value.clone());
-            for nested in map.values() {
-                gather_objects(nested, out);
-            }
-        }
-        Value::Array(items) => {
-            for item in items {
-                gather_objects(item, out);
-            }
-        }
-        _ => {}
-    }
-}
-
-fn normalize_file_results(response: &Value) -> Vec<SearchItem> {
-    let mut objects: Vec<Value> = Vec::new();
-    gather_objects(response, &mut objects);
-
+fn normalize_file_results(list: &[Value]) -> Vec<SearchItem> {
     let mut items: Vec<SearchItem> = Vec::new();
-    for obj in objects {
+    for obj in list {
         let Some(map) = obj.as_object() else {
             continue;
         };
@@ -111,22 +65,17 @@ fn normalize_file_results(response: &Value) -> Vec<SearchItem> {
             chunk_id: None,
             image_id: None,
             content_hash: None,
-            score: 0.0,
-            source: "file".to_string(),
         });
     }
 
     items
 }
 
-fn normalize_video_results(response: &Value) -> Vec<SearchItem> {
-    let mut objects: Vec<Value> = Vec::new();
-    gather_objects(response, &mut objects);
-
+fn normalize_video_results(list: &[Value]) -> Vec<SearchItem> {
     let mut dedup: HashSet<(String, String, String, String)> = HashSet::new();
     let mut items: Vec<SearchItem> = Vec::new();
 
-    for obj in objects {
+    for obj in list {
         let Some(map) = obj.as_object() else {
             continue;
         };
@@ -166,22 +115,17 @@ fn normalize_video_results(response: &Value) -> Vec<SearchItem> {
             chunk_id,
             image_id: None,
             content_hash,
-            score: 0.0,
-            source: "video".to_string(),
         });
     }
 
     items
 }
 
-fn normalize_image_results(response: &Value) -> Vec<SearchItem> {
-    let mut objects: Vec<Value> = Vec::new();
-    gather_objects(response, &mut objects);
-
+fn normalize_image_results(list: &[Value]) -> Vec<SearchItem> {
     let mut dedup: HashSet<(String, String)> = HashSet::new();
     let mut items: Vec<SearchItem> = Vec::new();
 
-    for obj in objects {
+    for obj in list {
         let Some(map) = obj.as_object() else {
             continue;
         };
@@ -213,8 +157,6 @@ fn normalize_image_results(response: &Value) -> Vec<SearchItem> {
             chunk_id: None,
             image_id,
             content_hash: None,
-            score: 0.0,
-            source: "image".to_string(),
         });
     }
 
@@ -248,6 +190,8 @@ async fn rust_helix_search_query(query: &str) -> Result<Value, String> {
         .map_err(|e| format!("invalid HELIX_PORT: {}", e))?;
     let api_key = env::var("HELIX_API_KEY").ok();
 
+    eprintln!("[DEBUG] rust_helix_search: connecting to {}:{}", endpoint, port);
+    
     let client = HelixDB::new(Some(endpoint.as_str()), Some(port), api_key.as_deref());
     let payload = json!({ "search_text": query });
 
@@ -257,52 +201,88 @@ async fn rust_helix_search_query(query: &str) -> Result<Value, String> {
 
     let (file_raw, video_raw, image_raw) = tokio::join!(file_future, video_future, image_future);
 
-    let file_value = file_raw.map_err(|e| format!("file search failed: {}", e))?;
-    let video_value = video_raw.map_err(|e| format!("video search failed: {}", e))?;
-    let image_value = image_raw.map_err(|e| format!("image search failed: {}", e))?;
-
-    let mut file_items = normalize_file_results(&file_value);
-    let mut video_items = normalize_video_results(&video_value);
-    let mut image_items = normalize_image_results(&image_value);
-
-    let keywords = extract_keywords(query);
-
-    for (rank, item) in file_items.iter_mut().enumerate() {
-        let mut score = 1.0 / (rank as f64 + 1.0 + 60.0);
-        if has_keyword_match(item, &keywords) {
-            score *= 1.2;
+    let file_value = match file_raw {
+        Ok(v) => v,
+        Err(e) => {
+            let msg = e.to_string();
+            if msg.contains("Empty input provided to reranker") {
+                eprintln!("[DEBUG] file search empty reranker input; treating as empty");
+                json!({"chunks": []})
+            } else {
+                eprintln!("[DEBUG] file search error: {}", e);
+                return Err(format!("file search failed: {}", e));
+            }
         }
-        item.score = score;
-    }
-    for (rank, item) in video_items.iter_mut().enumerate() {
-        let mut score = 1.0 / (rank as f64 + 1.0 + 60.0);
-        if has_keyword_match(item, &keywords) {
-            score *= 1.2;
+    };
+    let video_value = match video_raw {
+        Ok(v) => v,
+        Err(e) => {
+            let msg = e.to_string();
+            if msg.contains("Empty input provided to reranker") {
+                eprintln!("[DEBUG] video search empty reranker input; treating as empty");
+                json!({"transcript_videos": [], "frame_videos": []})
+            } else {
+                eprintln!("[DEBUG] video search error: {}", e);
+                return Err(format!("video search failed: {}", e));
+            }
         }
-        item.score = score;
-    }
-    for (rank, item) in image_items.iter_mut().enumerate() {
-        let mut score = 1.0 / (rank as f64 + 1.0 + 60.0);
-        if has_keyword_match(item, &keywords) {
-            score *= 1.2;
+    };
+    let image_value = match image_raw {
+        Ok(v) => v,
+        Err(e) => {
+            let msg = e.to_string();
+            if msg.contains("Empty input provided to reranker") {
+                eprintln!("[DEBUG] image search empty reranker input; treating as empty");
+                json!({"images": []})
+            } else {
+                eprintln!("[DEBUG] image search error: {}", e);
+                return Err(format!("image search failed: {}", e));
+            }
         }
-        item.score = score;
-    }
+    };
+
+    let file_list = file_value
+        .get("chunks")
+        .or_else(|| file_value.get("files"))
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+
+    let transcript_video_list = video_value
+        .get("transcript_videos")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+
+    let frame_video_list = video_value
+        .get("frame_videos")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+
+    let image_list = image_value
+        .get("images")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+
+    eprintln!(
+        "[DEBUG] search results: file_items={}, transcript_video_items={}, frame_video_items={}, image_items={}",
+        file_list.len(),
+        transcript_video_list.len(),
+        frame_video_list.len(),
+        image_list.len()
+    );
+
+    let file_items = normalize_file_results(&file_list);
+    let mut video_items = normalize_video_results(&transcript_video_list);
+    video_items.extend(normalize_video_results(&frame_video_list));
+    let image_items = normalize_image_results(&image_list);
 
     let mut combined = Vec::new();
     combined.extend(file_items);
     combined.extend(video_items);
     combined.extend(image_items);
-
-    combined.sort_by(|a, b| {
-        let score_cmp = b.score.partial_cmp(&a.score).unwrap_or(Ordering::Equal);
-        if score_cmp != Ordering::Equal {
-            return score_cmp;
-        }
-        let a_video = if a.source == "video" { 1 } else { 0 };
-        let b_video = if b.source == "video" { 1 } else { 0 };
-        b_video.cmp(&a_video)
-    });
 
     let mut deduped: Vec<SearchItem> = Vec::new();
     let mut seen: HashSet<(String, String, String, String, String, String)> = HashSet::new();

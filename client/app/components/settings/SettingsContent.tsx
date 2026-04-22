@@ -1,4 +1,3 @@
-import type { ComponentType } from 'react'
 import { cn } from '@/lib/utils'
 import About from './About'
 import General from './General'
@@ -8,18 +7,16 @@ type SettingsContentProps = {
   item: string
 }
 
-const components: Record<string, ComponentType> = {
-  About,
-  General,
-  Keybinds,
-}
+const sections = [
+  { key: 'General', Component: General },
+  { key: 'Keybinds', Component: Keybinds },
+  { key: 'About', Component: About },
+] as const
 
 export default function SettingsContent({ item }: SettingsContentProps) {
-  const ComponentToRender = components[item as keyof typeof components]
+  const hasMatch = sections.some((section) => section.key === item)
 
-  if (!ComponentToRender) {
-    return null
-  }
+  if (!hasMatch) return null
 
   return (
     <div
@@ -28,7 +25,11 @@ export default function SettingsContent({ item }: SettingsContentProps) {
         'bg-transparent'
       )}
     >
-      <ComponentToRender />
+      {sections.map(({ key, Component }) => (
+        <div key={key} className={cn('h-full w-full', item === key ? 'block' : 'hidden')} aria-hidden={item !== key}>
+          <Component />
+        </div>
+      ))}
     </div>
   )
 }

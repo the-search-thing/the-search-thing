@@ -1,7 +1,10 @@
 import { handle } from "@/lib/main/shared";
 import { dialog, shell } from "electron";
 import axios from "axios";
+import { readFile } from "fs/promises";
 import { sidecarClient } from "@/lib/main/sidecar-client";
+
+const MAX_RESULT_CONTENT_CHARS = 500_000;
 
 export const registerSearchHandlers = () => {
   const useSidecarForIndexing = process.env["USE_RUST_SIDECAR_INDEXING"] !== "false";
@@ -16,6 +19,19 @@ export const registerSearchHandlers = () => {
       params: { q: query },
     });
     return response.data;
+  });
+
+  handle("search-result-content", async (filePath: string) => {
+    try {
+      const content = await readFile(filePath, "utf8");
+      const truncated =
+        content.length > MAX_RESULT_CONTENT_CHARS
+          ? `${content.slice(0, MAX_RESULT_CONTENT_CHARS)}\n\n[truncated for preview]`
+          : content;
+      return { content: truncated };
+    } catch {
+      return { content: null };
+    }
   });
 
   handle("sidecar-ping", async () => {

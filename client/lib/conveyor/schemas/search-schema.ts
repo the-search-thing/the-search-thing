@@ -45,6 +45,12 @@ export const searchIpcSchema = {
       ),
     }),
   },
+  "search-result-content": {
+    args: z.tuple([z.string()]),
+    return: z.object({
+      content: z.string().nullable(),
+    }),
+  },
   "sidecar-ping": {
     args: z.tuple([]),
     return: z.object({

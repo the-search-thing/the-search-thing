@@ -31,6 +31,8 @@ const Results: React.FC<ResultsWithContextProps> = ({
   onRecentSearchSelect,
 }) => {
   const [selectedItem, setSelectedItem] = useState<ResultItem | null>(null);
+  const [selectedContent, setSelectedContent] = useState<string | null>(null);
+  const [isContentLoading, setIsContentLoading] = useState(false);
   const [brokenImagePaths, setBrokenImagePaths] = useState<Set<string>>(new Set());
   const [hasInitiatedIndexing, setHasInitiatedIndexing] = useState(false);
   const hasOpenedDialogRef = useRef(false);
@@ -52,8 +54,48 @@ const Results: React.FC<ResultsWithContextProps> = ({
 
   useEffect(() => {
     setSelectedItem(null);
+    setSelectedContent(null);
+    setIsContentLoading(false);
     setBrokenImagePaths(new Set());
   }, [searchResults]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!selectedItem) {
+      setSelectedContent(null);
+      setIsContentLoading(false);
+      return;
+    }
+
+    const preview = selectedItem.content ?? null;
+    setSelectedContent(preview);
+
+    if (selectedItem.label !== "file") {
+      setIsContentLoading(false);
+      return;
+    }
+
+    setIsContentLoading(true);
+    search
+      .getResultContent(selectedItem.path)
+      .then((response) => {
+        if (cancelled) return;
+        setSelectedContent(response.content ?? preview);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSelectedContent(preview);
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setIsContentLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedItem, search]);
 
   useEffect(() => {
     if (!hasSearched) {
@@ -360,7 +402,7 @@ const Results: React.FC<ResultsWithContextProps> = ({
                     )}
                   </div>
                   <div className="text-zinc-300 whitespace-pre-wrap break-words overflow-y-auto overflow-x-hidden min-h-0 flex-1">
-                    {selectedItem.content ?? "No preview available for this result."}
+                    {selectedContent ?? "No preview available for this result."}
                   </div>
                   <div
                     className="text-zinc-400 text-xs mt-3 truncate shrink-0"
@@ -377,7 +419,7 @@ const Results: React.FC<ResultsWithContextProps> = ({
                     className="w-full h-[320px] object-contain rounded-xl bg-zinc-950 shrink-0"
                   />
                   <div className="text-zinc-300 whitespace-pre-wrap break-words overflow-y-auto overflow-x-hidden min-h-0 flex-1 mt-4">
-                    {selectedItem.content ?? "No preview available for this result."}
+                    {selectedContent ?? "No preview available for this result."}
                   </div>
                   <div
                     className="text-zinc-400 text-xs mt-3 truncate shrink-0"
@@ -389,7 +431,9 @@ const Results: React.FC<ResultsWithContextProps> = ({
               ) : (
                 <div className="p-5 rounded-2xl h-full bg-zinc-700/60 overflow-hidden flex flex-col min-h-0">
                   <div className="text-zinc-300 whitespace-pre-wrap break-words overflow-y-auto overflow-x-hidden min-h-0 flex-1">
-                    {selectedItem.content ?? "No preview available for this result."}
+                    {isContentLoading && selectedItem.label === "file"
+                      ? "Loading full file content..."
+                      : (selectedContent ?? "No preview available for this result.")}
                   </div>
                 </div>
               )}

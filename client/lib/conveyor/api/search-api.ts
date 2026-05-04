@@ -5,6 +5,7 @@ export class SearchApi extends ConveyorApi {
   index = (dirPaths: string) => this.invoke("index", dirPaths);
   indexStatus = (jobId: string) => this.invoke("index-status", jobId);
   search = (input: string) => this.invoke("search", input);
+  getResultContent = (filePath: string) => this.invoke("search-result-content", filePath);
 
   sidecarPing = () => this.invoke("sidecar-ping");
   sidecarWalkTextBatch = (input: {

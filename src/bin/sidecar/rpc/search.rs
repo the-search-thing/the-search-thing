@@ -1,6 +1,6 @@
 use helix_rs::{HelixDB, HelixDBClient};
 use serde::Deserialize;
-use serde_json::{json, Value};
+use serde_json::{json, Map, Value};
 use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::env;
@@ -29,6 +29,23 @@ struct SearchItem {
     content_hash: Option<String>,
     score: f64,
     source: String,
+}
+
+const SEARCH_RESULT_PREVIEW_CHARS: usize = 320;
+
+fn truncate_preview(content: Option<&str>, max_chars: usize) -> Option<String> {
+    let content = content?.trim();
+    if content.is_empty() {
+        return None;
+    }
+
+    let mut chars = content.chars();
+    let preview: String = chars.by_ref().take(max_chars).collect();
+    if chars.next().is_some() {
+        Some(format!("{}…", preview))
+    } else {
+        Some(preview)
+    }
 }
 
 fn extract_keywords(query: &str) -> Vec<String> {
@@ -60,36 +77,30 @@ fn value_as_string(value: Option<&Value>) -> Option<String> {
     value.and_then(Value::as_str).map(ToString::to_string)
 }
 
-fn gather_objects(value: &Value, out: &mut Vec<Value>) {
-    match value {
-        Value::Object(map) => {
-            out.push(value.clone());
-            for nested in map.values() {
-                gather_objects(nested, out);
+fn walk_objects<'a>(root: &'a Value, mut on_object: impl FnMut(&'a Map<String, Value>)) {
+    let mut stack: Vec<&'a Value> = vec![root];
+
+    while let Some(value) = stack.pop() {
+        match value {
+            Value::Object(map) => {
+                on_object(map);
+                stack.extend(map.values());
             }
-        }
-        Value::Array(items) => {
-            for item in items {
-                gather_objects(item, out);
+            Value::Array(items) => {
+                stack.extend(items.iter());
             }
+            _ => {}
         }
-        _ => {}
     }
 }
 
 fn normalize_file_results(response: &Value) -> Vec<SearchItem> {
-    let mut objects: Vec<Value> = Vec::new();
-    gather_objects(response, &mut objects);
-
     let mut items: Vec<SearchItem> = Vec::new();
-    for obj in objects {
-        let Some(map) = obj.as_object() else {
-            continue;
-        };
 
+    walk_objects(response, |map| {
         let path = value_as_string(map.get("path"));
         if path.is_none() {
-            continue;
+            return;
         }
 
         let file_id =
@@ -97,7 +108,7 @@ fn normalize_file_results(response: &Value) -> Vec<SearchItem> {
         let content = value_as_string(map.get("content"));
 
         if file_id.is_none() && content.is_none() {
-            continue;
+            return;
         }
 
         items.push(SearchItem {
@@ -112,23 +123,16 @@ fn normalize_file_results(response: &Value) -> Vec<SearchItem> {
             score: 0.0,
             source: "file".to_string(),
         });
-    }
+    });
 
     items
 }
 
 fn normalize_video_results(response: &Value) -> Vec<SearchItem> {
-    let mut objects: Vec<Value> = Vec::new();
-    gather_objects(response, &mut objects);
-
     let mut dedup: HashSet<(String, String, String, String)> = HashSet::new();
     let mut items: Vec<SearchItem> = Vec::new();
 
-    for obj in objects {
-        let Some(map) = obj.as_object() else {
-            continue;
-        };
-
+    walk_objects(response, |map| {
         let chunk_id = value_as_string(map.get("chunk_id"));
         let video_id = value_as_string(map.get("video_id"));
         let file_id =
@@ -143,11 +147,11 @@ fn normalize_video_results(response: &Value) -> Vec<SearchItem> {
             && path.is_none()
             && content.is_none()
         {
-            continue;
+            return;
         }
 
         let Some(path_value) = path else {
-            continue;
+            return;
         };
 
         let key = (
@@ -157,7 +161,7 @@ fn normalize_video_results(response: &Value) -> Vec<SearchItem> {
             path_value.clone(),
         );
         if dedup.contains(&key) {
-            continue;
+            return;
         }
         dedup.insert(key);
 
@@ -173,39 +177,32 @@ fn normalize_video_results(response: &Value) -> Vec<SearchItem> {
             score: 0.0,
             source: "video".to_string(),
         });
-    }
+    });
 
     items
 }
 
 fn normalize_image_results(response: &Value) -> Vec<SearchItem> {
-    let mut objects: Vec<Value> = Vec::new();
-    gather_objects(response, &mut objects);
-
     let mut dedup: HashSet<(String, String)> = HashSet::new();
     let mut items: Vec<SearchItem> = Vec::new();
 
-    for obj in objects {
-        let Some(map) = obj.as_object() else {
-            continue;
-        };
-
+    walk_objects(response, |map| {
         let image_id =
             value_as_string(map.get("image_id")).or_else(|| value_as_string(map.get("id")));
         let path = value_as_string(map.get("path"));
         let content = value_as_string(map.get("content"));
 
         if image_id.is_none() && content.is_none() {
-            continue;
+            return;
         }
 
         let Some(path_value) = path else {
-            continue;
+            return;
         };
 
         let key = (image_id.clone().unwrap_or_default(), path_value.clone());
         if dedup.contains(&key) {
-            continue;
+            return;
         }
         dedup.insert(key);
 
@@ -221,7 +218,7 @@ fn normalize_image_results(response: &Value) -> Vec<SearchItem> {
             score: 0.0,
             source: "image".to_string(),
         });
-    }
+    });
 
     items
 }
@@ -492,9 +489,12 @@ async fn rust_helix_search_query(query: &str) -> Result<Value, String> {
 
     let mut results: Vec<Value> = Vec::new();
     for item in deduped {
+        let preview_content =
+            truncate_preview(item.content.as_deref(), SEARCH_RESULT_PREVIEW_CHARS);
+
         let mut result = json!({
             "label": item.label,
-            "content": item.content,
+            "content": preview_content,
             "path": item.path,
         });
 

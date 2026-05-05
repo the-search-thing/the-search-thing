@@ -7,7 +7,7 @@ This guide covers local setup, daily development workflow, and the frontend webs
 
 - Rust (for sidecar + indexing/search core)
 - Node.js + npm (for desktop client and website)
-- Docker (for running Helix locally)
+- Docker (optional, only for local Helix)
 - `ffmpeg` and `ffprobe` available on your `PATH`
 - Groq API key (for transcription + vision summaries)
 
@@ -22,14 +22,28 @@ cp .env.example .env
 Set these values in `.env`:
 
 - `GROQ_API_KEY`
-- `HELIX_LOCAL=true`
-- `HELIX_PORT=7003` (or any available port)
+- `HELIX_LOCAL=false`
+- `HELIX_ENDPOINT=https://your-flyio-host-name.fly.dev`
+- `HELIX_PORT=your-flyio-port`
+- `HELIX_API_KEY` (if your Fly Helix instance uses auth)
 
-### 2) Start Helix locally
+### 2) Helix runtime mode
 
-Make sure Docker is running, then:
+**Fly.io (default):** no local Docker needed.
 
 ```bash
+# uses remote Helix via HELIX_ENDPOINT/HELIX_PORT
+```
+
+**Local Docker (optional):**
+
+```bash
+# switch env
+HELIX_LOCAL=true
+HELIX_ENDPOINT=http://localhost
+HELIX_PORT=7003
+
+# start local Helix instance
 helix push dev
 ```
 
@@ -78,8 +92,13 @@ npm --prefix client run dev
 
 The desktop app routes through the Rust sidecar JSON-RPC path by default.
 
-- `HELIX_ENDPOINT` (default: `http://localhost`)
-- `HELIX_PORT` (default: `7003`)
+- `HELIX_LOCAL` (default behavior: `true` if unset)
+- `HELIX_ENDPOINT`
+  - local default when `HELIX_LOCAL=true`: `http://localhost`
+  - required when `HELIX_LOCAL=false` (e.g. `https://helix-the-search-thing-tst.fly.dev`)
+- `HELIX_PORT`
+  - local default when `HELIX_LOCAL=true`: `7003 for example`
+  - remote default when `HELIX_LOCAL=false`: `443 for example`
 - `HELIX_API_KEY` (optional, for secured Helix deployments)
 
 

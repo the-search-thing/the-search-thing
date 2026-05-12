@@ -4,6 +4,7 @@ const themeSetting = z.enum(["dark", "light"]);
 const fontSetting = z.enum(["sans-serif", "mono"]);
 const searchScopeSetting = z.enum(["both", "files", "folders"]);
 const windowPlacementSetting = z.enum(["center", "center-above", "center-below", "cursor"]);
+const inputModeSetting = z.enum(["normal", "vim"]);
 
 const generalSettingsState = z.object({
   "launch-on-startup": z.boolean(),
@@ -11,6 +12,7 @@ const generalSettingsState = z.object({
   font: fontSetting,
   scope: searchScopeSetting,
   "window-placement": windowPlacementSetting,
+  "input-mode": inputModeSetting,
 });
 
 const generalSettingKey = z.enum([
@@ -19,6 +21,7 @@ const generalSettingKey = z.enum([
   "font",
   "scope",
   "window-placement",
+  "input-mode",
 ]);
 const generalSettingValue = z.union([
   z.boolean(),
@@ -26,6 +29,7 @@ const generalSettingValue = z.union([
   fontSetting,
   searchScopeSetting,
   windowPlacementSetting,
+  inputModeSetting,
 ]);
 
 export const generalSettingsIpcSchema = {

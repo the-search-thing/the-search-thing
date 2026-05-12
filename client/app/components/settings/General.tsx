@@ -6,7 +6,7 @@ import type { GeneralSettingsState } from "@/lib/storage/general-settings";
 
 type DraftGeneralSettings = Pick<
   GeneralSettingsState,
-  "launch-on-startup" | "theme" | "font" | "scope" | "window-placement"
+  "launch-on-startup" | "theme" | "font" | "scope" | "window-placement" | "input-mode"
 >;
 
 export default function General() {
@@ -19,6 +19,7 @@ export default function General() {
     font: settings.font,
     scope: settings.scope,
     "window-placement": settings["window-placement"],
+    "input-mode": settings["input-mode"],
   });
   const [status, setStatus] = useState<"idle" | "saved" | "cleared">("idle");
   const [clearIndexDialogOpen, setClearIndexDialogOpen] = useState(false);
@@ -31,6 +32,7 @@ export default function General() {
       font: settings.font,
       scope: settings.scope,
       "window-placement": settings["window-placement"],
+      "input-mode": settings["input-mode"],
     });
   }, [
     settings["launch-on-startup"],
@@ -38,6 +40,7 @@ export default function General() {
     settings.font,
     settings.scope,
     settings["window-placement"],
+    settings["input-mode"],
   ]);
 
   useEffect(() => {
@@ -90,7 +93,8 @@ export default function General() {
       draftSettings.theme !== settings.theme ||
       draftSettings.font !== settings.font ||
       draftSettings.scope !== settings.scope ||
-      draftSettings["window-placement"] !== settings["window-placement"]
+      draftSettings["window-placement"] !== settings["window-placement"] ||
+      draftSettings["input-mode"] !== settings["input-mode"]
     );
   }, [draftSettings, settings]);
 
@@ -101,6 +105,7 @@ export default function General() {
       font: settings.font,
       scope: settings.scope,
       "window-placement": settings["window-placement"],
+      "input-mode": settings["input-mode"],
     });
     void windowApi.windowApplyPlacement(settings["window-placement"]);
   };
@@ -327,32 +332,69 @@ export default function General() {
 
         <div className="flex items-center justify-between gap-4">
           <div>
-            <div className="text-sm text-zinc-200">Clear recent searches</div>
-            <div className="text-xs text-zinc-500">Remove cached query history.</div>
-          </div>
-          <button
-            type="button"
-            onClick={() => void handleClearRecentSearches()}
-            className="h-7 px-3 rounded-md text-xs text-zinc-200 bg-zinc-700/60 hover:bg-zinc-700 transition-colors duration-150"
-          >
-            Clear
-          </button>
-        </div>
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <div className="text-sm text-zinc-200">Clear Index</div>
+            <div className="text-sm text-zinc-200">Input mode</div>
             <div className="text-xs text-zinc-500">
-              Permanently removes all indexed files and embeddings. You will need to run a full
-              re-index to search again.
+              Choose normal controls or Vim-style keyboard navigation.
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setClearIndexDialogOpen(true)}
-            className="h-7 px-3 rounded-md text-xs text-zinc-200 bg-zinc-700/60 hover:bg-zinc-700 transition-colors duration-150"
-          >
-            Clear
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setDraftSettings((prev) => ({ ...prev, "input-mode": "normal" }))}
+              className={cn(
+                "h-7 px-3 rounded-md text-xs transition-colors duration-150",
+                draftSettings["input-mode"] === "normal"
+                  ? "text-zinc-100 bg-zinc-600/80 ring-1 ring-zinc-500/70"
+                  : "text-zinc-200 bg-zinc-700/60 hover:bg-zinc-700",
+              )}
+            >
+              Normal
+            </button>
+            <button
+              type="button"
+              onClick={() => setDraftSettings((prev) => ({ ...prev, "input-mode": "vim" }))}
+              className={cn(
+                "h-7 px-3 rounded-md text-xs transition-colors duration-150",
+                draftSettings["input-mode"] === "vim"
+                  ? "text-zinc-100 bg-zinc-600/80 ring-1 ring-zinc-500/70"
+                  : "text-zinc-200 bg-zinc-700/60 hover:bg-zinc-700",
+              )}
+            >
+              Vim
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4 border-t border-zinc-700/70 pt-3 mt-1">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-sm text-zinc-200">Clear recent searches</div>
+              <div className="text-xs text-zinc-500">Remove cached query history.</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleClearRecentSearches()}
+              className="h-7 px-3 rounded-md text-xs text-zinc-200 bg-zinc-700/60 hover:bg-zinc-700 transition-colors duration-150"
+            >
+              Clear
+            </button>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-sm text-zinc-200">Clear Index</div>
+              <div className="text-xs text-zinc-500">
+                Permanently removes all indexed files and embeddings. You will need to run a full
+                re-index to search again.
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setClearIndexDialogOpen(true)}
+              className="h-7 px-3 rounded-md text-xs text-zinc-200 bg-zinc-700/60 hover:bg-zinc-700 transition-colors duration-150"
+            >
+              Clear
+            </button>
+          </div>
         </div>
       </div>
 

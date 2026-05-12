@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, type ComponentType, type KeyboardEvent } from "react";
 import { Settings, Command, Info } from "lucide-react";
+import { useGeneralSettings } from "@/app/hooks/use-general-settings";
 
 const items = ["General", "Keybinds", "About"] as const;
 
@@ -20,6 +21,7 @@ type SettingsSideBarProps = {
 };
 
 export default function SettingsSidebar({ selectedItem, onSelect }: SettingsSideBarProps) {
+  const { settings } = useGeneralSettings();
   const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   useEffect(() => {
@@ -32,8 +34,25 @@ export default function SettingsSidebar({ selectedItem, onSelect }: SettingsSide
 
   const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number, label: string) => {
     const lastIndex = items.length - 1;
+    const isVimMode = settings["input-mode"] === "vim";
+    const normalizedKey = event.key.toLowerCase();
 
-    if (event.key === "ArrowDown") {
+    const vimMoveDown =
+      isVimMode &&
+      normalizedKey === "j" &&
+      !event.ctrlKey &&
+      !event.altKey &&
+      !event.metaKey &&
+      !event.shiftKey;
+    const vimMoveUp =
+      isVimMode &&
+      normalizedKey === "k" &&
+      !event.ctrlKey &&
+      !event.altKey &&
+      !event.metaKey &&
+      !event.shiftKey;
+
+    if (event.key === "ArrowDown" || vimMoveDown) {
       event.preventDefault();
       const nextIndex = index === lastIndex ? 0 : index + 1;
       const nextLabel = items[nextIndex];
@@ -42,7 +61,7 @@ export default function SettingsSidebar({ selectedItem, onSelect }: SettingsSide
       return;
     }
 
-    if (event.key === "ArrowUp") {
+    if (event.key === "ArrowUp" || vimMoveUp) {
       event.preventDefault();
       const prevIndex = index === 0 ? lastIndex : index - 1;
       const prevLabel = items[prevIndex];

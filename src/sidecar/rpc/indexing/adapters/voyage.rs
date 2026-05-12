@@ -2,14 +2,27 @@ use async_trait::async_trait;
 use reqwest::Client;
 use serde_json::{json, Value};
 use std::env;
+use std::fmt;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct VoyageClient {
     http: Client,
     api_key: String,
     base_url: String,
     embedding_model: String,
     retrieval_model: String,
+}
+
+impl fmt::Debug for VoyageClient {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("VoyageClient")
+            .field("http", &self.http)
+            .field("api_key", &"[REDACTED]")
+            .field("base_url", &self.base_url)
+            .field("embedding_model", &self.embedding_model)
+            .field("retrieval_model", &self.retrieval_model)
+            .finish()
+    }
 }
 
 #[async_trait]

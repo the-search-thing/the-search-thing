@@ -249,10 +249,10 @@ export default function General() {
         </div>
 
         <div className="flex items-center justify-between gap-4">
-          <div>
-            {/*<div className="text-sm text-zinc-200">Search scope</div>*/}
+          {/*<div>
+            <div className="text-sm text-zinc-200">Search scope</div>
             <div className="text-xs text-zinc-500">Files, folders, or both.</div>
-          </div>
+          </div>*/}
           <select
             value={draftSettings.scope}
             onChange={(event) =>

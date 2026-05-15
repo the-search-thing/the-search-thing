@@ -5,8 +5,6 @@
 dist/
 
 # env vars
-.env
-.env.*
 
 # rust
 target/
@@ -34,8 +32,8 @@ client/resources/
 
 linux/
 .ruff_cache/
-videos/output_indexer/
-videos/thumbnails/
+client/videos/output_indexer/
+client/videos/thumbnails/
 backend.spec
 backend/build/backend/
 lazygit
@@ -43,3 +41,4 @@ backend/build/backend/
 client/resources/backend/
 client/resources/ffmpeg/
 backend.spec
+config.bat

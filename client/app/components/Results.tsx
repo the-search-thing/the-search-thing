@@ -20,11 +20,20 @@ function FileIcon({ path, ext }: { path: string; ext: string }) {
       setSrc(iconCache.get(path)!);
       return;
     }
-    conveyor.search.getFileIcon(path).then((dataUrl) => {
-      iconCache.set(path, dataUrl);
-      setSrc(dataUrl);
-    }).catch(() => {});
-  }, [path]);
+    setSrc(fallback);
+    let cancelled = false;
+    conveyor.search
+      .getFileIcon(path)
+      .then((dataUrl) => {
+        if (cancelled) return;
+        iconCache.set(path, dataUrl);
+        setSrc(dataUrl);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [path, fallback, conveyor]);
 
   return <img src={src} className="w-5 h-5" alt="" />;
 }
@@ -87,11 +96,27 @@ const Results: React.FC<ResultsWithContextProps> = ({
       setFileContent(selectedItem.content);
       return;
     }
+
+    const path = selectedItem.path;
     setFileContent(null);
-    search.readFileContent(selectedItem.path)
-      .then(setFileContent)
-      .catch(() => setFileContent("(Could not read file content)"));
-  }, [selectedItem]);
+    let cancelled = false;
+    search
+      .readFileContent(path)
+      .then((content) => {
+        if (!cancelled) {
+          setFileContent(content);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setFileContent("(Could not read file content)");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedItem, search]);
 
   useEffect(() => {
     if (!hasSearched) {
@@ -419,7 +444,7 @@ const Results: React.FC<ResultsWithContextProps> = ({
                   <div className="text-zinc-300 whitespace-pre-wrap break-words overflow-y-auto overflow-x-hidden min-h-0 flex-1 text-sm font-mono leading-relaxed">
                     {fileContent === null ? (
                       <span className="text-zinc-500 italic">Loading…</span>
-                    ) : fileContent !== "" ?(
+                    ) : fileContent !== "" ? (
                       fileContent
                     ) : (
                       <span className="text-zinc-500 italic">No preview available.</span>

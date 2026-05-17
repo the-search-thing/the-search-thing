@@ -173,7 +173,7 @@ export default function Home() {
           )}
         >
           <div className="text-lg">Welcome to the-search-thing!</div>
-          <div className="text-sm text-zinc-500">Please start searching to get started...</div>
+          <div className="text-sm text-zinc-500">Please start typing to get started...</div>
         </div>
       )}
 

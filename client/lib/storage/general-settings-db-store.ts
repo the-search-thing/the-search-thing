@@ -3,6 +3,7 @@ import {
   DEFAULT_GENERAL_SETTINGS,
   type FontSetting,
   type GeneralSettingsState,
+  type InputModeSetting,
   type SearchScopeSetting,
   type ThemeSetting,
   type WindowPlacementSetting,
@@ -50,6 +51,10 @@ const parseWindowPlacement = (
     value === "cursor"
     ? value
     : fallback;
+};
+
+const parseInputMode = (value: string, fallback: InputModeSetting): InputModeSetting => {
+  return value === "normal" || value === "vim" ? value : fallback;
 };
 
 const valueToStorage = (value: GeneralSettingsState[PersistedGeneralSettingKey]): string => {
@@ -102,6 +107,12 @@ export const createGeneralSettingsStore = (adapter: SqliteAdapter) => {
           settings["window-placement"] = parseWindowPlacement(
             row.setting_value,
             DEFAULT_GENERAL_SETTINGS["window-placement"],
+          );
+          break;
+        case "input-mode":
+          settings["input-mode"] = parseInputMode(
+            row.setting_value,
+            DEFAULT_GENERAL_SETTINGS["input-mode"],
           );
           break;
       }

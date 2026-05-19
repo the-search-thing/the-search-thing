@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { MemoryRouter, Route, Routes, useNavigate } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import Home from "@/app/home/Home";
 import Settings from "@/app/settings/Settings";
 import "./styles/app.css";
@@ -10,7 +10,9 @@ import { matchesCombo } from "@/lib/storage/keybind-store";
 
 function GlobalHotkeys() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { keybinds } = useKeybinds();
+  const { settings } = useGeneralSettings();
 
   useEffect(() => {
     const runAfterRouteChange = (action: () => void) => {
@@ -26,8 +28,33 @@ function GlobalHotkeys() {
       }
       const target = event.target as HTMLElement | null;
       const tagName = target?.tagName?.toLowerCase();
-      const isEditable = tagName === "input" || tagName === "textarea" || target?.isContentEditable;
+      const isEditable =
+        tagName === "input" ||
+        tagName === "textarea" ||
+        tagName === "select" ||
+        target?.isContentEditable;
       const isSearchInput = !!target?.closest?.('[data-search-input="true"]');
+      const vimModeEnabled = settings["input-mode"] === "vim";
+
+      if (
+        vimModeEnabled &&
+        location.pathname === "/" &&
+        !isEditable &&
+        !event.isComposing &&
+        !event.repeat &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        event.key === "/"
+      ) {
+        event.preventDefault();
+        const input = document.querySelector<HTMLInputElement>('[data-search-input="true"]');
+        if (input) {
+          input.focus();
+          input.select();
+        }
+        return;
+      }
 
       if (matchesCombo(event, keybinds.search)) {
         event.preventDefault();
@@ -66,7 +93,7 @@ function GlobalHotkeys() {
 
     window.addEventListener("keydown", handleKeyDown, true);
     return () => window.removeEventListener("keydown", handleKeyDown, true);
-  }, [navigate, keybinds]);
+  }, [navigate, location.pathname, keybinds, settings]);
 
   return null;
 }

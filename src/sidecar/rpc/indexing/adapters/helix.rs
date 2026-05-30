@@ -53,6 +53,16 @@ impl HelixTextStore {
         if let Some(id) = value.get("id").and_then(Value::as_str) {
             return Some(id.to_string());
         }
+        if let Some(ids) = value.get("ids").and_then(Value::as_array) {
+            for id in ids {
+                if let Some(num) = id.as_i64() {
+                    return Some(num.to_string());
+                }
+                if let Some(text) = id.as_str() {
+                    return Some(text.to_string());
+                }
+            }
+        }
 
         if let Some(array) = value.as_array() {
             for item in array {
@@ -75,12 +85,6 @@ impl HelixTextStore {
 
     fn current_timestamp_rfc3339() -> String {
         Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true)
-    }
-
-    fn is_not_found_error(message: &str) -> bool {
-        let lowered = message.to_ascii_lowercase();
-        lowered.contains("graph error: no value found")
-            || lowered.contains("\"error\":\"graph error: no value found\"")
     }
 
     fn has_video_completion_marker(value: &Value) -> bool {
@@ -125,33 +129,142 @@ impl HelixTextStore {
         Ok(vector.into_iter().map(f64::from).collect())
     }
 
-    pub async fn clear_search_index(&self) -> Result<Value, String> {
+    fn asset_lookup_steps(param_name: &str) -> Vec<Value> {
+        vec![
+            json!({"NWhere": {"Eq": ["$label", {"String": "Asset"}]}}),
+            json!({"Where": {"Compare": {
+                "left": {"Property": "content_hash"},
+                "op": "Eq",
+                "right": {"Param": param_name}
+            }}}),
+            json!({"Limit": 1}),
+        ]
+    }
+
+    async fn query_dynamic(
+        &self,
+        request_type: &str,
+        queries: Vec<Value>,
+        returns: Vec<&str>,
+        parameters: Value,
+        parameter_types: Value,
+    ) -> Result<Value, String> {
+        let payload = json!({
+            "request_type": request_type,
+            "query": {
+                "queries": queries,
+                "returns": returns,
+            },
+            "parameters": parameters,
+            "parameter_types": parameter_types,
+        });
+
         let client = self.client();
         client
-            .query("ClearSearchIndex", &json!({}))
+            .query("v1/query", &payload)
             .await
             .map_err(|e| e.to_string())
     }
 
-    async fn query_optional(&self, endpoint: &str, payload: &Value) -> Result<Value, String> {
-        let client = self.client();
-        client
-            .query(endpoint, payload)
-            .await
-            .map_err(|e| e.to_string())
-            .or_else(|error| {
-                if Self::is_not_found_error(&error) {
-                    Ok(Value::Null)
-                } else {
-                    Err(error)
-                }
-            })
+    async fn read_query_result(
+        &self,
+        name: &str,
+        steps: Vec<Value>,
+        parameters: Value,
+        parameter_types: Value,
+    ) -> Result<Value, String> {
+        let response = self
+            .query_dynamic(
+                "read",
+                vec![json!({"Query": {
+                    "name": name,
+                    "steps": steps,
+                    "condition": Value::Null
+                }})],
+                vec![name],
+                parameters,
+                parameter_types,
+            )
+            .await?;
+
+        Ok(response.get(name).cloned().unwrap_or(Value::Null))
     }
 
     async fn get_asset_id_by_hash(&self, content_hash: &str) -> Result<Option<String>, String> {
-        let payload = json!({ "content_hash": content_hash });
-        let result = self.query_optional("GetAssetByHash", &payload).await?;
+        let result = self
+            .read_query_result(
+                "asset",
+                Self::asset_lookup_steps("content_hash"),
+                json!({"content_hash": content_hash}),
+                json!({"content_hash": "String"}),
+            )
+            .await?;
+
         Ok(Self::extract_asset_id(&result))
+    }
+
+    async fn get_asset_embeddings_by_hash(&self, content_hash: &str) -> Result<Value, String> {
+        let response = self
+            .query_dynamic(
+                "read",
+                vec![
+                    json!({"Query": {
+                        "name": "asset",
+                        "steps": Self::asset_lookup_steps("content_hash"),
+                        "condition": Value::Null
+                    }}),
+                    json!({"Query": {
+                        "name": "embeddings",
+                        "steps": [
+                            {"N": {"Var": "asset"}},
+                            {"Out": "HasAssetEmbedding"},
+                            {"ValueMap": Value::Null}
+                        ],
+                        "condition": Value::Null
+                    }}),
+                ],
+                vec!["embeddings"],
+                json!({"content_hash": content_hash}),
+                json!({"content_hash": "String"}),
+            )
+            .await?;
+
+        Ok(response.get("embeddings").cloned().unwrap_or(Value::Null))
+    }
+
+    async fn ensure_indexes(&self) -> Result<(), String> {
+        let _ = self
+            .query_dynamic(
+                "write",
+                vec![
+                    json!({"Query": {
+                        "name": "idx_asset_hash",
+                        "steps": [
+                            {"CreateIndex": {
+                                "spec": {"NodeEquality": {"label": "Asset", "property": "content_hash", "unique": false}},
+                                "if_not_exists": true
+                            }}
+                        ],
+                        "condition": Value::Null
+                    }}),
+                    json!({"Query": {
+                        "name": "idx_asset_embedding",
+                        "steps": [
+                            {"CreateIndex": {
+                                "spec": {"NodeVector": {"label": "AssetEmbedding", "property": "embedding", "tenant_property": Value::Null}},
+                                "if_not_exists": true
+                            }}
+                        ],
+                        "condition": Value::Null
+                    }}),
+                ],
+                vec![],
+                json!({}),
+                json!({}),
+            )
+            .await?;
+
+        Ok(())
     }
 
     async fn ensure_asset_exists(
@@ -160,20 +273,42 @@ impl HelixTextStore {
         kind: &str,
         path: &str,
     ) -> Result<(), String> {
+        self.ensure_indexes().await?;
         if self.get_asset_id_by_hash(content_hash).await?.is_some() {
             return Ok(());
         }
 
-        let payload = json!({
-            "content_hash": content_hash,
-            "kind": kind,
-            "path": path,
-        });
-        let client = self.client();
-        let _: Value = client
-            .query("CreateAsset", &payload)
-            .await
-            .map_err(|e| e.to_string())?;
+        let _ = self
+            .query_dynamic(
+                "write",
+                vec![json!({"Query": {
+                    "name": "asset",
+                    "steps": [
+                        {"AddN": {
+                            "label": "Asset",
+                            "properties": [
+                                ["kind", {"Expr": {"Param": "kind"}}],
+                                ["path", {"Expr": {"Param": "path"}}],
+                                ["content_hash", {"Expr": {"Param": "content_hash"}}]
+                            ]
+                        }}
+                    ],
+                    "condition": Value::Null
+                }})],
+                vec!["asset"],
+                json!({
+                    "content_hash": content_hash,
+                    "kind": kind,
+                    "path": path,
+                }),
+                json!({
+                    "content_hash": "String",
+                    "kind": "String",
+                    "path": "String",
+                }),
+            )
+            .await?;
+
         Ok(())
     }
 
@@ -183,15 +318,53 @@ impl HelixTextStore {
         unit_kind: &str,
         unit_key: &str,
     ) -> Result<bool, String> {
-        let payload = json!({
-            "content_hash": content_hash,
-            "unit_kind": unit_kind,
-            "unit_key": unit_key,
-        });
-        let result = self
-            .query_optional("GetAssetEmbeddingByHashAndUnit", &payload)
+        let response = self
+            .query_dynamic(
+                "read",
+                vec![
+                    json!({"Query": {
+                        "name": "asset",
+                        "steps": Self::asset_lookup_steps("content_hash"),
+                        "condition": Value::Null
+                    }}),
+                    json!({"Query": {
+                        "name": "embedding",
+                        "steps": [
+                            {"N": {"Var": "asset"}},
+                            {"Out": "HasAssetEmbedding"},
+                            {"Where": {"Compare": {
+                                "left": {"Property": "unit_kind"},
+                                "op": "Eq",
+                                "right": {"Param": "unit_kind"}
+                            }}},
+                            {"Where": {"Compare": {
+                                "left": {"Property": "unit_key"},
+                                "op": "Eq",
+                                "right": {"Param": "unit_key"}
+                            }}},
+                            {"Limit": 1}
+                        ],
+                        "condition": Value::Null
+                    }}),
+                ],
+                vec!["embedding"],
+                json!({
+                    "content_hash": content_hash,
+                    "unit_kind": unit_kind,
+                    "unit_key": unit_key,
+                }),
+                json!({
+                    "content_hash": "String",
+                    "unit_kind": "String",
+                    "unit_key": "String",
+                }),
+            )
             .await?;
-        Ok(Self::extract_asset_id(&result).is_some())
+
+        Ok(Self::extract_asset_id(
+            &response.get("embedding").cloned().unwrap_or(Value::Null),
+        )
+        .is_some())
     }
 
     async fn ensure_asset_embedding_exists(
@@ -202,6 +375,11 @@ impl HelixTextStore {
         content: &str,
         vector: Vec<f64>,
     ) -> Result<(), String> {
+        self.ensure_indexes().await?;
+        if self.get_asset_id_by_hash(content_hash).await?.is_none() {
+            return Err(format!("asset not found for content_hash={}", content_hash));
+        }
+
         if self
             .embedding_exists_for_asset_unit(content_hash, unit_kind, unit_key)
             .await?
@@ -209,20 +387,95 @@ impl HelixTextStore {
             return Ok(());
         }
 
-        let payload = json!({
-            "content_hash": content_hash,
-            "unit_kind": unit_kind,
-            "unit_key": unit_key,
-            "content": content,
-            "vector": vector,
-            "created_at": Self::current_timestamp_rfc3339(),
-        });
-        let client = self.client();
-        let _: Value = client
-            .query("CreateAssetEmbeddingByHash", &payload)
-            .await
-            .map_err(|e| e.to_string())?;
+        let _ = self
+            .query_dynamic(
+                "write",
+                vec![
+                    json!({"Query": {
+                        "name": "asset",
+                        "steps": Self::asset_lookup_steps("content_hash"),
+                        "condition": Value::Null
+                    }}),
+                    json!({"Query": {
+                        "name": "embedding",
+                        "steps": [
+                            {"AddN": {
+                                "label": "AssetEmbedding",
+                                "properties": [
+                                    ["unit_kind", {"Expr": {"Param": "unit_kind"}}],
+                                    ["unit_key", {"Expr": {"Param": "unit_key"}}],
+                                    ["content", {"Expr": {"Param": "content"}}],
+                                    ["embedding", {"Expr": {"Param": "vector"}}]
+                                ]
+                            }}
+                        ],
+                        "condition": Value::Null
+                    }}),
+                    json!({"Query": {
+                        "name": "link",
+                        "steps": [
+                            {"N": {"Var": "asset"}},
+                            {"AddE": {
+                                "label": "HasAssetEmbedding",
+                                "to": {"Var": "embedding"},
+                                "properties": [
+                                    ["created_at", {"Expr": {"Param": "created_at"}}]
+                                ]
+                            }}
+                        ],
+                        "condition": {"VarNotEmpty": "asset"}
+                    }}),
+                ],
+                vec!["embedding"],
+                json!({
+                    "content_hash": content_hash,
+                    "unit_kind": unit_kind,
+                    "unit_key": unit_key,
+                    "content": content,
+                    "vector": vector,
+                    "created_at": Self::current_timestamp_rfc3339(),
+                }),
+                json!({
+                    "content_hash": "String",
+                    "unit_kind": "String",
+                    "unit_key": "String",
+                    "content": "String",
+                    "vector": {"Array": "F64"},
+                    "created_at": "String",
+                }),
+            )
+            .await?;
+
         Ok(())
+    }
+
+    pub async fn clear_search_index(&self) -> Result<Value, String> {
+        self.query_dynamic(
+            "write",
+            vec![
+                json!({"Query": {
+                    "name": "drop_edges",
+                    "steps": [
+                        {"NWhere": {"Eq": ["$label", {"String": "Asset"}] }},
+                        {"Out": "HasAssetEmbedding"},
+                        "Drop"
+                    ],
+                    "condition": Value::Null
+                }}),
+                json!({"Query": {
+                    "name": "drop_assets",
+                    "steps": [
+                        {"NWhere": {"Eq": ["$label", {"String": "Asset"}] }},
+                        "Drop"
+                    ],
+                    "condition": Value::Null
+                }}),
+            ],
+            vec![],
+            json!({}),
+            json!({}),
+        )
+        .await
     }
 }
 
@@ -307,9 +560,7 @@ impl VideoIndexStore for HelixTextStore {
     }
 
     async fn video_asset_has_embeddings(&self, content_hash: &str) -> Result<bool, String> {
-        let payload = json!({ "content_hash": content_hash });
-        let result = self.query_optional("GetAssetEmbeddingsByHash", &payload).await?;
-
+        let result = self.get_asset_embeddings_by_hash(content_hash).await?;
         Ok(Self::has_video_completion_marker(&result))
     }
 

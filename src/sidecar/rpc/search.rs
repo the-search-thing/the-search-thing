@@ -128,6 +128,7 @@ fn percent_encode(value: &str) -> String {
 fn is_empty_vector_index_error(message: &str) -> bool {
     let lowered = message.to_ascii_lowercase();
     lowered.contains("no entry point found for hnsw index")
+        || lowered.contains("vector index not found")
         || lowered.contains("empty input provided to reranker")
         || (lowered.contains("graph_error") && lowered.contains("vector error"))
         || (lowered.contains("graph_error") && lowered.contains("reranker error"))
@@ -197,7 +198,39 @@ async fn rust_helix_search_query(query: &str) -> Result<Value, String> {
     let voyage = VoyageClient::from_env()?;
     let vector = voyage.embed_query(query).await?;
     let payload = json!({
-        "vector": vector.into_iter().map(f64::from).collect::<Vec<f64>>()
+        "request_type": "read",
+        "query": {
+            "queries": [
+                {"Query": {
+                    "name": "embeddings",
+                    "steps": [
+                        {"VectorSearchNodes": {
+                            "label": "AssetEmbedding",
+                            "property": "embedding",
+                            "tenant_value": Value::Null,
+                            "query_vector": {"Expr": {"Param": "vector"}},
+                            "k": {"Literal": 50}
+                        }}
+                    ],
+                    "condition": Value::Null
+                }},
+                {"Query": {
+                    "name": "assets",
+                    "steps": [
+                        {"N": {"Var": "embeddings"}},
+                        {"In": "HasAssetEmbedding"}
+                    ],
+                    "condition": Value::Null
+                }}
+            ],
+            "returns": ["assets"]
+        },
+        "parameters": {
+            "vector": vector.into_iter().map(f64::from).collect::<Vec<f64>>()
+        },
+        "parameter_types": {
+            "vector": {"Array": "F64"}
+        }
     });
 
     let backend_timeout_ms = env::var("SIDECAR_SEARCH_BACKEND_TIMEOUT_MS")
@@ -208,7 +241,7 @@ async fn rust_helix_search_query(query: &str) -> Result<Value, String> {
 
     let raw = tokio::time::timeout(
         backend_timeout,
-        client.query::<_, Value>("SearchAssetEmbeddings", &payload),
+        client.query::<_, Value>("v1/query", &payload),
     )
     .await;
 

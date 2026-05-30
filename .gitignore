@@ -34,4 +34,5 @@ client/videos/thumbnails/
 client/resources/backend/
 client/resources/ffmpeg/
 backend.spec
+backend/build/backend/
 lazygit

@@ -1,4 +1,3 @@
-// MIGRATED: Helix v2 Rust DSL equivalent lives in db/schema_v2.rs (source retained for compatibility).
 N::Asset {
     INDEX content_hash: String,
     kind: String,

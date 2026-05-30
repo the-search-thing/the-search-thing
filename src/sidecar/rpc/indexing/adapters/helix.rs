@@ -132,18 +132,11 @@ impl HelixTextStore {
             .await
             .map_err(|e| e.to_string())
     }
-}
 
-#[async_trait]
-impl TextIndexStore for HelixTextStore {
-    async fn get_file_by_hash(
-        &self,
-        content_hash: &str,
-    ) -> Result<Option<ExistingFileRecord>, String> {
-        let payload = json!({ "content_hash": content_hash });
+    async fn query_optional(&self, endpoint: &str, payload: &Value) -> Result<Value, String> {
         let client = self.client();
-        let result: Value = client
-            .query("GetAssetByHash", &payload)
+        client
+            .query(endpoint, payload)
             .await
             .map_err(|e| e.to_string())
             .or_else(|error| {
@@ -152,17 +145,25 @@ impl TextIndexStore for HelixTextStore {
                 } else {
                     Err(error)
                 }
-            })?;
-
-        Ok(Self::extract_asset_id(&result).map(|asset_id| ExistingFileRecord { asset_id }))
+            })
     }
 
-    async fn create_file_asset(
+    async fn get_asset_id_by_hash(&self, content_hash: &str) -> Result<Option<String>, String> {
+        let payload = json!({ "content_hash": content_hash });
+        let result = self.query_optional("GetAssetByHash", &payload).await?;
+        Ok(Self::extract_asset_id(&result))
+    }
+
+    async fn ensure_asset_exists(
         &self,
         content_hash: &str,
         kind: &str,
         path: &str,
     ) -> Result<(), String> {
+        if self.get_asset_id_by_hash(content_hash).await?.is_some() {
+            return Ok(());
+        }
+
         let payload = json!({
             "content_hash": content_hash,
             "kind": kind,
@@ -174,6 +175,76 @@ impl TextIndexStore for HelixTextStore {
             .await
             .map_err(|e| e.to_string())?;
         Ok(())
+    }
+
+    async fn embedding_exists_for_asset_unit(
+        &self,
+        content_hash: &str,
+        unit_kind: &str,
+        unit_key: &str,
+    ) -> Result<bool, String> {
+        let payload = json!({
+            "content_hash": content_hash,
+            "unit_kind": unit_kind,
+            "unit_key": unit_key,
+        });
+        let result = self
+            .query_optional("GetAssetEmbeddingByHashAndUnit", &payload)
+            .await?;
+        Ok(Self::extract_asset_id(&result).is_some())
+    }
+
+    async fn ensure_asset_embedding_exists(
+        &self,
+        content_hash: &str,
+        unit_kind: &str,
+        unit_key: &str,
+        content: &str,
+        vector: Vec<f64>,
+    ) -> Result<(), String> {
+        if self
+            .embedding_exists_for_asset_unit(content_hash, unit_kind, unit_key)
+            .await?
+        {
+            return Ok(());
+        }
+
+        let payload = json!({
+            "content_hash": content_hash,
+            "unit_kind": unit_kind,
+            "unit_key": unit_key,
+            "content": content,
+            "vector": vector,
+            "created_at": Self::current_timestamp_rfc3339(),
+        });
+        let client = self.client();
+        let _: Value = client
+            .query("CreateAssetEmbeddingByHash", &payload)
+            .await
+            .map_err(|e| e.to_string())?;
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl TextIndexStore for HelixTextStore {
+    async fn get_file_by_hash(
+        &self,
+        content_hash: &str,
+    ) -> Result<Option<ExistingFileRecord>, String> {
+        Ok(self
+            .get_asset_id_by_hash(content_hash)
+            .await?
+            .map(|asset_id| ExistingFileRecord { asset_id }))
+    }
+
+    async fn create_file_asset(
+        &self,
+        content_hash: &str,
+        kind: &str,
+        path: &str,
+    ) -> Result<(), String> {
+        self.ensure_asset_exists(content_hash, kind, path).await
     }
 
     async fn create_file_asset_embeddings(
@@ -184,20 +255,8 @@ impl TextIndexStore for HelixTextStore {
         content: &str,
     ) -> Result<(), String> {
         let vector = self.build_document_vector(content).await?;
-        let payload = json!({
-            "content_hash": content_hash,
-            "unit_kind": unit_kind,
-            "unit_key": unit_key,
-            "content": content,
-            "vector": vector,
-            "created_at": Self::current_timestamp_rfc3339(),
-        });
-        let client = self.client();
-        let _: Value = client
-            .query("CreateAssetEmbeddingByHash", &payload)
+        self.ensure_asset_embedding_exists(content_hash, unit_kind, unit_key, content, vector)
             .await
-            .map_err(|e| e.to_string())?;
-        Ok(())
     }
 }
 
@@ -207,21 +266,10 @@ impl ImageIndexStore for HelixTextStore {
         &self,
         content_hash: &str,
     ) -> Result<Option<ExistingImageRecord>, String> {
-        let payload = json!({ "content_hash": content_hash });
-        let client = self.client();
-        let result: Value = client
-            .query("GetAssetByHash", &payload)
-            .await
-            .map_err(|e| e.to_string())
-            .or_else(|error| {
-                if Self::is_not_found_error(&error) {
-                    Ok(Value::Null)
-                } else {
-                    Err(error)
-                }
-            })?;
-
-        Ok(Self::extract_asset_id(&result).map(|asset_id| ExistingImageRecord { asset_id }))
+        Ok(self
+            .get_asset_id_by_hash(content_hash)
+            .await?
+            .map(|asset_id| ExistingImageRecord { asset_id }))
     }
 
     async fn create_image_asset(
@@ -230,17 +278,7 @@ impl ImageIndexStore for HelixTextStore {
         kind: &str,
         path: &str,
     ) -> Result<(), String> {
-        let payload = json!({
-            "content_hash": content_hash,
-            "kind": kind,
-            "path": path,
-        });
-        let client = self.client();
-        let _: Value = client
-            .query("CreateAsset", &payload)
-            .await
-            .map_err(|e| e.to_string())?;
-        Ok(())
+        self.ensure_asset_exists(content_hash, kind, path).await
     }
 
     async fn create_image_asset_embeddings(
@@ -251,20 +289,8 @@ impl ImageIndexStore for HelixTextStore {
         content: &str,
     ) -> Result<(), String> {
         let vector = self.build_document_vector(content).await?;
-        let payload = json!({
-            "content_hash": content_hash,
-            "unit_kind": unit_kind,
-            "unit_key": unit_key,
-            "content": content,
-            "vector": vector,
-            "created_at": Self::current_timestamp_rfc3339(),
-        });
-        let client = self.client();
-        let _: Value = client
-            .query("CreateAssetEmbeddingByHash", &payload)
+        self.ensure_asset_embedding_exists(content_hash, unit_kind, unit_key, content, vector)
             .await
-            .map_err(|e| e.to_string())?;
-        Ok(())
     }
 }
 
@@ -274,37 +300,15 @@ impl VideoIndexStore for HelixTextStore {
         &self,
         content_hash: &str,
     ) -> Result<Option<ExistingVideoRecord>, String> {
-        let payload = json!({ "content_hash": content_hash });
-        let client = self.client();
-        let result: Value = client
-            .query("GetAssetByHash", &payload)
-            .await
-            .map_err(|e| e.to_string())
-            .or_else(|error| {
-                if Self::is_not_found_error(&error) {
-                    Ok(Value::Null)
-                } else {
-                    Err(error)
-                }
-            })?;
-
-        Ok(Self::extract_asset_id(&result).map(|asset_id| ExistingVideoRecord { asset_id }))
+        Ok(self
+            .get_asset_id_by_hash(content_hash)
+            .await?
+            .map(|asset_id| ExistingVideoRecord { asset_id }))
     }
 
     async fn video_asset_has_embeddings(&self, content_hash: &str) -> Result<bool, String> {
         let payload = json!({ "content_hash": content_hash });
-        let client = self.client();
-        let result: Value = client
-            .query("GetAssetEmbeddingsByHash", &payload)
-            .await
-            .map_err(|e| e.to_string())
-            .or_else(|error| {
-                if Self::is_not_found_error(&error) {
-                    Ok(Value::Null)
-                } else {
-                    Err(error)
-                }
-            })?;
+        let result = self.query_optional("GetAssetEmbeddingsByHash", &payload).await?;
 
         Ok(Self::has_video_completion_marker(&result))
     }
@@ -315,17 +319,7 @@ impl VideoIndexStore for HelixTextStore {
         kind: &str,
         path: &str,
     ) -> Result<(), String> {
-        let payload = json!({
-            "content_hash": content_hash,
-            "kind": kind,
-            "path": path,
-        });
-        let client = self.client();
-        let _: Value = client
-            .query("CreateAsset", &payload)
-            .await
-            .map_err(|e| e.to_string())?;
-        Ok(())
+        self.ensure_asset_exists(content_hash, kind, path).await
     }
 
     async fn create_video_asset_embeddings(
@@ -336,19 +330,7 @@ impl VideoIndexStore for HelixTextStore {
         content: &str,
     ) -> Result<(), String> {
         let vector = self.build_document_vector(content).await?;
-        let payload = json!({
-            "content_hash": content_hash,
-            "unit_kind": unit_kind,
-            "unit_key": unit_key,
-            "content": content,
-            "vector": vector,
-            "created_at": Self::current_timestamp_rfc3339(),
-        });
-        let client = self.client();
-        let _: Value = client
-            .query("CreateAssetEmbeddingByHash", &payload)
+        self.ensure_asset_embedding_exists(content_hash, unit_kind, unit_key, content, vector)
             .await
-            .map_err(|e| e.to_string())?;
-        Ok(())
     }
 }

@@ -1,4 +1,3 @@
-// MIGRATED: Helix v2 Rust DSL equivalent lives in db/queries_v2.rs (source retained for compatibility).
 QUERY CreateAsset(kind: String, path: String, content_hash: String) =>
     existing <- N<Asset>::WHERE(_::{content_hash}::EQ(content_hash))
     asset <- existing::UpsertN({

@@ -1,6 +1,8 @@
 use helix_db::dsl::prelude::*;
 
-// Migrated from db/queries.hx (HQL) to Helix v2 Rust DSL.
+// Reference-only migration artifact.
+// This file is intentionally not part of the Rust build and documents
+// how db/queries.hx maps to the Helix v2 Rust DSL surface.
 // NOTE: HQL UpsertN/UpsertV/UpsertE are unsupported in v2 DSL.
 // Upsert behavior must be implemented in application code by read-then-create/update branching.
 
@@ -134,4 +136,3 @@ pub fn ClearSearchIndex() -> WriteBatch {
         .step(g().n_with_label("Asset").drop())
         .returning([])
 }
-

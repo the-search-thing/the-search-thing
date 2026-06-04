@@ -4,6 +4,7 @@ use helix_rs::{HelixDB, HelixDBClient};
 use serde_json::{json, Value};
 use std::env;
 use std::sync::Mutex;
+use tokio::sync::Mutex as AsyncMutex;
 
 use crate::sidecar::rpc::indexing::adapters::store::{
     ExistingFileRecord, ExistingImageRecord, ExistingVideoRecord, ImageIndexStore, TextIndexStore,
@@ -17,6 +18,8 @@ pub struct HelixTextStore {
     port: u16,
     api_key: Option<String>,
     voyage: Mutex<Option<VoyageClient>>,
+    asset_write_lock: AsyncMutex<()>,
+    embedding_write_lock: AsyncMutex<()>,
 }
 
 impl HelixTextStore {
@@ -35,6 +38,8 @@ impl HelixTextStore {
             port,
             api_key,
             voyage: Mutex::new(None),
+            asset_write_lock: AsyncMutex::new(()),
+            embedding_write_lock: AsyncMutex::new(()),
         })
     }
 
@@ -274,6 +279,7 @@ impl HelixTextStore {
         path: &str,
     ) -> Result<(), String> {
         self.ensure_indexes().await?;
+        let _guard = self.asset_write_lock.lock().await;
         if self.get_asset_id_by_hash(content_hash).await?.is_some() {
             return Ok(());
         }
@@ -376,6 +382,7 @@ impl HelixTextStore {
         vector: Vec<f64>,
     ) -> Result<(), String> {
         self.ensure_indexes().await?;
+        let _guard = self.embedding_write_lock.lock().await;
         if self.get_asset_id_by_hash(content_hash).await?.is_none() {
             return Err(format!("asset not found for content_hash={}", content_hash));
         }

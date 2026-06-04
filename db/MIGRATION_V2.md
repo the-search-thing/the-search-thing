@@ -5,8 +5,8 @@ Source files migrated:
 - `db/queries.hx`
 
 Target files:
-- `db/schema_v2.rs`
-- `db/queries_v2.rs`
+- `db/schema_v2.rs.example` (reference-only)
+- `db/queries_v2.rs.example` (reference-only)
 
 ### Unsupported HQL Features Found
 

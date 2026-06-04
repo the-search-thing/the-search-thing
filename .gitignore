@@ -5,8 +5,6 @@
 dist/
 
 # env vars
-.env
-.env.*
 
 # rust
 target/
@@ -35,3 +33,4 @@ client/resources/backend/
 client/resources/ffmpeg/
 backend.spec
 lazygit
+config.bat

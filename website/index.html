@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>the-search-thing</title>
+    <meta
+      name="description"
+      content="Local-first semantic search for files, images, and videos on your OS"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <div class="hero__inner">
+          <h1 class="hero__title motion-pop-in" data-delay="0ms">
+            <span
+              class="whimsy-loader whimsy-loader--solo"
+              data-whimsy-loader
+              data-loader="crab"
+              data-size="140"
+              data-color="#525252"
+              aria-hidden="true"
+            >
+              <canvas width="140" height="140"></canvas>
+            </span>
+            <code class="brand-name">the-search-thing</code>
+          </h1>
+
+          <p class="hero__intro motion-slide-in-up" data-delay="80ms">
+            <span class="hero__intro-oneline">
+              <span class="semibold">hi everyone,</span> we are building
+              <span class="brand-name underline">the-search-thing</span> because search should be
+              <em>fast</em> and <em>accurate</em>
+            </span>
+          </p>
+
+          <p class="hero__lede motion-fade-in" data-delay="120ms">
+            Semantically search files, images, and videos on your machine—local-first,
+            keyboard-friendly, still very early.
+          </p>
+        </div>
+      </section>
+
+      <section id="features" class="section" aria-labelledby="features-heading">
+        <div class="section__inner">
+          <div class="motion-fade-in">
+            <p class="section__eyebrow">what it does</p>
+            <h2 id="features-heading" class="section__title">features</h2>
+            <p class="section__lede">
+              A local-first search layer for your OS—semantic, fast, and a little whimsical
+              while it works.
+            </p>
+          </div>
+
+          <ul class="feature-list">
+            <li
+              class="feature-list__item motion-slide-in-up"
+              data-delay="calc(0 * var(--stagger-gap))"
+            >
+              <div class="card">
+                <div class="card2">
+                  <div class="feature-list__row">
+                    <span
+                      class="feature-list__bullet whimsy-loader whimsy-loader--solo"
+                      data-whimsy-loader
+                      data-loader="lattice"
+                      data-size="48"
+                      data-color="#525252"
+                      aria-hidden="true"
+                    >
+                      <canvas width="48" height="48"></canvas>
+                    </span>
+                    <div class="feature-list__body">
+                      <h3 class="feature-list__heading">Semantic search</h3>
+                      <p class="feature-list__desc">
+                        Describe what you need in plain language.
+                        <span class="brand-name">the-search-thing</span> matches
+                        meaning across filenames, bodies, and media—not just keywords.
+                      </p>
+                      <p class="feature-list__detail">
+                        Text, images, and videos are embedded so “that diagram from the
+                        investor deck” can surface without remembering the exact path.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+
+            <li
+              class="feature-list__item motion-slide-in-up"
+              data-delay="calc(1 * var(--stagger-gap))"
+            >
+              <div class="card">
+                <div class="card2">
+                  <div class="feature-list__row">
+                    <span
+                      class="feature-list__bullet whimsy-loader whimsy-loader--solo"
+                      data-whimsy-loader
+                      data-loader="dissolve"
+                      data-size="48"
+                      data-color="#525252"
+                      aria-hidden="true"
+                    >
+                      <canvas width="48" height="48"></canvas>
+                    </span>
+                    <div class="feature-list__body">
+                      <h3 class="feature-list__heading">Built for sub-millisecond feel</h3>
+                      <p class="feature-list__desc">
+                        Interactive search is tuned for instant feedback. Results should land
+                        while you are still typing the thought.
+                      </p>
+                      <p class="feature-list__detail">
+                        We keep pushing indexing and query paths until the app feels as fast
+                        as muscle memory—not “fast for Electron.”
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+
+            <li
+              class="feature-list__item motion-slide-in-up"
+              data-delay="calc(2 * var(--stagger-gap))"
+            >
+              <div class="card">
+                <div class="card2">
+                  <div class="feature-list__row">
+                    <span
+                      class="feature-list__bullet whimsy-loader whimsy-loader--solo"
+                      data-whimsy-loader
+                      data-loader="lattice"
+                      data-size="48"
+                      data-color="#525252"
+                      aria-hidden="true"
+                    >
+                      <canvas width="48" height="48"></canvas>
+                    </span>
+                    <div class="feature-list__body">
+                      <h3 class="feature-list__heading">Local-first by default</h3>
+                      <p class="feature-list__desc">
+                        Your index lives on your machine. Nothing is uploaded to our servers
+                        today—you stay in control of your files.
+                      </p>
+                      <p class="feature-list__detail">
+                        When optional hosting exists later, the plan is encrypted storage.
+                        Until then: fully local, fully yours.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+
+            <li
+              class="feature-list__item motion-slide-in-up"
+              data-delay="calc(3 * var(--stagger-gap))"
+            >
+              <div class="card">
+                <div class="card2">
+                  <div class="feature-list__row">
+                    <span
+                      class="feature-list__bullet whimsy-loader whimsy-loader--solo"
+                      data-whimsy-loader
+                      data-loader="dissolve"
+                      data-size="48"
+                      data-color="#525252"
+                      aria-hidden="true"
+                    >
+                      <canvas width="48" height="48"></canvas>
+                    </span>
+                    <div class="feature-list__body">
+                      <h3 class="feature-list__heading">Smart directory indexing</h3>
+                      <p class="feature-list__desc">
+                        Point at a folder once. Ignore rules skip noise; jobs run in the
+                        background with clear progress per media type.
+                      </p>
+                      <p class="feature-list__detail">
+                        Videos are chunked with transcripts and frame summaries. Images get
+                        structured summaries before embedding. Text scans and indexes in
+                        batches.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+
+            <li
+              class="feature-list__item motion-slide-in-up"
+              data-delay="calc(4 * var(--stagger-gap))"
+            >
+              <div class="card">
+                <div class="card2">
+                  <div class="feature-list__row">
+                    <span
+                      class="feature-list__bullet whimsy-loader whimsy-loader--solo"
+                      data-whimsy-loader
+                      data-loader="lattice"
+                      data-size="48"
+                      data-color="#525252"
+                      aria-hidden="true"
+                    >
+                      <canvas width="48" height="48"></canvas>
+                    </span>
+                    <div class="feature-list__body">
+                      <h3 class="feature-list__heading">Keyboard-native workflow</h3>
+                      <p class="feature-list__desc">
+                        Global shortcuts to summon search, kick off indexing, and open
+                        settings—designed for people who live in the launcher.
+                      </p>
+                      <p class="feature-list__detail">
+                        Rebind keys to taste. Search history remembers recent queries so you
+                        can jump back without retyping.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+
+            <li
+              class="feature-list__item motion-slide-in-up"
+              data-delay="calc(5 * var(--stagger-gap))"
+            >
+              <div class="card">
+                <div class="card2">
+                  <div class="feature-list__row">
+                    <span
+                      class="feature-list__bullet whimsy-loader whimsy-loader--solo"
+                      data-whimsy-loader
+                      data-loader="dissolve"
+                      data-size="48"
+                      data-color="#525252"
+                      aria-hidden="true"
+                    >
+                      <canvas width="48" height="48"></canvas>
+                    </span>
+                    <div class="feature-list__body">
+                      <h3 class="feature-list__heading">One bar, many file types</h3>
+                      <p class="feature-list__desc">
+                        Filter to files, folders, or both. File-type icons and previews help you
+                        recognize hits before you open them.
+                      </p>
+                      <p class="feature-list__detail">
+                        Supported types and ignore lists are configurable—tune what gets indexed
+                        so search stays relevant.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="faq" class="section" aria-labelledby="faq-heading">
+        <div class="section__inner section__inner--faq">
+          <div class="motion-fade-in">
+            <p class="section__eyebrow">questions</p>
+            <h2 id="faq-heading" class="section__title">faq</h2>
+            <p class="section__lede">
+              Straight answers about search, privacy, and why it is still Electron—for now.
+            </p>
+          </div>
+
+          <ul class="faq-list">
+            <li class="faq-list__item">
+              <details
+                class="faq__item motion-slide-in-up"
+                data-delay="calc(0 * var(--stagger-gap))"
+              >
+                <summary class="faq__summary">
+                  <span
+                    class="faq-list__bullet whimsy-loader whimsy-loader--solo"
+                    data-whimsy-loader
+                    data-loader="lattice"
+                    data-size="32"
+                    data-color="#525252"
+                    aria-hidden="true"
+                  >
+                    <canvas width="32" height="32"></canvas>
+                  </span>
+                  <span class="faq__question">how did you build search?</span>
+                  <span class="faq__indicator" aria-hidden="true"></span>
+                </summary>
+                <div class="faq__panel">
+                  <div class="faq__panel-inner">
+                    <p class="faq__content">
+                      We index directories on your machine—text, images, and videos—then
+                      embed content so you can query by meaning. Ignore rules and file-type
+                      config keep the index focused.
+                    </p>
+                  </div>
+                </div>
+              </details>
+            </li>
+
+            <li class="faq-list__item">
+              <details
+                class="faq__item motion-slide-in-up"
+                data-delay="calc(1 * var(--stagger-gap))"
+              >
+                <summary class="faq__summary">
+                  <span
+                    class="faq-list__bullet whimsy-loader whimsy-loader--solo"
+                    data-whimsy-loader
+                    data-loader="dissolve"
+                    data-size="32"
+                    data-color="#525252"
+                    aria-hidden="true"
+                  >
+                    <canvas width="32" height="32"></canvas>
+                  </span>
+                  <span class="faq__question">is my data safe?</span>
+                  <span class="faq__indicator" aria-hidden="true"></span>
+                </summary>
+                <div class="faq__panel">
+                  <div class="faq__panel-inner">
+                    <p class="faq__content">
+                      Yes. We are not hosting your files today; everything runs locally. If
+                      we add optional cloud features later, the plan is encrypted storage
+                      end to end.
+                    </p>
+                  </div>
+                </div>
+              </details>
+            </li>
+
+            <li class="faq-list__item">
+              <details
+                class="faq__item motion-slide-in-up"
+                data-delay="calc(2 * var(--stagger-gap))"
+              >
+                <summary class="faq__summary">
+                  <span
+                    class="faq-list__bullet whimsy-loader whimsy-loader--solo"
+                    data-whimsy-loader
+                    data-loader="lattice"
+                    data-size="32"
+                    data-color="#525252"
+                    aria-hidden="true"
+                  >
+                    <canvas width="32" height="32"></canvas>
+                  </span>
+                  <span class="faq__question">is it fast?</span>
+                  <span class="faq__indicator" aria-hidden="true"></span>
+                </summary>
+                <div class="faq__panel">
+                  <div class="faq__panel-inner">
+                    <p class="faq__content">
+                      That is the whole point. Interactive search targets sub-millisecond
+                      feel; indexing runs in the background so you can keep working while
+                      folders are processed.
+                    </p>
+                  </div>
+                </div>
+              </details>
+            </li>
+
+            <li class="faq-list__item">
+              <details
+                class="faq__item motion-slide-in-up"
+                data-delay="calc(3 * var(--stagger-gap))"
+              >
+                <summary class="faq__summary">
+                  <span
+                    class="faq-list__bullet whimsy-loader whimsy-loader--solo"
+                    data-whimsy-loader
+                    data-loader="dissolve"
+                    data-size="32"
+                    data-color="#525252"
+                    aria-hidden="true"
+                  >
+                    <canvas width="32" height="32"></canvas>
+                  </span>
+                  <span class="faq__question">what can I search?</span>
+                  <span class="faq__indicator" aria-hidden="true"></span>
+                </summary>
+                <div class="faq__panel">
+                  <div class="faq__panel-inner">
+                    <p class="faq__content">
+                      Files, folders, images, and videos from folders you choose. Video
+                      indexing uses transcripts and frame summaries; images get structured
+                      summaries before embedding.
+                    </p>
+                  </div>
+                </div>
+              </details>
+            </li>
+
+            <li class="faq-list__item">
+              <details
+                class="faq__item motion-slide-in-up"
+                data-delay="calc(4 * var(--stagger-gap))"
+              >
+                <summary class="faq__summary">
+                  <span
+                    class="faq-list__bullet whimsy-loader whimsy-loader--solo"
+                    data-whimsy-loader
+                    data-loader="lattice"
+                    data-size="32"
+                    data-color="#525252"
+                    aria-hidden="true"
+                  >
+                    <canvas width="32" height="32"></canvas>
+                  </span>
+                  <span class="faq__question">ew but this is electron!</span>
+                  <span class="faq__indicator" aria-hidden="true"></span>
+                </summary>
+                <div class="faq__panel">
+                  <div class="faq__panel-inner">
+                    <p class="faq__content">
+                      We know. We shipped something we wanted to use quickly. A native GPUI
+                      path (Zed's framework) is on the roadmap when the core search
+                      experience is solid.
+                    </p>
+                  </div>
+                </div>
+              </details>
+            </li>
+          </ul>
+
+          <p class="faq__footer motion-fade-in" data-delay="calc(5 * var(--stagger-gap))">
+            still curious?
+            <a
+              class="faq__footer-link"
+              href="https://github.com/the-search-thing/the-search-thing/issues"
+              >open an issue</a
+            >
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <script src="main.js" defer></script>
+    <script>
+      document.querySelectorAll("[data-delay]").forEach((el) => {
+        const delay = el.getAttribute("data-delay");
+        if (delay) el.style.transitionDelay = delay;
+      });
+    </script>
+  </body>
+</html>

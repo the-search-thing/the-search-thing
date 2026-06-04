@@ -15,9 +15,13 @@ the-search-thing is a local-first search system that makes your files, images, a
 - Sub-millisecond response targets for interactive search
 - Directory indexing with ignore rules
 
+## Website
+
+Static marketing site in [`website/`](website/) (HTML/CSS/JS). See [`website/README.md`](website/README.md).
+
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, dev workflow, and frontend website instructions.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, dev workflow, and website preview.
 
 ## License
 

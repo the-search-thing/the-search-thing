@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "skills": {
+    "helix-memory-system": {
+      "source": "HelixDB/skills",
+      "sourceType": "github",
+      "skillPath": "skills/helix-memory-system/SKILL.md",
+      "computedHash": "24783cb5e2e1a9d699edb487a1f05b3fce3bb9bffc7abdeb446f8cfee82a7add"
+    },
+    "helix-query-from-cypher": {
+      "source": "HelixDB/skills",
+      "sourceType": "github",
+      "skillPath": "skills/helix-query-from-cypher/SKILL.md",
+      "computedHash": "7d20606f168c04655d0020fe41e9bcaed6b48b4b73f619498d48b70273a5c3a6"
+    },
+    "helix-query-from-gremlin": {
+      "source": "HelixDB/skills",
+      "sourceType": "github",
+      "skillPath": "skills/helix-query-from-gremlin/SKILL.md",
+      "computedHash": "102b857597f54df2b7b7e2e56ff1156b1c0ca073968cfab79a02f9cd8d46fdf8"
+    },
+    "helix-query-from-hql": {
+      "source": "HelixDB/skills",
+      "sourceType": "github",
+      "skillPath": "skills/helix-query-from-hql/SKILL.md",
+      "computedHash": "1e59ec22b3f83ae32217cdb9e481be3e5b61ddd57494caf07ce2af5193e7ecae"
+    },
+    "helix-query-json-dynamic": {
+      "source": "HelixDB/skills",
+      "sourceType": "github",
+      "skillPath": "skills/helix-query-json-dynamic/SKILL.md",
+      "computedHash": "7f690af4dcf3376a454460e1654e78241c389c87ee4700efdf575d3b36c73145"
+    },
+    "helix-query-optimize": {
+      "source": "HelixDB/skills",
+      "sourceType": "github",
+      "skillPath": "skills/helix-query-optimize/SKILL.md",
+      "computedHash": "9042b5ed436dcf2745ec0246e04d02d353792e8d2cb8929c00cbb7ab22030266"
+    },
+    "helix-query-rust": {
+      "source": "HelixDB/skills",
+      "sourceType": "github",
+      "skillPath": "skills/helix-query-rust/SKILL.md",
+      "computedHash": "3bbb75803af2c657a3446b3e5f2ed703d9e8a9bb448fb81a34a4d4354325781d"
+    },
+    "helix-query-typescript": {
+      "source": "HelixDB/skills",
+      "sourceType": "github",
+      "skillPath": "skills/helix-query-typescript/SKILL.md",
+      "computedHash": "b0ffc7e5129beb3d3f4daa2a7c5022a58ca94bba3fbe7da983c7ddf7528088aa"
+    }
+  }
+}

@@ -28,14 +28,3 @@ repos:
         files: ^client/.*\.(js|jsx|ts|tsx|json)$
         pass_filenames: false
         always_run: true
-
-  # Website (Next.js) formatter
-  - repo: local
-    hooks:
-      - id: website-oxfmt
-        name: oxfmt (website)
-        entry: bash -c "cd website && npx oxfmt --write ."
-        language: system
-        files: ^website/.*\.(js|jsx|ts|tsx|json)$
-        pass_filenames: false
-        always_run: true

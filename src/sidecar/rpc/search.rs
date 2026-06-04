@@ -1,7 +1,7 @@
 use helix_rs::{HelixDB, HelixDBClient};
 use serde::Deserialize;
 use serde_json::{json, Value};
-use std::collections::HashMap;
+use std::collections::HashSet;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -128,6 +128,7 @@ fn percent_encode(value: &str) -> String {
 fn is_empty_vector_index_error(message: &str) -> bool {
     let lowered = message.to_ascii_lowercase();
     lowered.contains("no entry point found for hnsw index")
+        || lowered.contains("vector index not found")
         || lowered.contains("empty input provided to reranker")
         || (lowered.contains("graph_error") && lowered.contains("vector error"))
         || (lowered.contains("graph_error") && lowered.contains("reranker error"))
@@ -197,7 +198,32 @@ async fn rust_helix_search_query(query: &str) -> Result<Value, String> {
     let voyage = VoyageClient::from_env()?;
     let vector = voyage.embed_query(query).await?;
     let payload = json!({
-        "vector": vector.into_iter().map(f64::from).collect::<Vec<f64>>()
+        "request_type": "read",
+        "query": {
+            "queries": [
+                {"Query": {
+                    "name": "embeddings",
+                    "steps": [
+                        {"VectorSearchNodes": {
+                            "label": "AssetEmbedding",
+                            "property": "embedding",
+                            "tenant_value": Value::Null,
+                            "query_vector": {"Expr": {"Param": "vector"}},
+                            "k": {"Literal": 50}
+                        }},
+                        {"ValueMap": ["$id", "$distance"]}
+                    ],
+                    "condition": Value::Null
+                }}
+            ],
+            "returns": ["embeddings"]
+        },
+        "parameters": {
+            "vector": vector.into_iter().map(f64::from).collect::<Vec<f64>>()
+        },
+        "parameter_types": {
+            "vector": {"Array": "F64"}
+        }
     });
 
     let backend_timeout_ms = env::var("SIDECAR_SEARCH_BACKEND_TIMEOUT_MS")
@@ -208,41 +234,111 @@ async fn rust_helix_search_query(query: &str) -> Result<Value, String> {
 
     let raw = tokio::time::timeout(
         backend_timeout,
-        client.query::<_, Value>("SearchAssetEmbeddings", &payload),
+        client.query::<_, Value>("v1/query", &payload),
     )
     .await;
 
     let response = normalize_timed_vector_query_result("asset", raw)?;
-    let assets_raw = response
-        .get("assets")
+    let embedding_rows = response
+        .get("embeddings")
+        .and_then(|v| v.get("properties"))
         .and_then(Value::as_array)
         .cloned()
         .unwrap_or_default();
-    // assets and embeddings are parallel: embeddings[i] drove the traversal to assets[i].
-    // Helix returns embeddings most-relevant-first, so lowest index = best rank.
-    // For assets with multiple chunks (videos), keep the earliest-appearing chunk index.
-    let mut best_pos: HashMap<String, (usize, Value)> = HashMap::new();
-    for (idx, asset) in assets_raw.iter().enumerate() {
-        let Some(asset_map) = asset.as_object() else {
+
+    let mut embedding_hits: Vec<(i64, f64)> = Vec::new();
+    for row in &embedding_rows {
+        let Some(map) = row.as_object() else {
             continue;
         };
-        let Some(path) = value_as_string(asset_map.get("path")) else {
+
+        let id = map
+            .get("$id")
+            .and_then(Value::as_i64)
+            .or_else(|| map.get("id").and_then(Value::as_i64))
+            .or_else(|| {
+                map.get("$id")
+                    .and_then(Value::as_str)
+                    .and_then(|s| s.parse::<i64>().ok())
+            })
+            .or_else(|| {
+                map.get("id")
+                    .and_then(Value::as_str)
+                    .and_then(|s| s.parse::<i64>().ok())
+            });
+        let Some(embedding_id) = id else {
             continue;
         };
-        best_pos.entry(path).or_insert_with(|| (idx, asset.clone()));
+
+        let distance = map
+            .get("$distance")
+            .or_else(|| map.get("distance"))
+            .and_then(Value::as_f64)
+            .unwrap_or(f64::INFINITY);
+        embedding_hits.push((embedding_id, distance));
+    }
+    embedding_hits.sort_by(|a, b| a.1.total_cmp(&b.1));
+
+    if embedding_hits.is_empty() {
+        return Ok(json!({
+            "query": query,
+            "results": []
+        }));
     }
 
-    let mut ranked: Vec<(usize, Value)> = best_pos.into_values().collect();
-    ranked.sort_by_key(|(idx, _)| *idx);
+    let mut asset_queries: Vec<Value> = Vec::with_capacity(embedding_hits.len());
+    let mut asset_returns: Vec<String> = Vec::with_capacity(embedding_hits.len());
+    for (idx, (embedding_id, _)) in embedding_hits.iter().enumerate() {
+        let name = format!("asset_{}", idx);
+        asset_returns.push(name.clone());
+        asset_queries.push(json!({"Query": {
+            "name": name,
+            "steps": [
+                {"N": {"Ids": [embedding_id]}},
+                {"In": "HasAssetEmbedding"},
+                {"ValueMap": ["path", "kind", "content_hash"]},
+                {"Limit": 1}
+            ],
+            "condition": Value::Null
+        }}));
+    }
+
+    let assets_payload = json!({
+        "request_type": "read",
+        "query": {
+            "queries": asset_queries,
+            "returns": asset_returns,
+        },
+        "parameters": {},
+        "parameter_types": {},
+    });
+    let assets_raw = tokio::time::timeout(
+        backend_timeout,
+        client.query::<_, Value>("v1/query", &assets_payload),
+    )
+    .await;
+    let assets_response = normalize_timed_vector_query_result("asset-map", assets_raw)?;
 
     let mut results: Vec<Value> = Vec::new();
-    for (_, node) in ranked {
-        let Some(map) = node.as_object() else {
+    let mut seen_paths: HashSet<String> = HashSet::new();
+    for idx in 0..embedding_hits.len() {
+        let key = format!("asset_{}", idx);
+        let Some(map) = assets_response
+            .get(&key)
+            .and_then(|v| v.get("properties"))
+            .and_then(Value::as_array)
+            .and_then(|arr| arr.first())
+            .and_then(Value::as_object)
+        else {
             continue;
         };
+
         let Some(path) = value_as_string(map.get("path")) else {
             continue;
         };
+        if !seen_paths.insert(path.clone()) {
+            continue;
+        }
 
         let kind = value_as_string(map.get("kind")).unwrap_or_else(|| "file".to_string());
         let content_hash = value_as_string(map.get("content_hash")).unwrap_or_default();

@@ -43,3 +43,7 @@ backend/build/backend/
 client/resources/backend/
 client/resources/ffmpeg/
 backend.spec
+
+
+#mcp 
+.playwright-mcp/

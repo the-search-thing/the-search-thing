@@ -19,7 +19,7 @@ This guide covers architecture, local setup, daily development workflow.
 ## Prerequisites
 
 - Rust (for sidecar + indexing/search core)
-- Node.js + npm (for desktop client and website)
+- Node.js + npm (for desktop client)
 - Docker (for running Helix locally)
 - `ffmpeg` and `ffprobe` available on your `PATH`
 - Groq API key (for transcription + vision summaries)
@@ -129,12 +129,14 @@ npm --prefix client run dev
   - macOS: `~/Library/Application Support/the-search-thing/keybinds.db`
   - Linux: `~/.config/the-search-thing/keybinds.db`
 
-## Frontend website (Next.js)
+## Frontend website (static)
 
-The site lives in `website/` and is a standalone Next.js app.
+The marketing site lives in `website/` — plain HTML, CSS, and JavaScript (no build step).
+
 ```bash
 cd website
-npm install
-npm run dev
+python3 -m http.server 3000
+# optional: npm run dev  (uses npx serve)
 ```
-Open `http://localhost:3000` and edit files under `website/src/`.
+
+Open `http://localhost:3000` and edit `index.html`, `styles.css`, or `main.js`.

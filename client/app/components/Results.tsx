@@ -131,11 +131,9 @@ const Results: React.FC<ResultsWithContextProps> = ({
               console.error("Failed to start next indexing job:", err);
             }
           } else {
-            // All dirs processed — clear job but keep UI visible until user types
-            setTimeout(() => {
-              if (!isActive) return;
-              setCurrentJobId(null);
-            }, 1000);
+            // All dirs processed — null the job so the completion state renders.
+            // A dedicated effect handles the redirect back to the search UI.
+            setCurrentJobId(null);
           }
         }
       } catch (err) {
@@ -151,6 +149,34 @@ const Results: React.FC<ResultsWithContextProps> = ({
       clearInterval(intervalId);
     };
   }, [currentJobId, indexingLocation]);
+
+  // Auto-redirect back to the search/results UI once the whole queue is done.
+  // Owns its own timer so it isn't cancelled by the polling effect's lifecycle.
+  useEffect(() => {
+    if (indexingLocation !== "results" || !awaitingIndexing) return;
+    if (currentJobId) return;
+
+    const isTerminal = (s: DirStatus) => s === "done" || s === "error";
+    const allDone =
+      dirsQueued.length > 0 &&
+      dirStatuses.length === dirsQueued.length &&
+      dirStatuses.every(isTerminal);
+    if (!allDone) return;
+
+    const timer = setTimeout(() => {
+      setDirsQueued([]);
+      setCurrentDirIndex(0);
+      setDirStatuses([]);
+      setJobStatus(null);
+      setDirIndexed(null);
+      setIndexingLocation(null);
+      setAwaitingIndexing(false);
+      setHasInitiatedIndexing(false);
+      hasOpenedDialogRef.current = false;
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [indexingLocation, awaitingIndexing, currentJobId, dirsQueued, dirStatuses]);
 
   const handleOpen = (filePath: string) => {
     search.openFile(filePath);
@@ -180,8 +206,26 @@ const Results: React.FC<ResultsWithContextProps> = ({
     });
   };
 
+  // Reset all queue + indexing state and return to the search/results UI.
+  const abortIndexing = () => {
+    setDirsQueued([]);
+    setCurrentDirIndex(0);
+    setDirStatuses([]);
+    setCurrentJobId(null);
+    setJobStatus(null);
+    setDirIndexed(null);
+    setIndexingLocation(null);
+    setAwaitingIndexing(false);
+    setHasInitiatedIndexing(false);
+    hasOpenedDialogRef.current = false;
+    onIndexingCancelled?.();
+  };
+
   const startIndexingQueue = async (dirs: string[]) => {
-    if (dirs.length === 0) return;
+    if (dirs.length === 0) {
+      abortIndexing();
+      return;
+    }
     const statuses: DirStatus[] = dirs.map((_, i) => (i === 0 ? "indexing" : "queued"));
     setDirsQueued(dirs);
     setCurrentDirIndex(0);
@@ -192,9 +236,14 @@ const Results: React.FC<ResultsWithContextProps> = ({
         setCurrentJobId(indexRes.job_id);
         setDirIndexed(dirs[0]);
         setIndexingLocation("results");
+      } else {
+        // index() resolved but backend gave no usable job — recover to search UI.
+        console.error("Indexing did not start: missing success/job_id", indexRes);
+        abortIndexing();
       }
     } catch (error) {
       console.error("Error starting indexing:", error);
+      abortIndexing();
     }
   };
 

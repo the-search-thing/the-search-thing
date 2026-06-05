@@ -5,11 +5,23 @@ use reqwest::multipart::{Form, Part};
 use reqwest::Client;
 use serde_json::{json, Map, Value};
 use std::env;
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::Mutex;
+use tokio::time::Instant;
+
+// Groq's free tier caps the meta-llama vision model at 30 requests/min.
+// Throttle vision calls to stay just under that. Whisper has no such limit
+// and is intentionally left ungated.
+const DEFAULT_VISION_MIN_INTERVAL_MS: u64 = 2_400; // 25 req/min
 
 #[derive(Clone)]
 pub struct GroqClient {
     http: Client,
     api_key: String,
+    vision_min_interval: Duration,
+    // Shared across clones: serializes vision calls to respect the RPM cap.
+    vision_last_call: Arc<Mutex<Option<Instant>>>,
 }
 
 #[async_trait]
@@ -41,10 +53,30 @@ impl GroqClient {
         if api_key.trim().is_empty() {
             return Err("GROQ_API_KEY is empty — video indexing will be skipped".to_string());
         }
+        let vision_min_interval_ms = env::var("GROQ_VISION_MIN_INTERVAL_MS")
+            .ok()
+            .and_then(|v| v.parse::<u64>().ok())
+            .unwrap_or(DEFAULT_VISION_MIN_INTERVAL_MS);
         Ok(Self {
             http: Client::new(),
             api_key,
+            vision_min_interval: Duration::from_millis(vision_min_interval_ms),
+            vision_last_call: Arc::new(Mutex::new(None)),
         })
+    }
+
+    /// Block until enough time has passed since the previous vision call to keep
+    /// the request rate under Groq's per-minute cap. Holds the lock across the
+    /// sleep so concurrent callers queue up one interval apart.
+    async fn throttle_vision(&self) {
+        let mut last = self.vision_last_call.lock().await;
+        if let Some(prev) = *last {
+            let elapsed = prev.elapsed();
+            if elapsed < self.vision_min_interval {
+                tokio::time::sleep(self.vision_min_interval - elapsed).await;
+            }
+        }
+        *last = Some(Instant::now());
     }
 
     pub async fn transcribe_audio_bytes(
@@ -108,6 +140,7 @@ impl GroqClient {
             "temperature": 0.2
         });
 
+        self.throttle_vision().await;
         let response = self
             .http
             .post("https://api.groq.com/openai/v1/chat/completions")
@@ -188,6 +221,7 @@ impl GroqClient {
             "temperature": 0.2
         });
 
+        self.throttle_vision().await;
         let response = self
             .http
             .post("https://api.groq.com/openai/v1/chat/completions")

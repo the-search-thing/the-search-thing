@@ -82,7 +82,7 @@ export const searchIpcSchema = {
   // system operations
   "open-file-dialog": {
     args: z.tuple([]),
-    return: z.string(),
+    return: z.array(z.string()),
   },
   "open-file": {
     args: z.tuple([z.string()]),

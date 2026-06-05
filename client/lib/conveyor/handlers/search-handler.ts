@@ -60,9 +60,9 @@ export const registerSearchHandlers = () => {
   // System operations
   handle("open-file-dialog", async () => {
     const result = await dialog.showOpenDialog({
-      properties: ["openDirectory"],
+      properties: ["openDirectory", "multiSelections"],
     });
-    return result.filePaths[0] ?? "";
+    return result.filePaths;
   });
 
   handle("open-file", async (filePath: string) => {

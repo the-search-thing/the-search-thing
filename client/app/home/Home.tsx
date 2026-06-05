@@ -51,6 +51,18 @@ export default function Home() {
       setQuery(effectiveQuery);
     }
 
+    // Second Enter on same query with no results → trigger indexing
+    if (
+      hasSearched &&
+      searchResults?.results.length === 0 &&
+      nextQuery === undefined &&
+      !awaitingIndexing &&
+      !currentJobId
+    ) {
+      setAwaitingIndexing(true);
+      return;
+    }
+
     setHasInteracted(true);
     setIsLoading(true);
     try {

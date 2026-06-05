@@ -125,6 +125,15 @@ export default function Footer() {
                   next[nextIdx] = "indexing";
                   return next;
                 });
+              } else {
+                // Backend resolved without a usable job — mark failed and recover.
+                console.error("Queue advancement failed: missing success/job_id", indexRes);
+                setDirStatuses((prev) => {
+                  const next = [...prev];
+                  next[nextIdx] = "error";
+                  return next;
+                });
+                timeoutId = setTimeout(() => { if (isActive) clearAll(); }, 5000);
               }
             } catch (err) {
               console.error("Failed to start next indexing job:", err);

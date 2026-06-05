@@ -295,12 +295,10 @@ const Results: React.FC<ResultsWithContextProps> = ({
     const newDirs = [...dirsQueuedRef.current, ...dirs];
     setDirsQueued(newDirs);
     setDirStatuses((prev) => [...prev, ...dirs.map((): DirStatus => "queued")]);
-
-    // Read the live job id via ref: the dialog may have been open long enough
-    // for the last job to finish (state → null) while the closure value is stale.
-    // If a job is still running, the polling effect advances into the appended
-    // dirs automatically; only kick off indexing when the queue is idle.
     if (currentJobIdRef.current) return;
+
+    setAwaitingIndexing(true);
+    setIndexingLocation("results");
 
     try {
       const firstNewDir = dirs[0];
@@ -310,7 +308,6 @@ const Results: React.FC<ResultsWithContextProps> = ({
         setCurrentJobId(indexRes.job_id);
         setDirIndexed(firstNewDir);
         setJobStatus(null);
-        setIndexingLocation("results");
         setDirStatuses((prev) => {
           const next = [...prev];
           next[startIdx] = "indexing";

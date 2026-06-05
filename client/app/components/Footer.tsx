@@ -4,6 +4,8 @@ import { Button } from "./ui/button";
 import { Info, CornerDownLeft } from "lucide-react";
 import { useAppContext } from "../AppContext";
 
+type DirStatus = "queued" | "indexing" | "done" | "error";
+
 const phaseLabels: Record<string, string> = {
   scan_text: "Scanning text files",
   index_text: "Indexing text files",
@@ -20,6 +22,22 @@ export default function Footer() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
+
+  // Queue state — mirrors the pattern in Results.tsx
+  const dirsQueuedRef = useRef<string[]>([]);
+  const currentDirIndexRef = useRef(0);
+  const [dirsQueued, setDirsQueuedState] = useState<string[]>([]);
+  const [currentDirIndex, setCurrentDirIndexState] = useState(0);
+  const [dirStatuses, setDirStatuses] = useState<DirStatus[]>([]);
+
+  const setDirsQueued = (dirs: string[]) => {
+    dirsQueuedRef.current = dirs;
+    setDirsQueuedState(dirs);
+  };
+  const setCurrentDirIndex = (idx: number) => {
+    currentDirIndexRef.current = idx;
+    setCurrentDirIndexState(idx);
+  };
 
   const {
     currentJobId,
@@ -59,23 +77,65 @@ export default function Footer() {
 
     let isActive = true;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const clearAll = () => {
+      setCurrentJobId(null);
+      setIndexingLocation(null);
+      setDirIndexed(null);
+      setJobStatus(null);
+      setAwaitingIndexing(false);
+      setDirsQueued([]);
+      setCurrentDirIndex(0);
+      setDirStatuses([]);
+    };
+
     const fetchStatus = async () => {
       try {
         const status = await search.indexStatus(currentJobId);
         if (!isActive) return;
         setJobStatus(status);
+
         if (status.status === "completed" || status.status === "failed") {
           clearInterval(intervalId);
-          // Clear job state after completion or failure
-          const delay = status.status === "completed" ? 3000 : 5000;
-          timeoutId = setTimeout(() => {
-            if (!isActive) return;
-            setCurrentJobId(null);
-            setIndexingLocation(null);
-            setDirIndexed(null);
-            setJobStatus(null);
-            setAwaitingIndexing(false);
-          }, delay);
+
+          const activeDirIdx = currentDirIndexRef.current;
+          const nextStatusVal: DirStatus = status.status === "completed" ? "done" : "error";
+          setDirStatuses((prev) => {
+            const next = [...prev];
+            next[activeDirIdx] = nextStatusVal;
+            return next;
+          });
+
+          const nextIdx = activeDirIdx + 1;
+          const queue = dirsQueuedRef.current;
+
+          if (nextIdx < queue.length) {
+            // Advance to next dir in queue
+            try {
+              const nextDir = queue[nextIdx];
+              const indexRes = await search.index(nextDir);
+              if (!isActive) return;
+              if (indexRes.success && indexRes.job_id) {
+                setCurrentDirIndex(nextIdx);
+                setCurrentJobId(indexRes.job_id);
+                setDirIndexed(nextDir);
+                setJobStatus(null);
+                setDirStatuses((prev) => {
+                  const next = [...prev];
+                  next[nextIdx] = "indexing";
+                  return next;
+                });
+              }
+            } catch (err) {
+              console.error("Failed to start next indexing job:", err);
+              const delay = 5000;
+              timeoutId = setTimeout(() => { if (isActive) clearAll(); }, delay);
+            }
+          } else {
+            // All dirs done — clear after brief display
+            const delay = status.status === "completed" ? 3000 : 5000;
+            timeoutId = setTimeout(() => { if (isActive) clearAll(); }, delay);
+          }
         }
       } catch (error) {
         console.error("Error fetching index status:", error);
@@ -112,6 +172,10 @@ export default function Footer() {
     try {
       const indexRes = await search.index(dirs[0]);
       if (indexRes.success && indexRes.job_id) {
+        const statuses: DirStatus[] = dirs.map((_, i) => (i === 0 ? "indexing" : "queued"));
+        setDirsQueued(dirs);
+        setCurrentDirIndex(0);
+        setDirStatuses(statuses);
         setCurrentJobId(indexRes.job_id);
         setDirIndexed(dirs[0]);
         setIndexingLocation("footer");
@@ -130,28 +194,34 @@ export default function Footer() {
   }, [search]);
 
   const renderStatus = () => {
-    // Show simple status when job is in results or just status message
-    if (indexingLocation === "footer" && jobStatus && currentJobId) {
-      const phaseText = phaseLabels[jobStatus.phase] || jobStatus.phase;
+    if (indexingLocation === "footer" && (jobStatus || currentJobId)) {
+      const multiDir = dirsQueued.length > 1;
+      const queueLabel = multiDir ? ` (${currentDirIndex + 1}/${dirsQueued.length})` : "";
 
-      if (jobStatus.status === "failed") {
+      if (jobStatus?.status === "failed") {
         return (
           <span className="text-red-400 text-xs truncate max-w-[300px]">
-            Failed{jobStatus.error ? `: ${jobStatus.error}` : ""}
+            Failed{queueLabel}{jobStatus.error ? `: ${jobStatus.error}` : ""}
           </span>
         );
       }
 
-      if (jobStatus.status === "completed") {
+      if (jobStatus?.status === "completed" && !currentJobId) {
+        // All done (cleared by polling effect) — show briefly before unmounting
         return (
-          <span className="text-green-400 text-xs">{jobStatus.message || "Indexing complete"}</span>
+          <span className="text-green-400 text-xs">
+            {jobStatus.message || "Indexing complete"}
+          </span>
         );
       }
 
+      const phaseText = jobStatus ? (phaseLabels[jobStatus.phase] || jobStatus.phase) : "Starting…";
       return (
         <span className="text-zinc-400 text-xs truncate max-w-[300px]">
-          {phaseText}
-          {jobStatus.message && <span className="text-zinc-500 ml-1.5">- {jobStatus.message}</span>}
+          {phaseText}{queueLabel}
+          {jobStatus?.message && (
+            <span className="text-zinc-500 ml-1.5">- {jobStatus.message}</span>
+          )}
         </span>
       );
     }

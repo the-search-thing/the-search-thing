@@ -213,9 +213,34 @@ const Results: React.FC<ResultsWithContextProps> = ({
   const handleAddMoreDirs = async () => {
     const dirs = await search.openFileDialog();
     if (!dirs || dirs.length === 0) return;
+
+    const startIdx = dirsQueuedRef.current.length;
     const newDirs = [...dirsQueuedRef.current, ...dirs];
     setDirsQueued(newDirs);
     setDirStatuses((prev) => [...prev, ...dirs.map((): DirStatus => "queued")]);
+
+    // If queue already idle (no active job), the polling effect won't pick up
+    // the appended dirs — kick off indexing at the first newly-added dir.
+    if (!currentJobId) {
+      try {
+        const firstNewDir = dirs[0];
+        const indexRes = await search.index(firstNewDir);
+        if (indexRes.success && indexRes.job_id) {
+          setCurrentDirIndex(startIdx);
+          setCurrentJobId(indexRes.job_id);
+          setDirIndexed(firstNewDir);
+          setJobStatus(null);
+          setIndexingLocation("results");
+          setDirStatuses((prev) => {
+            const next = [...prev];
+            next[startIdx] = "indexing";
+            return next;
+          });
+        }
+      } catch (error) {
+        console.error("Error starting indexing for added dirs:", error);
+      }
+    }
   };
 
   useEffect(() => {

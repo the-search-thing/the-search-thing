@@ -5,8 +5,6 @@
 dist/
 
 # env vars
-.env
-.env.*
 
 # rust
 target/
@@ -43,3 +41,4 @@ backend/build/backend/
 client/resources/backend/
 client/resources/ffmpeg/
 backend.spec
+config.bat

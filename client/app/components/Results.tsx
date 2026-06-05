@@ -44,6 +44,9 @@ const Results: React.FC<ResultsWithContextProps> = ({
   const currentDirIndexRef = useRef(0);
 
   const hasOpenedDialogRef = useRef(false);
+  // Mirror of currentJobId so async handlers read the latest value, not the
+  // closure captured at call time (e.g. while the file dialog is open).
+  const currentJobIdRef = useRef<string | null>(null);
   const search = useConveyor("search");
 
   const setDirsQueued = (dirs: string[]) => {
@@ -69,6 +72,25 @@ const Results: React.FC<ResultsWithContextProps> = ({
   } = useAppContext();
 
   const allResults = searchResults?.results || [];
+
+  // Keep the ref in lockstep with context state.
+  useEffect(() => {
+    currentJobIdRef.current = currentJobId;
+  }, [currentJobId]);
+
+  // Mark every still-pending dir from `fromIdx` onward as failed (terminal) and
+  // drop the active job. This guarantees the redirect effect's all-terminal
+  // guard can fire, so a failed queue advancement never traps the user.
+  const failRemainingDirs = (fromIdx: number) => {
+    setDirStatuses((prev) => {
+      const next = [...prev];
+      for (let i = Math.max(0, fromIdx); i < next.length; i++) {
+        if (next[i] !== "done" && next[i] !== "error") next[i] = "error";
+      }
+      return next;
+    });
+    setCurrentJobId(null);
+  };
 
   useEffect(() => {
     setSelectedItem(null);
@@ -126,9 +148,15 @@ const Results: React.FC<ResultsWithContextProps> = ({
                   next[nextIdx] = "indexing";
                   return next;
                 });
+              } else {
+                // Backend resolved without a usable job — fail the rest of the
+                // queue so the redirect effect can recover the UI.
+                console.error("Queue advancement failed: missing success/job_id", indexRes);
+                failRemainingDirs(nextIdx);
               }
             } catch (err) {
               console.error("Failed to start next indexing job:", err);
+              if (isActive) failRemainingDirs(nextIdx);
             }
           } else {
             // All dirs processed — null the job so the completion state renders.
@@ -268,27 +296,34 @@ const Results: React.FC<ResultsWithContextProps> = ({
     setDirsQueued(newDirs);
     setDirStatuses((prev) => [...prev, ...dirs.map((): DirStatus => "queued")]);
 
-    // If queue already idle (no active job), the polling effect won't pick up
-    // the appended dirs — kick off indexing at the first newly-added dir.
-    if (!currentJobId) {
-      try {
-        const firstNewDir = dirs[0];
-        const indexRes = await search.index(firstNewDir);
-        if (indexRes.success && indexRes.job_id) {
-          setCurrentDirIndex(startIdx);
-          setCurrentJobId(indexRes.job_id);
-          setDirIndexed(firstNewDir);
-          setJobStatus(null);
-          setIndexingLocation("results");
-          setDirStatuses((prev) => {
-            const next = [...prev];
-            next[startIdx] = "indexing";
-            return next;
-          });
-        }
-      } catch (error) {
-        console.error("Error starting indexing for added dirs:", error);
+    // Read the live job id via ref: the dialog may have been open long enough
+    // for the last job to finish (state → null) while the closure value is stale.
+    // If a job is still running, the polling effect advances into the appended
+    // dirs automatically; only kick off indexing when the queue is idle.
+    if (currentJobIdRef.current) return;
+
+    try {
+      const firstNewDir = dirs[0];
+      const indexRes = await search.index(firstNewDir);
+      if (indexRes.success && indexRes.job_id) {
+        setCurrentDirIndex(startIdx);
+        setCurrentJobId(indexRes.job_id);
+        setDirIndexed(firstNewDir);
+        setJobStatus(null);
+        setIndexingLocation("results");
+        setDirStatuses((prev) => {
+          const next = [...prev];
+          next[startIdx] = "indexing";
+          return next;
+        });
+      } else {
+        // No usable job — mark the appended dirs terminal so the redirect fires.
+        console.error("Adding dirs failed: missing success/job_id", indexRes);
+        failRemainingDirs(startIdx);
       }
+    } catch (error) {
+      console.error("Error starting indexing for added dirs:", error);
+      failRemainingDirs(startIdx);
     }
   };
 

@@ -1,0 +1,3 @@
+- never build unless explicitly asked to
+- always use exa mcp for web search
+- use fff for local file search instead of grep tool

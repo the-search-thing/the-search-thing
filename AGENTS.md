@@ -1,0 +1,2 @@
+- never build unless explicitly asked to
+- always use exa mcp for web search

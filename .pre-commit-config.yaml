@@ -18,6 +18,17 @@ repos:
         pass_filenames: false
         always_run: true
 
+  # Client (Electron/React) linter
+  - repo: local
+    hooks:
+      - id: client-oxlint
+        name: oxlint (client)
+        entry: bash -c "cd client && npx oxlint"
+        language: system
+        files: ^client/.*\.(js|jsx|ts|tsx)$
+        pass_filenames: false
+        always_run: true
+
   # Client (Electron/React) formatter
   - repo: local
     hooks:
@@ -29,7 +40,18 @@ repos:
         pass_filenames: false
         always_run: true
 
-  # Website (Next.js) formatter
+  # Website (Preact) linter
+  - repo: local
+    hooks:
+      - id: website-oxlint
+        name: oxlint (website)
+        entry: bash -c "cd website && npx oxlint"
+        language: system
+        files: ^website/.*\.(js|jsx|ts|tsx)$
+        pass_filenames: false
+        always_run: true
+
+  # Website (Preact) formatter
   - repo: local
     hooks:
       - id: website-oxfmt

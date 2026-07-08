@@ -1,44 +1,27 @@
 {
-  "name": "website",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "build": "opennextjs-cloudflare build",
-    "build:next": "next build",
-    "dev": "next dev",
-    "start": "next start",
-    "lint": "oxlint",
-    "lint:fix": "oxlint --fix",
-    "fmt": "oxfmt",
-    "fmt:check": "oxfmt --check",
-    "preview": "npm run build && opennextjs-cloudflare preview",
-    "deploy": "npm run build && opennextjs-cloudflare deploy",
-    "upload": "npm run build && opennextjs-cloudflare upload",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
-  },
-  "dependencies": {
-    "@opennextjs/cloudflare": "^1.19.8",
-    "@radix-ui/react-accordion": "^1.2.12",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "js-yaml": "^4.1.0",
-    "lucide-react": "^0.563.0",
-    "next": "^16.2.2",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "tailwind-merge": "^3.4.0"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/js-yaml": "^4.0.9",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "oxfmt": "^0.27.0",
-    "oxlint": "^1.62.0",
-    "tailwindcss": "^4",
-    "tw-animate-css": "^1.4.0",
-    "typescript": "^5",
-    "wrangler": "^4.90.0"
-  }
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"preview": "vite preview",
+		"lint": "oxlint",
+		"lint:fix": "oxlint --fix",
+		"format": "oxfmt",
+		"format:check": "oxfmt --check"
+	},
+	"dependencies": {
+		"@tailwindcss/vite": "^4.3.2",
+		"preact": "^10.26.9",
+		"preact-iso": "^2.12.0",
+		"preact-render-to-string": "^6.7.0",
+		"tailwindcss": "^4.3.2"
+	},
+	"devDependencies": {
+		"@preact/preset-vite": "^2.10.2",
+		"oxfmt": "^0.58.0",
+		"oxlint": "^1.73.0",
+		"typescript": "^7.0.2",
+		"vite": "^7.0.4"
+	}
 }

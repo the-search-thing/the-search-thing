@@ -1,0 +1,16 @@
+packages:
+  - packages/*
+
+allowBuilds:
+  '@parcel/watcher': true
+  esbuild: true
+  msgpackr-extract: true
+
+catalog:
+  '@effect/language-service': 0.86.4
+  '@effect/platform': 0.96.2
+  '@effect/platform-node': 0.107.0
+  '@types/node': 24.3.0
+  effect: beta
+  tsx: 4.20.6
+  typescript: 5.9.2

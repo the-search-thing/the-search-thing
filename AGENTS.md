@@ -1,5 +1,5 @@
 - use exa mcp for web search always.
 - never build unless asked to.
-- always use effect-ts skill before building suggesting or writing any effect code.
+- always use effect-ts skill and `~/code/effect/` repository/directory before building suggesting or writing any effect code.
 - keep responses concise and to the point. never repeat something alredy mentioned.
 - use fff mcp server for local grep and file search

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@effect/platform-node": "catalog:",
+    "@ff-labs/fff-node": "^0.9.6",
     "effect": "catalog:"
   },
   "devDependencies": {

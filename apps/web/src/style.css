@@ -78,8 +78,9 @@ body {
   margin-top: 1rem;
 }
 
-.search input,
-.search .mode {
+.search input {
+  flex: 1;
+  min-width: 0;
   padding: 0.85rem 1rem;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -88,18 +89,7 @@ body {
   font: inherit;
 }
 
-.search input {
-  flex: 1;
-  min-width: 0;
-}
-
-.search .mode {
-  flex: 0 0 auto;
-  text-transform: capitalize;
-}
-
-.search input:focus,
-.search .mode:focus {
+.search input:focus {
   outline: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
   outline-offset: 1px;
 }

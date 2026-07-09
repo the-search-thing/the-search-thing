@@ -4,7 +4,6 @@ import {
   searchFiles,
   searchGrep,
   type FileSearchResult,
-  type GrepMode,
   type GrepSearchResult,
 } from "./api";
 import "./style.css";
@@ -14,8 +13,6 @@ type Tab = "files" | "grep";
 type SearchResults =
   | { kind: "files"; data: FileSearchResult }
   | { kind: "grep"; data: GrepSearchResult };
-
-const GREP_MODES: ReadonlyArray<GrepMode> = ["plain", "fuzzy", "regex"];
 
 function formatError(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -28,7 +25,6 @@ function formatError(error: unknown): string {
 export function App() {
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("files");
-  const [mode, setMode] = useState<GrepMode>("fuzzy");
   const [results, setResults] = useState<SearchResults | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +42,7 @@ export function App() {
         const data = await searchFiles(trimmed);
         setResults({ kind: "files", data });
       } else {
-        const data = await searchGrep(trimmed, mode);
+        const data = await searchGrep(trimmed);
         setResults({ kind: "grep", data });
       }
     } catch (cause) {
@@ -95,20 +91,6 @@ export function App() {
           placeholder={activeTab === "files" ? "Search by file name…" : "Search file contents…"}
           autofocus
         />
-        {activeTab === "grep" && (
-          <select
-            class="mode"
-            value={mode}
-            onChange={(event) => setMode(event.currentTarget.value as GrepMode)}
-            aria-label="Grep mode"
-          >
-            {GREP_MODES.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </select>
-        )}
         <button type="submit" disabled={loading || !query.trim()}>
           {loading ? "Searching…" : "Search"}
         </button>
@@ -142,7 +124,7 @@ export function App() {
         <section class="results">
           <p class="meta">
             {results.data.totalMatched} match{results.data.totalMatched === 1 ? "" : "es"} for “
-            {results.data.query}” ({results.data.mode})
+            {results.data.query}”
           </p>
           {results.data.items.length === 0 ? (
             <p class="empty">No content matches found.</p>

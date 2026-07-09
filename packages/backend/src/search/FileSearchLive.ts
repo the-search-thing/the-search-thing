@@ -1,9 +1,9 @@
-import { FileFinder, type Result } from "@ff-labs/fff-node"
-import { Effect, Layer } from "effect"
-import { SearchConfig, SearchConfigLive } from "../config.js"
-import { FileSearchError, FileSearchService } from "./FileSearchService.js"
+import { FileFinder, type Result } from "@ff-labs/fff-node";
+import { Effect, Layer } from "effect";
+import { SearchConfig, SearchConfigLive } from "../config.js";
+import { FileSearchError, FileSearchService } from "./FileSearchService.js";
 
-const defaultLimit = 20
+const defaultLimit = 20;
 
 const fromResult = <A, B>(
   result: Result<A>,
@@ -11,21 +11,21 @@ const fromResult = <A, B>(
 ): Effect.Effect<B, FileSearchError> =>
   result.ok
     ? Effect.succeed(onSuccess(result.value))
-    : Effect.fail(FileSearchError.make({ message: result.error }))
+    : Effect.fail(FileSearchError.make({ message: result.error }));
 
 export const FileSearchLive = Layer.effect(FileSearchService)(
   Effect.gen(function* () {
-    const { root } = yield* SearchConfig
+    const { root } = yield* SearchConfig;
 
-    const created = FileFinder.create({ basePath: root, aiMode: true })
+    const created = FileFinder.create({ basePath: root, aiMode: true });
     if (!created.ok) {
-      return yield* Effect.die(new Error(created.error))
+      return yield* Effect.die(new Error(created.error));
     }
 
     const finder = yield* Effect.acquireRelease(
       Effect.sync(() => created.value),
       (instance) => Effect.sync(() => instance.destroy()),
-    )
+    );
 
     const scanResult = yield* Effect.tryPromise({
       try: () => finder.waitForScan(10_000),
@@ -33,14 +33,14 @@ export const FileSearchLive = Layer.effect(FileSearchService)(
         FileSearchError.make({
           message: error instanceof Error ? error.message : String(error),
         }),
-    })
+    });
 
     if (!scanResult.ok) {
-      return yield* FileSearchError.make({ message: scanResult.error })
+      return yield* FileSearchError.make({ message: scanResult.error });
     }
 
     if (!scanResult.value) {
-      return yield* FileSearchError.make({ message: "Initial file scan timed out" })
+      return yield* FileSearchError.make({ message: "Initial file scan timed out" });
     }
 
     return {
@@ -75,6 +75,6 @@ export const FileSearchLive = Layer.effect(FileSearchService)(
             })),
           ),
         ),
-    }
+    };
   }),
-).pipe(Layer.provide(SearchConfigLive))
+).pipe(Layer.provide(SearchConfigLive));

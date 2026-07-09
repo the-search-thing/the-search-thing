@@ -6,7 +6,11 @@
   "main": "./src/main.ts",
   "scripts": {
     "dev": "tsx src/main.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check"
   },
   "dependencies": {
     "@effect/platform-node": "catalog:",
@@ -15,6 +19,8 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "oxfmt": "^0.27.0",
+    "oxlint": "^1.62.0",
     "tsx": "catalog:",
     "typescript": "catalog:"
   }

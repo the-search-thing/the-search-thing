@@ -1,5 +1,8 @@
 - use exa mcp for web search always.
 - never build unless asked to.
-- always use effect-ts skill and `~/code/effect/` repository/directory before building suggesting or writing any effect code.
+- this repo uses Effect v4 (`effect@4.0.0-beta.x`). keep all `@effect/*` packages on the same beta version.
+- use the effect-ts skill and `.repos/effect` (Effect v4 source: effect-smol) before building, suggesting, or writing Effect code.
+- in v4, core HTTP/API modules live in `effect/unstable/http` and `effect/unstable/httpapi`. do not use `@effect/platform`.
+- node adapters come from `@effect/platform-node@4.x` only.
 - keep responses concise and to the point. never repeat something alredy mentioned.
 - use fff mcp server for local grep and file search

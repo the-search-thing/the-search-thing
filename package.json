@@ -4,7 +4,7 @@
   "type": "module",
   "packageManager": "pnpm@11.9.0",
   "scripts": {
-    "prepare": "effect-language-service patch",
+    "prepare": "sh scripts/prepare-effect.sh && effect-language-service patch",
     "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {

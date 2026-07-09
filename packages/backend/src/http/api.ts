@@ -1,5 +1,6 @@
 import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi"
 import { Schema } from "effect"
+import { FileSearchError, GrepModeSchema } from "../search/FileSearchService.js"
 
 export class HealthResponse extends Schema.Class<HealthResponse>("HealthResponse")({
   ok: Schema.Boolean,
@@ -28,8 +29,7 @@ export class ContentSearchResponse extends Schema.Class<ContentSearchResponse>("
   query: Schema.String,
   items: Schema.Array(ContentSearchItem),
   totalMatched: Schema.Number,
-  mode: Schema.String,
-  // schema.literal("plain, fuzzy, regex")
+  mode: GrepModeSchema,
 }) { }
 
 export class HealthApi extends HttpApiGroup.make("health")
@@ -48,16 +48,18 @@ export class Search extends HttpApiGroup.make("search")
         limit: Schema.optional(Schema.NumberFromString),
       },
       success: FileSearchResponse,
+      error: FileSearchError,
     }),
   )
   .add(
     HttpApiEndpoint.get("contentSearch", "/search/grep", {
       query: {
         q: Schema.String,
-        mode: Schema.optional(Schema.String),
+        mode: Schema.optional(GrepModeSchema),
         limit: Schema.optional(Schema.NumberFromString),
       },
       success: ContentSearchResponse,
+      error: FileSearchError,
     }),
   ) { }
 

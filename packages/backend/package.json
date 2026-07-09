@@ -9,7 +9,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@effect/platform": "catalog:",
     "@effect/platform-node": "catalog:",
     "effect": "catalog:"
   },

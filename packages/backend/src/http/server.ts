@@ -1,24 +1,40 @@
-import { HttpApiBuilder, HttpMiddleware, HttpServer } from "@effect/platform"
-import { NodeHttpServer } from "@effect/platform-node"
+import { NodeHttpServer, NodeRuntime } from "@effect/platform-node"
 import { Effect, Layer } from "effect"
+import { HttpRouter } from "effect/unstable/http"
+import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { createServer } from "node:http"
-import { Api } from "./api.js"
+import { Api, ContentSearchResponse, FileSearchResponse, HealthResponse} from "./api.js"
 
 const HealthLive = HttpApiBuilder.group(Api, "health", (handlers) =>
   handlers.handle("healthz", () =>
-    Effect.succeed({
+    Effect.succeed(new HealthResponse({
       ok: true,
       service: "backend",
-    }),
+    })),
+  ),
+)
+const SearchLive = HttpApiBuilder.group(Api, "search", (handlers) =>
+  handlers.handle("fileSearch", ({ query }) =>
+    Effect.succeed(new FileSearchResponse({
+      query: query.q,
+      items: [],
+      totalMatched: 0,
+    })),
+  ).handle("contentSearch", ({ query }) =>
+    Effect.succeed(new ContentSearchResponse({
+      query: query.q,
+      items: [],
+      totalMatched: 0,
+      mode: "plain",
+    })),
   ),
 )
 
-const ApiLive = HttpApiBuilder.api(Api).pipe(
+const HttpLive = HttpApiBuilder.layer(Api).pipe(
   Layer.provide(HealthLive),
+  Layer.provide(SearchLive),
+  HttpRouter.serve,
+  Layer.provide(NodeHttpServer.layer(createServer, { port: 3000 })),
 )
 
-export const ServerLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
-  Layer.provide(ApiLive),
-  HttpServer.withLogAddress,
-  Layer.provide(NodeHttpServer.layer(createServer, { port: 3333 })),
-)
+Layer.launch(HttpLive).pipe(NodeRuntime.runMain)

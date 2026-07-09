@@ -14,13 +14,13 @@
   },
   "dependencies": {
     "@effect/platform-node": "catalog:",
-    "@ff-labs/fff-node": "^0.9.6",
+    "@ff-labs/fff-node": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "oxfmt": "^0.27.0",
-    "oxlint": "^1.62.0",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:"
   }

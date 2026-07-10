@@ -17,6 +17,7 @@ export const SearchConfigLive = Layer.effect(SearchConfig)(
     }
 
     const extractCacheDir =
+      // there needs to be a better way to do this instead of cwd/.data/extracted
       process.env.EXTRACT_CACHE_DIR ?? NodePath.join(process.cwd(), ".data", "extracted");
 
     return {

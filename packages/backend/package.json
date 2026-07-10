@@ -19,6 +19,7 @@
   "dependencies": {
     "@effect/platform-node": "catalog:",
     "@ff-labs/fff-node": "catalog:",
+    "@llamaindex/liteparse": "^2.5.0",
     "effect": "catalog:"
   },
   "devDependencies": {

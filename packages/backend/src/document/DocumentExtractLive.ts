@@ -83,7 +83,7 @@ export const DocumentExtractLive = Layer.effect(DocumentExtractService)(
             return yield* DocumentExtractError.make({
               path,
               message:
-                "LibreOffice (soffice) is required to extract Office documents; install it or index PDFs only",
+                "LibreOffice (soffice) is required to extract Office documents; To install it visit: https://www.libreoffice.org/download/",
             });
           }
           if (!pdfExtensions.has(ext) && !officeExtensions.has(ext)) {

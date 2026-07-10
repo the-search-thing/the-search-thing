@@ -2,8 +2,7 @@
   "extends": "../../tsconfig.options.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist",
-    "types": ["node"]
+    "outDir": "dist"
   },
   "include": ["src/**/*.ts"]
 }

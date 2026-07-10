@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@the-search-thing/backend": "workspace:*",
+    "@the-search-thing/api": "workspace:*",
     "effect": "catalog:",
     "preact": "catalog:"
   },

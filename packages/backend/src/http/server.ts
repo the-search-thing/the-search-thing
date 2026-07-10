@@ -7,17 +7,14 @@ import {
   Api,
   ContentSearchItem,
   ContentSearchResponse,
+  DocumentIndexError,
   FileSearchItem,
   FileSearchResponse,
   HealthResponse,
   IndexRunErrorItem,
   IndexRunResponse,
-} from "./api.js";
-import {
-  DocumentIndexError,
-  DocumentIndexLive,
-  DocumentIndexService,
-} from "../document/DocumentIndexService.js";
+} from "@the-search-thing/api";
+import { DocumentIndexLive, DocumentIndexService } from "../document/DocumentIndexService.js";
 import { FileSearchLive } from "../search/FileSearchLive.js";
 import { FileSearchService } from "../search/FileSearchService.js";
 

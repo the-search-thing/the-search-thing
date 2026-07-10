@@ -44,4 +44,4 @@ client/resources/backend/
 client/resources/ffmpeg/
 backend.spec
 .repos/effect
-
+.playwright-mcp/

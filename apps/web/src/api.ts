@@ -1,4 +1,4 @@
-import { Api } from "@the-search-thing/backend/api";
+import { Api } from "@the-search-thing/api";
 import { Effect, ManagedRuntime } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
 import { HttpApiClient } from "effect/unstable/httpapi";

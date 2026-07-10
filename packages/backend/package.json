@@ -4,10 +4,6 @@
   "private": true,
   "type": "module",
   "main": "./src/main.ts",
-  "exports": {
-    ".": "./src/main.ts",
-    "./api": "./src/http/api.ts"
-  },
   "scripts": {
     "dev": "tsx src/main.ts",
     "typecheck": "tsc --noEmit",
@@ -20,6 +16,7 @@
     "@effect/platform-node": "catalog:",
     "@ff-labs/fff-node": "catalog:",
     "@llamaindex/liteparse": "^2.5.0",
+    "@the-search-thing/api": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

@@ -1,7 +1,5 @@
-import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 import { Schema } from "effect";
-import { DocumentIndexError } from "../document/DocumentIndexService.js";
-import { FileSearchError, GrepModeSchema } from "../search/FileSearchService.js";
+import { GrepModeSchema } from "./domain/FileSearchSchemas.js";
 
 export class HealthResponse extends Schema.Class<HealthResponse>("HealthResponse")({
   ok: Schema.Boolean,
@@ -46,41 +44,3 @@ export class IndexRunResponse extends Schema.Class<IndexRunResponse>("IndexRunRe
   failed: Schema.Number,
   errors: Schema.Array(IndexRunErrorItem),
 }) {}
-
-export class HealthApi extends HttpApiGroup.make("health").add(
-  HttpApiEndpoint.get("healthz", "/healthz", {
-    success: HealthResponse,
-  }),
-) {}
-
-export class Search extends HttpApiGroup.make("search")
-  .add(
-    HttpApiEndpoint.get("fileSearch", "/search/files", {
-      query: {
-        q: Schema.String,
-        limit: Schema.optional(Schema.NumberFromString),
-      },
-      success: FileSearchResponse,
-      error: FileSearchError,
-    }),
-  )
-  .add(
-    HttpApiEndpoint.get("contentSearch", "/search/grep", {
-      query: {
-        q: Schema.String,
-        mode: Schema.optional(GrepModeSchema),
-        limit: Schema.optional(Schema.NumberFromString),
-      },
-      success: ContentSearchResponse,
-      error: FileSearchError,
-    }),
-  ) {}
-
-export class IndexApi extends HttpApiGroup.make("index").add(
-  HttpApiEndpoint.post("run", "/index/run", {
-    success: IndexRunResponse,
-    error: DocumentIndexError,
-  }),
-) {}
-
-export class Api extends HttpApi.make("api").add(HealthApi, Search, IndexApi) {}

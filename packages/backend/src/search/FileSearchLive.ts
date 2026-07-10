@@ -3,7 +3,8 @@ import { Effect, Layer } from "effect";
 import * as NodeFs from "node:fs/promises";
 import { SearchConfig, SearchConfigLive } from "../config.js";
 import { ExtractCache, ExtractCacheLive } from "../document/ExtractCache.js";
-import { FileSearchError, FileSearchService, type GrepMode } from "./FileSearchService.js";
+import { FileSearchError, type GrepMode } from "@the-search-thing/api";
+import { FileSearchService } from "./FileSearchService.js";
 
 const defaultLimit = 20;
 
@@ -39,16 +40,15 @@ const createFinder = (basePath: string) =>
       return yield* FileSearchError.make({ message: scanResult.error });
     }
     if (!scanResult.value) {
-      return yield* FileSearchError.make({ message: `Initial file scan timed out for ${basePath}` });
+      return yield* FileSearchError.make({
+        message: `Initial file scan timed out for ${basePath}`,
+      });
     }
 
     return finder;
   });
 
-const grepFinder = (
-  finder: FileFinder,
-  input: { query: string; mode: GrepMode; limit: number },
-) =>
+const grepFinder = (finder: FileFinder, input: { query: string; mode: GrepMode; limit: number }) =>
   Effect.sync(() =>
     finder.grep(input.query, {
       mode: input.mode,
@@ -72,9 +72,9 @@ export const FileSearchLive = Layer.effect(FileSearchService)(
     const { root, extractCacheDir } = yield* SearchConfig;
     const extractCache = yield* ExtractCache;
 
-    yield* extractCache.ensureReady().pipe(
-      Effect.mapError((error) => FileSearchError.make({ message: error.message })),
-    );
+    yield* extractCache
+      .ensureReady()
+      .pipe(Effect.mapError((error) => FileSearchError.make({ message: error.message })));
 
     yield* Effect.tryPromise({
       try: () => NodeFs.mkdir(extractCacheDir, { recursive: true }),

@@ -1,17 +1,11 @@
-import { Context, Effect, Layer, Result, Schema } from "effect";
+import { Context, Effect, Layer, Result } from "effect";
 import * as NodeFs from "node:fs/promises";
 import * as NodePath from "node:path";
 import { SearchConfig, SearchConfigLive } from "../config.js";
 import { DocumentExtractLive } from "./DocumentExtractLive.js";
 import { DocumentExtractService } from "./DocumentExtractService.js";
+import { DocumentIndexError } from "@the-search-thing/api";
 import { ExtractCache, ExtractCacheLive } from "./ExtractCache.js";
-
-export class DocumentIndexError extends Schema.TaggedErrorClass<DocumentIndexError>()(
-  "DocumentIndexError",
-  {
-    message: Schema.String,
-  },
-) {}
 
 export class DocumentIndexService extends Context.Service<
   DocumentIndexService,
@@ -55,9 +49,9 @@ export const DocumentIndexLive = Layer.effect(DocumentIndexService)(
     return {
       run: () =>
         Effect.gen(function* () {
-          yield* cache.ensureReady().pipe(
-            Effect.mapError((error) => DocumentIndexError.make({ message: error.message })),
-          );
+          yield* cache
+            .ensureReady()
+            .pipe(Effect.mapError((error) => DocumentIndexError.make({ message: error.message })));
 
           const files = yield* Effect.tryPromise({
             try: () => walkFiles(root),

@@ -1,5 +1,6 @@
 import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 import { Schema } from "effect";
+import { DocumentIndexError } from "../document/DocumentIndexService.js";
 import { FileSearchError, GrepModeSchema } from "../search/FileSearchService.js";
 
 export class HealthResponse extends Schema.Class<HealthResponse>("HealthResponse")({
@@ -33,6 +34,19 @@ export class ContentSearchResponse extends Schema.Class<ContentSearchResponse>(
   mode: GrepModeSchema,
 }) {}
 
+export class IndexRunErrorItem extends Schema.Class<IndexRunErrorItem>("IndexRunErrorItem")({
+  path: Schema.String,
+  message: Schema.String,
+}) {}
+
+export class IndexRunResponse extends Schema.Class<IndexRunResponse>("IndexRunResponse")({
+  scanned: Schema.Number,
+  extracted: Schema.Number,
+  skipped: Schema.Number,
+  failed: Schema.Number,
+  errors: Schema.Array(IndexRunErrorItem),
+}) {}
+
 export class HealthApi extends HttpApiGroup.make("health").add(
   HttpApiEndpoint.get("healthz", "/healthz", {
     success: HealthResponse,
@@ -62,4 +76,11 @@ export class Search extends HttpApiGroup.make("search")
     }),
   ) {}
 
-export class Api extends HttpApi.make("api").add(HealthApi, Search) {}
+export class IndexApi extends HttpApiGroup.make("index").add(
+  HttpApiEndpoint.post("run", "/index/run", {
+    success: IndexRunResponse,
+    error: DocumentIndexError,
+  }),
+) {}
+
+export class Api extends HttpApi.make("api").add(HealthApi, Search, IndexApi) {}

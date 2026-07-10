@@ -10,7 +10,14 @@ import {
   FileSearchItem,
   FileSearchResponse,
   HealthResponse,
+  IndexRunErrorItem,
+  IndexRunResponse,
 } from "./api.js";
+import {
+  DocumentIndexError,
+  DocumentIndexLive,
+  DocumentIndexService,
+} from "../document/DocumentIndexService.js";
 import { FileSearchLive } from "../search/FileSearchLive.js";
 import { FileSearchService } from "../search/FileSearchService.js";
 
@@ -57,11 +64,42 @@ const SearchLive = HttpApiBuilder.group(
         }),
       );
   }),
-).pipe(Layer.provide(FileSearchLive));
+);
+
+const IndexLive = HttpApiBuilder.group(
+  Api,
+  "index",
+  Effect.fn(function* (handlers) {
+    const index = yield* DocumentIndexService;
+    const search = yield* FileSearchService;
+    return handlers.handle("run", () =>
+      Effect.gen(function* () {
+        const result = yield* index.run();
+        yield* search.refreshExtractIndex().pipe(
+          Effect.mapError((error) =>
+            DocumentIndexError.make({
+              message: `Extract cache rescan failed: ${error.message}`,
+            }),
+          ),
+        );
+        return new IndexRunResponse({
+          scanned: result.scanned,
+          extracted: result.extracted,
+          skipped: result.skipped,
+          failed: result.failed,
+          errors: result.errors.map((error) => new IndexRunErrorItem(error)),
+        });
+      }),
+    );
+  }),
+);
+
+const ApiLive = Layer.mergeAll(HealthLive, SearchLive, IndexLive).pipe(
+  Layer.provide(Layer.mergeAll(FileSearchLive, DocumentIndexLive)),
+);
 
 const HttpLive = HttpApiBuilder.layer(Api).pipe(
-  Layer.provide(HealthLive),
-  Layer.provide(SearchLive),
+  Layer.provide(ApiLive),
   HttpRouter.serve,
   Layer.provide(NodeHttpServer.layer(createServer, { port: 3000 })),
 );

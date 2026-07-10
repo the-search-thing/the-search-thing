@@ -84,6 +84,9 @@ importers:
       '@ff-labs/fff-node':
         specifier: 'catalog:'
         version: 0.9.6
+      '@llamaindex/liteparse':
+        specifier: ^2.5.0
+        version: 2.5.0
       effect:
         specifier: 'catalog:'
         version: 4.0.0-beta.94
@@ -597,6 +600,49 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
+  '@llamaindex/liteparse-darwin-arm64@2.5.0':
+    resolution: {integrity: sha512-rMeO2MUAyezEL0mspuQ7SQwTf2PzGphqzXQGF6Hxvg1nfDK1IBbs4fWlOWpe9ZLn2l73lBlTTlFJiQDiI0hH1A==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@llamaindex/liteparse-darwin-x64@2.5.0':
+    resolution: {integrity: sha512-buylqT3siI30t4XLNR10MvDgCmO6zB1gSBZtwlzLectKQ92GDAweIx1wV76NTL5nIQTy6FilGquTBJLhO+iJ4Q==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@llamaindex/liteparse-linux-arm64-gnu@2.5.0':
+    resolution: {integrity: sha512-pLJLYQiYbMaaX5PpSkiCzhnNB9qsHvuxgjSmKQDVnPoMHiykxRT91jo0XUXuu+2yGs1nFjKyGyvJevGAlpug2w==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@llamaindex/liteparse-linux-x64-gnu@2.5.0':
+    resolution: {integrity: sha512-WeMP9JZfW8+yeKzEcpEzwKRyuNtEaRQCoU7AHY5eWYuO31rj5EMGvxKlAwsX/Qs7YoDpedutJ4+Y/xLzlVhjwQ==}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@llamaindex/liteparse-linux-x64-musl@2.5.0':
+    resolution: {integrity: sha512-GgR/xtQnZi0+FIF/VsdmGA299rPyhVaB9lXFdFe81f2WrWuXp1ja0sml0JvyImUNRZoRM6S17faGBHxauU+fDQ==}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  '@llamaindex/liteparse-win32-arm64-msvc@2.5.0':
+    resolution: {integrity: sha512-Q4QR8aE8ZNmVEF6bu7j48Aa6YkIqCR9R/w1ifIw/+ogrsPx5m4+UkypWgEbbHdZejSIZFQC9jTlIVaRFkzJ+2Q==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@llamaindex/liteparse-win32-x64-msvc@2.5.0':
+    resolution: {integrity: sha512-PHo7F637ZdXmvIGVfUaKwO/kNu6rFcggt0IOe+BWk1bCaAr9MFWuCPSVwoepj6wdwL9SLDBiqpDTr4mleirDbA==}
+    cpu: [x64]
+    os: [win32]
+
+  '@llamaindex/liteparse@2.5.0':
+    resolution: {integrity: sha512-axLSvxh/7Pa1f0EuXifLbqD79S6Ssli8b+sKfNHqsNbGXpPEGtvh8oQNQocrq4aoFRjRS+YWQ50LU0Ghy0/rvg==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4':
     resolution: {integrity: sha512-LCkGo6JDfaBhgST7UpPWgNgLINpcpabaHfyz5OBx75nUYxBsaEPxjnyNjWpeb/xBup/682QnBfRBy2/LvPutZQ==}
     cpu: [arm64]
@@ -1073,6 +1119,10 @@ packages:
   cluster-key-slot@1.1.1:
     resolution: {integrity: sha512-rwHwUfXL40Chm1r08yrhU3qpUvdVlgkKNeyeGPOxnW8/SyVDvgRaed/Uz54AqWNaTCAThlj6QAs3TZcKI0xDEw==}
     engines: {node: '>=0.10.0'}
+
+  commander@12.1.0:
+    resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
+    engines: {node: '>=18'}
 
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
@@ -1802,6 +1852,39 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  '@llamaindex/liteparse-darwin-arm64@2.5.0':
+    optional: true
+
+  '@llamaindex/liteparse-darwin-x64@2.5.0':
+    optional: true
+
+  '@llamaindex/liteparse-linux-arm64-gnu@2.5.0':
+    optional: true
+
+  '@llamaindex/liteparse-linux-x64-gnu@2.5.0':
+    optional: true
+
+  '@llamaindex/liteparse-linux-x64-musl@2.5.0':
+    optional: true
+
+  '@llamaindex/liteparse-win32-arm64-msvc@2.5.0':
+    optional: true
+
+  '@llamaindex/liteparse-win32-x64-msvc@2.5.0':
+    optional: true
+
+  '@llamaindex/liteparse@2.5.0':
+    dependencies:
+      commander: 12.1.0
+    optionalDependencies:
+      '@llamaindex/liteparse-darwin-arm64': 2.5.0
+      '@llamaindex/liteparse-darwin-x64': 2.5.0
+      '@llamaindex/liteparse-linux-arm64-gnu': 2.5.0
+      '@llamaindex/liteparse-linux-x64-gnu': 2.5.0
+      '@llamaindex/liteparse-linux-x64-musl': 2.5.0
+      '@llamaindex/liteparse-win32-arm64-msvc': 2.5.0
+      '@llamaindex/liteparse-win32-x64-msvc': 2.5.0
+
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4':
     optional: true
 
@@ -2092,6 +2175,8 @@ snapshots:
   caniuse-lite@1.0.30001803: {}
 
   cluster-key-slot@1.1.1: {}
+
+  commander@12.1.0: {}
 
   convert-source-map@2.0.0: {}
 

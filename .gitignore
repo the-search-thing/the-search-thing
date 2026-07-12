@@ -6,7 +6,7 @@ dist/
 
 # env vars
 .env
-.env.*
+.env.local
 
 # rust
 target/

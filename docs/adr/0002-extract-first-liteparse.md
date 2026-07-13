@@ -20,4 +20,4 @@ Lexical search via `@ff-labs/fff-node` covers greppable text files. fff skips bi
 
 - Host dependency: LibreOffice for Office formats; ImageMagick later for images.
 - Disk cache of extracted text under `.data/extracted` (or `EXTRACT_CACHE_DIR`).
-- Index trigger: `POST /index/run`.
+- Index trigger: `POST /index/run` (extraction only). fff’s built-in watcher keeps both FileFinder indexes fresh; it does not run LiteParse.

@@ -31,7 +31,6 @@ export class FileSearchService extends Context.Service<
       FileSearchError
     >;
 
-    /** Rescan the extract-cache FileFinder after new `.txt` mirrors are written. */
     readonly refreshExtractIndex: () => Effect.Effect<void, FileSearchError>;
   }
 >()("FileSearchService") {}

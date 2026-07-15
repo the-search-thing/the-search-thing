@@ -6,7 +6,7 @@ dist/
 
 # env vars
 .env
-.env.local
+.env.*
 
 # rust
 target/
@@ -43,5 +43,3 @@ backend/build/backend/
 client/resources/backend/
 client/resources/ffmpeg/
 backend.spec
-.repos/
-.playwright-mcp/

@@ -1,0 +1,22 @@
+packages:
+  - packages/*
+  - apps/*
+
+allowBuilds:
+  "@parcel/watcher": true
+  esbuild: true
+  msgpackr-extract: true
+
+catalog:
+  "@effect/language-service": 0.86.4
+  "@effect/platform-node": 4.0.0-beta.94
+  "@types/node": 24.3.0
+  effect: 4.0.0-beta.94
+  tsx: 4.20.6
+  typescript: 5.9.2
+  "preact": "^10.26.9"
+  "@preact/preset-vite": "^2.10.2"
+  "vite": "^7.0.4"
+  "oxfmt": "^0.27.0"
+  "oxlint": "^1.62.0"
+  "@ff-labs/fff-node": "^0.9.6"

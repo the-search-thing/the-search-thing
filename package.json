@@ -1,0 +1,14 @@
+{
+  "name": "the-search-thing-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.9.0",
+  "scripts": {
+    "prepare": "sh scripts/prepare-effect.sh && effect-language-service patch",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "@effect/language-service": "catalog:",
+    "typescript": "catalog:"
+  }
+}

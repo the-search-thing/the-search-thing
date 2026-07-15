@@ -2,16 +2,16 @@
 
 <div align="center">
   <img src="branding/logo-white-bg.webp" alt="the-search-thing" width="400" />
-  <p>Semantically search for your files, instantly*</p>
+  <p>Never lose what you're looking for</p>
 </div>
 
 ## What it is
 
-the-search-thing is a local-first search system that makes your files, images, and videos semantically searchable from one place.
+the-search-thing is a search tool that makes your files, images, and videos semantically searchable.
 
 ## Features
 
-- Semantic search across files, images, and videos
+- insanely fast search across files, images, and even videos
 - Sub-millisecond response targets for interactive search
 - Directory indexing with ignore rules
 

@@ -1,7 +1,8 @@
 # Contributing
 
-Thanks for your interest in contributing to **the-search-thing**.
-This guide covers architecture, local setup, daily development workflow.
+We are currently undergoing a major refactoring of the backend which will eventually all be done in Effect. We are also rethinking how this tool can be used completely locally for free forever and also work for enterprise use cases. The guide below may be outdated depending on the current state of the project.
+
+I hope you understand, and thank you for your interest in contributing!
 
 ## Architecture (high level)
 
@@ -34,6 +35,7 @@ cp .env.example .env
 ```
 
 Set these values in `.env`:
+
 ```bash
 - `GEMINI_API_KEY`=
 - `OPENAI_API_KEY`=
@@ -46,7 +48,6 @@ Set these values in `.env`:
 HELIX_PORT=6969
 HELIX_LOCAL=True
 ```
-
 
 ### 2) Start Helix locally
 
@@ -132,9 +133,11 @@ npm --prefix client run dev
 ## Frontend website (Next.js)
 
 The site lives in `website/` and is a standalone Next.js app.
+
 ```bash
 cd website
 npm install
 npm run dev
 ```
+
 Open `http://localhost:3000` and edit files under `website/src/`.

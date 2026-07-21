@@ -28,4 +28,8 @@ export class WindowApi extends ConveyorApi {
   webZoomOut = () => this.invoke("web-zoom-out");
   webToggleFullscreen = () => this.invoke("web-toggle-fullscreen");
   webOpenUrl = (url: string) => this.invoke("web-open-url", url);
+
+  /** Listen for main-process navigation requests (e.g. from the app menu). */
+  onNavigate = (callback: (path: string) => void) =>
+    this.renderer.on("navigate", (_event, path: string) => callback(path));
 }

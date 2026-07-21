@@ -18,8 +18,8 @@ export default function About() {
       <img src={logoSrc} alt="Logo" className="w-[75px] h-[75px]" />
       <div className="items-center flex flex-col">
         <p className="text-lg text-zinc-200">the-search-thing</p>
-        <p className="text-sm text-zinc-500 font-semibold">v0.1.0</p>
-        <p className="text-xs text-zinc-500 py-2">by Karthik & Amaan</p>
+        <p className="text-sm text-zinc-500 font-semibold">v0.1.1</p>
+        <p className="text-xs text-zinc-500 py-2">by The Search Company</p>
       </div>
     </div>
   );

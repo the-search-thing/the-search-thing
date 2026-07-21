@@ -13,6 +13,12 @@ function GlobalHotkeys() {
   const { keybinds } = useKeybinds();
 
   useEffect(() => {
+    return window.conveyor.window.onNavigate((path) => {
+      navigate(path);
+    });
+  }, [navigate]);
+
+  useEffect(() => {
     const runAfterRouteChange = (action: () => void) => {
       requestAnimationFrame(() => requestAnimationFrame(action));
     };

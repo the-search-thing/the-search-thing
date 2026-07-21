@@ -168,25 +168,6 @@ export default function Footer() {
 
   return (
     <div className="flex flex-row justify-between items-center w-full h-full">
-      <div className="relative" ref={popoverRef}>
-        <Button
-          variant="hoverlessTransparent"
-          className="p-0.5 w-auto h-auto rounded-full cursor-pointer transition-colors"
-          onClick={() => setIsPopoverOpen(!isPopoverOpen)}
-        >
-          <Info className="w-3 h- opacity-75" />
-        </Button>
-
-        {isPopoverOpen && (
-          <div className="absolute left-0 bottom-full mb-2 z-[60] min-w-[150px] rounded-lg bg-zinc-900/70 p-3 text-zinc-100 shadow-xl backdrop-blur-sm border border-zinc-600">
-            <div className="text-xs font-medium mb-1">the-search-thing</div>
-            <div className="text-[10px] text-zinc-400">Version 0.1.0</div>
-            {/* Arrow pointing down */}
-            <div className="absolute left-3 -bottom-1 h-2 w-2 rotate-45 bg-zinc-900/95 ring-1 ring-white/10"></div>
-          </div>
-        )}
-      </div>
-
       <div className="text-sm flex items-center flex-1 justify-center px-4">{renderStatus()}</div>
 
       <Button

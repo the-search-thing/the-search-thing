@@ -241,27 +241,6 @@ export default function General() {
             </button>
           </div>
         </div>
-
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <div className="text-sm text-zinc-200">Font</div>
-            <div className="text-xs text-zinc-500">Choose Sans-Serif or Mono.</div>
-          </div>
-          <select
-            value={draftSettings.font}
-            onChange={(event) =>
-              setDraftSettings((prev) => ({
-                ...prev,
-                font: event.target.value as "sans-serif" | "mono",
-              }))
-            }
-            className="h-7 rounded-md bg-zinc-800/60 border-1 border-zinc-600/80 text-xs text-zinc-200 px-2"
-          >
-            <option value="sans-serif">Manrope</option>
-            <option value="mono">Mono</option>
-          </select>
-        </div>
-
         <div className="flex items-center justify-between gap-4">
           <div>
             <div className="text-sm text-zinc-200">Search scope</div>
@@ -280,48 +259,6 @@ export default function General() {
             <option value="both">Everything</option>
             <option value="files">Files Only</option>
             <option value="folders">Folders Only</option>
-          </select>
-        </div>
-
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <div className="text-sm text-zinc-200">Window placement</div>
-            <div className="text-xs text-zinc-500">Choose where the window appears.</div>
-          </div>
-          <select
-            value={draftSettings["window-placement"]}
-            onChange={(event) => {
-              const nextValue = event.target.value as
-                | "center"
-                | "center-above"
-                | "center-below"
-                | "cursor";
-              setDraftSettings((prev) => ({
-                ...prev,
-                "window-placement": nextValue,
-              }));
-              void windowApi.windowApplyPlacement(nextValue);
-            }}
-            className="h-7 rounded-md bg-zinc-800/60 border-1 border-zinc-600/80 text-xs text-zinc-200 px-2"
-          >
-            <option value="center" title="Center the window on the active display.">
-              Centered
-            </option>
-            <option
-              value="center-above"
-              title="Center the window 80px higher on the active display."
-            >
-              Centered (slightly higher)
-            </option>
-            <option
-              value="center-below"
-              title="Center the window 80px lower on the active display."
-            >
-              Centered (slightly lower)
-            </option>
-            <option value="cursor" title="Center the window around your mouse cursor.">
-              Cursor
-            </option>
           </select>
         </div>
 
@@ -391,7 +328,7 @@ export default function General() {
               >
                 Cancel
               </button>
-              <button
+              {/*<button
                 type="button"
                 disabled={clearIndexPending}
                 onClick={() => void handleConfirmClearIndex()}
@@ -403,7 +340,7 @@ export default function General() {
                 )}
               >
                 {clearIndexPending ? "Clearing…" : "Clear index"}
-              </button>
+              </button>*/}
             </div>
           </div>
         </div>

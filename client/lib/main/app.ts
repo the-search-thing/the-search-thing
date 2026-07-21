@@ -40,6 +40,17 @@ const setupApplicationMenu = () => {
       label: "View",
       submenu: [{ role: "reload" }, { role: "forceReload" }, { role: "toggleDevTools" }],
     },
+    {
+      label: "Settings",
+      submenu: [
+        {
+          label: "Go to Settings",
+          click: () => {
+            getMainWindow()?.webContents.send("navigate", "/settings");
+          },
+        },
+      ],
+    },
   ];
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));

@@ -84,6 +84,7 @@ const IndexLive = HttpApiBuilder.group(
           extracted: result.extracted,
           skipped: result.skipped,
           failed: result.failed,
+          pruned: result.pruned,
           errors: result.errors.map((error) => new IndexRunErrorItem(error)),
         });
       }),

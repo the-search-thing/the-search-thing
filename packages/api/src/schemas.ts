@@ -42,5 +42,6 @@ export class IndexRunResponse extends Schema.Class<IndexRunResponse>("IndexRunRe
   extracted: Schema.Number,
   skipped: Schema.Number,
   failed: Schema.Number,
+  pruned: Schema.Number,
   errors: Schema.Array(IndexRunErrorItem),
 }) {}

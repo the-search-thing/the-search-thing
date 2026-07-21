@@ -1,31 +1,34 @@
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&display=swap");
-@import "./globals.css";
-@import "./window.css";
+@import './globals.css';
+@import './window.css';
+
+html {
+  font-size: 15px;
+}
 
 body {
   font-family:
-    "Manrope",
     system-ui,
     -apple-system,
-    "Segoe UI",
+    'Segoe UI',
     sans-serif;
-  font-size: 14px;
+  font-size: 1rem;
+  font-weight: 500;
   margin: 0;
   overflow: hidden;
 }
 
-body[data-font="sans-serif"] {
+body[data-font='sans-serif'] {
   font-family:
-    "Manrope",
     system-ui,
     -apple-system,
-    "Segoe UI",
+    'Segoe UI',
     sans-serif;
 }
 
-body[data-font="mono"] {
+body[data-font='mono'] {
   font-family:
-    "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
 }
 
 html,
@@ -33,5 +36,5 @@ body,
 #app {
   height: 100%;
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.45;
 }

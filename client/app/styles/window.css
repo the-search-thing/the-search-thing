@@ -3,48 +3,51 @@
   --window-icon-height: 16px;
   --window-title-margin: 42px;
   --window-titlebar-height: 40px;
-  --window-titlebar-font-size: 13px;
+  --window-titlebar-font-size: 14px;
+  --window-titlebar-font-weight: 500;
   --window-scrollbar-width: 12px;
   --window-mac-titlebar-controls-margin: 80px;
   --window-background-transition-duration: 0.3s;
-  --window-c-popup-font-weight: normal;
+  --window-c-popup-font-weight: 500;
 
-  --window-c-background: #1c1c1c;
-  --window-c-titlebar-background: #282828;
-  --window-c-titlebar-border: transparent;
-  --window-c-text: #ffffffc8;
-  --window-c-hover: #3c3c3c;
-  --window-c-popup-background: #282828;
-  --window-c-popup-border: #3c3c3c;
+  /* Ayu Dark */
+  --window-c-background: #0d1017;
+  --window-c-titlebar-background: #141821;
+  --window-c-titlebar-border: #1b1f29;
+  --window-c-text: #bfbdb6c8;
+  --window-c-hover: #161a24;
+  --window-c-popup-background: #141821;
+  --window-c-popup-border: #1b1f29;
   --window-c-popup-shadow: #00000080;
-  --window-c-separator: #80808033;
-  --window-c-control-hover: #0000003d;
-  --window-c-control-close-hover: #c42b1c;
-  --window-c-scrollbar-track: #1e1e1ec6;
-  --window-c-scrollbar-thumb: #88888863;
-  --window-c-scrollbar-thumb-hover: #555;
+  --window-c-separator: #1b1f29;
+  --window-c-control-hover: #4752663d;
+  --window-c-control-close-hover: #d95757;
+  --window-c-scrollbar-track: #0d1017c6;
+  --window-c-scrollbar-thumb: #6c738063;
+  --window-c-scrollbar-thumb-hover: #6c7380;
   --window-c-text-shadow: #000000a8;
 }
 
 :root:not(.dark) {
   color-scheme: light;
-  --window-titlebar-font-weight: 500;
-  --window-c-popup-font-weight: 500;
+  --window-titlebar-font-weight: 600;
+  --window-c-popup-font-weight: 600;
 
-  --window-c-background: #fff;
-  --window-c-titlebar-background: #fff;
-  --window-c-titlebar-border: #8080801a;
-  --window-c-text: #000000c8;
-  --window-c-hover: #ececec;
-  --window-c-popup-background: #f6f6f6;
-  --window-c-popup-border: #dcdcdc;
-  --window-c-popup-shadow: hsla(0, 0%, 0%, 0.1);
-  --window-c-separator: #80808033;
-  --window-c-control-hover: #0000001a;
-  --window-c-control-close-hover: #ff453b;
-  --window-c-control-close-hover-text: #fff;
-  --window-c-scrollbar-track: #e0e0e0;
-  --window-c-scrollbar-thumb: #b0b0b0;
-  --window-c-scrollbar-thumb-hover: #888888cf;
+  /* Ayu Light */
+  --window-c-background: #fcfcfc;
+  --window-c-titlebar-background: #f8f9fa;
+  --window-c-titlebar-border: #6b7d8f1a;
+  --window-c-text: #5c6166c8;
+  --window-c-hover: #56728f1f;
+  --window-c-popup-background: #fafafa;
+  --window-c-popup-border: #d8d8d7;
+  --window-c-popup-shadow: #6b7d8f12;
+  --window-c-separator: #6b7d8f1f;
+  --window-c-control-hover: #6b7d8f1a;
+  --window-c-control-close-hover: #e65050;
+  --window-c-control-close-hover-text: #fcfcfc;
+  --window-c-scrollbar-track: #e7eaed;
+  --window-c-scrollbar-thumb: #828e9f99;
+  --window-c-scrollbar-thumb-hover: #828e9f;
   --window-c-text-shadow: transparent;
 }

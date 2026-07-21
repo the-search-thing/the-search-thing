@@ -30,75 +30,93 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+  --font-weight-normal: 500;
+  --font-weight-medium: 600;
+  --font-weight-semibold: 700;
+  --font-weight-bold: 800;
 }
 
+/* Ayu Light / Ayu Dark — https://github.com/ayu-theme/ayu-colors */
 @layer base {
   :root {
-    --background: var(--color-neutral-50);
-    --foreground: var(--color-neutral-900);
-    --card: hsl(0 0% 100%);
-    --card-foreground: hsl(0 0% 3.9%);
-    --popover: hsl(0 0% 100%);
-    --popover-foreground: hsl(0 0% 3.9%);
-    --primary: hsl(0 0% 9%);
-    --primary-foreground: hsl(0 0% 98%);
-    --secondary: hsl(0 0% 96.1%);
-    --secondary-foreground: hsl(0 0% 9%);
-    --muted: hsl(0 0% 96.1%);
-    --muted-foreground: hsl(0 0% 45.1%);
-    --accent: hsl(0 0% 96.1%);
-    --accent-foreground: hsl(0 0% 9%);
-    --destructive: hsl(0 84.2% 60.2%);
-    --destructive-foreground: hsl(0 0% 98%);
-    --border: hsl(0 0% 89.8%);
-    --input: hsl(0 0% 89.8%);
-    --ring: hsl(0 0% 3.9%);
-    --chart-1: hsl(12 76% 61%);
-    --chart-2: hsl(173 58% 39%);
-    --chart-3: hsl(197 37% 24%);
-    --chart-4: hsl(43 74% 66%);
-    --chart-5: hsl(27 87% 67%);
+    --background: #fcfcfc;
+    --foreground: #5c6166;
+    --card: #fafafa;
+    --card-foreground: #5c6166;
+    --popover: #fafafa;
+    --popover-foreground: #5c6166;
+    --primary: #f29718;
+    --primary-foreground: #fcfcfc;
+    --secondary: #f8f9fa;
+    --secondary-foreground: #5c6166;
+    --muted: #f0f1f2;
+    --muted-foreground: #828e9f;
+    --accent: #f8f9fa;
+    --accent-foreground: #5c6166;
+    --destructive: #e65050;
+    --destructive-foreground: #fcfcfc;
+    --border: #d8d8d7;
+    --input: #d8d8d7;
+    --ring: #f29718;
+    --chart-1: #399ee6;
+    --chart-2: #86b300;
+    --chart-3: #f2a300;
+    --chart-4: #a37acc;
+    --chart-5: #f07171;
     --radius: 0.5rem;
   }
 
+  /* Inverted zinc so dark-first zinc-* classes read as Ayu Light */
   .light {
-    --color-zinc-50: #202124;
-    --color-zinc-100: #2b2c2e;
-    --color-zinc-200: #37383b;
-    --color-zinc-300: #4a4b4f;
-    --color-zinc-400: #64666b;
-    --color-zinc-500: #84878d;
-    --color-zinc-600: #a9adb4;
-    --color-zinc-700: #c7cbd2;
-    --color-zinc-800: #dee2e8;
-    --color-zinc-900: #eceff3;
-    --color-zinc-950: #f4f6f8;
+    --color-zinc-50: #5c6166;
+    --color-zinc-100: #6b737a;
+    --color-zinc-200: #787b80;
+    --color-zinc-300: #828e9f;
+    --color-zinc-400: #8a9199;
+    --color-zinc-500: #a0a6ad;
+    --color-zinc-600: #c5c8cc;
+    --color-zinc-700: #e3e5e8;
+    --color-zinc-800: #f0f1f2;
+    --color-zinc-900: #f8f9fa;
+    --color-zinc-950: #fcfcfc;
   }
 
   .dark {
-    --background: var(--color-neutral-950);
-    --foreground: var(--color-neutral-100);
-    --card: hsl(0, 0%, 3.9%);
-    --card-foreground: hsl(0 0% 98%);
-    --popover: hsl(0 0% 3.9%);
-    --popover-foreground: hsl(0 0% 98%);
-    --primary: hsl(0 0% 98%);
-    --primary-foreground: hsl(0 0% 9%);
-    --secondary: hsl(0 0% 14.9%);
-    --secondary-foreground: hsl(0 0% 98%);
-    --muted: hsl(0 0% 14.9%);
-    --muted-foreground: hsl(0 0% 63.9%);
-    --accent: hsl(0 0% 14.9%);
-    --accent-foreground: hsl(0 0% 98%);
-    --destructive: hsl(0 62.8% 30.6%);
-    --destructive-foreground: hsl(0 0% 98%);
-    --border: hsl(0 0% 14.9%);
-    --input: hsl(0 0% 14.9%);
-    --ring: hsl(0 0% 83.1%);
-    --chart-1: hsl(220 70% 50%);
-    --chart-2: hsl(160 60% 45%);
-    --chart-3: hsl(30 80% 55%);
-    --chart-4: hsl(280 65% 60%);
-    --chart-5: hsl(340 75% 55%);
+    --background: #0d1017;
+    --foreground: #bfbdb6;
+    --card: #141821;
+    --card-foreground: #bfbdb6;
+    --popover: #141821;
+    --popover-foreground: #bfbdb6;
+    --primary: #e6b450;
+    --primary-foreground: #0d1017;
+    --secondary: #161a24;
+    --secondary-foreground: #bfbdb6;
+    --muted: #161a24;
+    --muted-foreground: #6c7380;
+    --accent: #161a24;
+    --accent-foreground: #bfbdb6;
+    --destructive: #d95757;
+    --destructive-foreground: #bfbdb6;
+    --border: #1b1f29;
+    --input: #1b1f29;
+    --ring: #e6b450;
+    --chart-1: #59c2ff;
+    --chart-2: #aad94c;
+    --chart-3: #ffb454;
+    --chart-4: #d2a6ff;
+    --chart-5: #f07178;
+
+    --color-zinc-50: #e6e1cf;
+    --color-zinc-100: #bfbdb6;
+    --color-zinc-200: #bfbdb6;
+    --color-zinc-300: #8a9199;
+    --color-zinc-400: #6c7380;
+    --color-zinc-500: #555e73;
+    --color-zinc-600: #475266;
+    --color-zinc-700: #1b1f29;
+    --color-zinc-800: #141821;
+    --color-zinc-900: #10141c;
+    --color-zinc-950: #0d1017;
   }
 }

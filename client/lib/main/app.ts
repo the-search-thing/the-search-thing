@@ -1,4 +1,4 @@
-import { BrowserWindow, app, screen } from "electron";
+import { BrowserWindow, Menu, app, screen } from "electron";
 import { join } from "path";
 import appIcon from "@/resources/build/logo-white-bg.webp";
 import { registerResourcesProtocol } from "./protocols";
@@ -17,7 +17,33 @@ let mainWindow: BrowserWindow | null = null;
 let generalSettingsStore: ReturnType<typeof createGeneralSettingsStore> | null = null;
 let currentGeneralSettings: GeneralSettingsState | null = null;
 
+const WINDOW_WIDTH = 1200;
+const WINDOW_HEIGHT = 800;
 const WINDOW_PLACEMENT_OFFSET = 80;
+
+const setupApplicationMenu = () => {
+  const isMac = process.platform === "darwin";
+
+  const template: Electron.MenuItemConstructorOptions[] = [
+    ...(isMac
+      ? [
+          {
+            role: "appMenu" as const,
+          },
+        ]
+      : []),
+    {
+      label: "File",
+      submenu: [{ type: "separator" }, { role: "quit" }],
+    },
+    {
+      label: "View",
+      submenu: [{ role: "reload" }, { role: "forceReload" }, { role: "toggleDevTools" }],
+    },
+  ];
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+};
 
 const getGeneralSettingsStore = () => {
   if (generalSettingsStore) {
@@ -81,15 +107,15 @@ const positionAppWindowWithPlacement = (
   window: BrowserWindow,
   placement: WindowPlacementSetting,
 ) => {
-  if (window.isFullScreen()) return;
+  if (window.isFullScreen() || window.isMaximized()) return;
   const { width, height } = window.getBounds();
   const bounds = computeWindowBoundsForPlacement(placement, width, height);
   window.setBounds(bounds, false);
 };
 
 export const positionAppWindow = (window: BrowserWindow) => {
-  const settings = currentGeneralSettings ?? getGeneralSettingsStore().getGeneralSettings();
-  positionAppWindowWithPlacement(window, settings["window-placement"]);
+  if (window.isFullScreen() || window.isMaximized()) return;
+  window.center();
 };
 
 export function getMainWindow(): BrowserWindow | null {
@@ -106,6 +132,7 @@ export function initializeApp(options?: {
   onKeybindsChange?: (map: KeybindMap) => void;
   onGeneralSettingsChange?: () => void;
 }): void {
+  setupApplicationMenu();
   registerResourcesProtocol();
   registerWindowHandlers(getMainWindow, positionAppWindowWithPlacement);
   registerAppHandlers(app);
@@ -124,15 +151,12 @@ export function initializeApp(options?: {
 
 export function createAppWindow(): BrowserWindow {
   mainWindow = new BrowserWindow({
+    width: WINDOW_WIDTH,
+    height: WINDOW_HEIGHT,
     show: false,
-    fullscreen: true,
+    center: true,
     backgroundColor: "#1c1c1c",
     icon: appIcon,
-    frame: false,
-    titleBarStyle: "hiddenInset",
-    title: "Electron React App",
-    maximizable: false,
-    resizable: false,
     webPreferences: {
       preload: join(__dirname, "../preload/preload.js"),
       sandbox: false,
@@ -141,12 +165,6 @@ export function createAppWindow(): BrowserWindow {
 
   mainWindow.on("ready-to-show", () => {
     mainWindow?.show();
-  });
-
-  mainWindow.on("leave-full-screen", () => {
-    if (mainWindow) {
-      positionAppWindow(mainWindow);
-    }
   });
 
   mainWindow.on("closed", () => {

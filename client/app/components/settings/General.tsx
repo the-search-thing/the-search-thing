@@ -12,7 +12,6 @@ type DraftGeneralSettings = Pick<
 export default function General() {
   const { settings, setAllSettings } = useGeneralSettings();
   const searchApi = useConveyor("search");
-  const windowApi = useConveyor("window");
   const [draftSettings, setDraftSettings] = useState<DraftGeneralSettings>({
     "launch-on-startup": settings["launch-on-startup"],
     theme: settings.theme,
@@ -102,7 +101,6 @@ export default function General() {
       scope: settings.scope,
       "window-placement": settings["window-placement"],
     });
-    void windowApi.windowApplyPlacement(settings["window-placement"]);
   };
 
   const handleSave = () => {

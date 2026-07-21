@@ -88,12 +88,6 @@ app.whenReady().then(() => {
   // This must not be called again — ipcMain.handle() throws on duplicate registrations.
   initializeApp({
     onKeybindsChange: handleKeybindsChange,
-    onGeneralSettingsChange: () => {
-      const win = getMainWindow();
-      if (win) {
-        positionAppWindow(win);
-      }
-    },
   });
   // Create app window
   createAppWindow();

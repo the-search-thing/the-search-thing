@@ -7,17 +7,13 @@
 
 ## What it is
 
-the-search-thing is a search tool that makes your files, images, and videos semantically searchable.
+the-search-thing is a search tool that makes your files, images, and videos* searchable.
 
 ## Features
 
-- insanely fast search across files, images, and even videos
-- Sub-millisecond response targets for interactive search
-- Directory indexing with ignore rules
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, dev workflow, and frontend website instructions.
+- insanely fast 
+- search for anything
+- private
 
 ## License
 

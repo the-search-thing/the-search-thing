@@ -1,29 +1,16 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { type TitlebarProps } from "./Titlebar";
 import type { ChannelReturn } from "@/lib/conveyor/schemas";
 import { useConveyor } from "@/app/hooks/use-conveyor";
 
 type WindowInitProps = ChannelReturn<"window-init">;
 
 interface WindowContextProps {
-  titlebar: TitlebarProps;
   readonly window: WindowInitProps | undefined;
 }
 
 const WindowContext = createContext<WindowContextProps | undefined>(undefined);
 
-export const WindowContextProvider = ({
-  children,
-  titlebar = {
-    title: "the-search-thing",
-    icon: "logo-white-bg.webp",
-    titleCentered: false,
-    menuItems: [],
-  },
-}: {
-  children: React.ReactNode;
-  titlebar?: TitlebarProps;
-}) => {
+export const WindowContextProvider = ({ children }: { children: React.ReactNode }) => {
   const [initProps, setInitProps] = useState<WindowInitProps>();
   const { windowInit } = useConveyor("window");
 
@@ -43,7 +30,7 @@ export const WindowContextProvider = ({
   }, [windowInit]);
 
   return (
-    <WindowContext.Provider value={{ titlebar, window: initProps }}>
+    <WindowContext.Provider value={{ window: initProps }}>
       <div className="window-content flex-1 overflow-y-auto overflow-x-hidden relative [&>div:last-child]:h-full [scrollbar-width:thin] [scrollbar-color:var(--window-c-scrollbar-thumb)_var(--window-c-scrollbar-track)] [&::-webkit-scrollbar]:w-3 [&::-webkit-scrollbar-track]:bg-[var(--window-c-scrollbar-track)] [&::-webkit-scrollbar-thumb]:bg-[var(--window-c-scrollbar-thumb)] [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:border-[3px] [&::-webkit-scrollbar-thumb]:border-solid [&::-webkit-scrollbar-thumb]:border-[var(--window-c-scrollbar-track)] [&::-webkit-scrollbar-thumb:hover]:bg-[var(--window-c-scrollbar-thumb-hover)]">
         {children}
       </div>

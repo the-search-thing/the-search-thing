@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import type { TitlebarProps } from "./Titlebar";
+import { type TitlebarProps } from "./Titlebar";
 import type { ChannelReturn } from "@/lib/conveyor/schemas";
 import { useConveyor } from "@/app/hooks/use-conveyor";
 
@@ -44,9 +44,6 @@ export const WindowContextProvider = ({
 
   return (
     <WindowContext.Provider value={{ titlebar, window: initProps }}>
-      {/*<TitlebarContextProvider>
-        <Titlebar />
-      </TitlebarContextProvider>*/}
       <div className="window-content flex-1 overflow-y-auto overflow-x-hidden relative [&>div:last-child]:h-full [scrollbar-width:thin] [scrollbar-color:var(--window-c-scrollbar-thumb)_var(--window-c-scrollbar-track)] [&::-webkit-scrollbar]:w-3 [&::-webkit-scrollbar-track]:bg-[var(--window-c-scrollbar-track)] [&::-webkit-scrollbar-thumb]:bg-[var(--window-c-scrollbar-thumb)] [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:border-[3px] [&::-webkit-scrollbar-thumb]:border-solid [&::-webkit-scrollbar-thumb]:border-[var(--window-c-scrollbar-track)] [&::-webkit-scrollbar-thumb:hover]:bg-[var(--window-c-scrollbar-thumb-hover)]">
         {children}
       </div>

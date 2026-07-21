@@ -7,7 +7,7 @@ const runtime = ManagedRuntime.make(FetchHttpClient.layer);
 
 const makeClient = HttpApiClient.make(Api);
 
-export const searchFiles = (query: string, limit = 50) =>
+export const searchFiles = (query: string, limit = 50, signal?: AbortSignal) =>
   runtime.runPromise(
     Effect.gen(function* () {
       const client = yield* makeClient;
@@ -15,9 +15,10 @@ export const searchFiles = (query: string, limit = 50) =>
         query: { q: query, limit },
       });
     }),
+    { signal },
   );
 
-export const searchGrep = (query: string, limit = 50) =>
+export const searchGrep = (query: string, limit = 50, signal?: AbortSignal) =>
   runtime.runPromise(
     Effect.gen(function* () {
       const client = yield* makeClient;
@@ -25,6 +26,7 @@ export const searchGrep = (query: string, limit = 50) =>
         query: { q: query, mode: "fuzzy", limit },
       });
     }),
+    { signal },
   );
 
 export type FileSearchResult = Awaited<ReturnType<typeof searchFiles>>;

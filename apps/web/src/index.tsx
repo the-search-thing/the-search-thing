@@ -1,5 +1,5 @@
 import { render } from "preact";
-import { useState } from "preact/hooks";
+import { useRef, useState } from "preact/hooks";
 import {
   searchFiles,
   searchGrep,
@@ -28,35 +28,53 @@ export function App() {
   const [results, setResults] = useState<SearchResults | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  function cancelInFlight() {
+    abortRef.current?.abort();
+    abortRef.current = null;
+  }
 
   async function onSearch(event: Event) {
     event.preventDefault();
     const trimmed = query.trim();
     if (!trimmed) return;
 
+    cancelInFlight();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const { signal } = controller;
+
     setLoading(true);
     setError(null);
 
     try {
       if (activeTab === "files") {
-        const data = await searchFiles(trimmed);
+        const data = await searchFiles(trimmed, 50, signal);
+        if (signal.aborted) return;
         setResults({ kind: "files", data });
       } else {
-        const data = await searchGrep(trimmed);
+        const data = await searchGrep(trimmed, 50, signal);
+        if (signal.aborted) return;
         setResults({ kind: "grep", data });
       }
     } catch (cause) {
+      if (signal.aborted) return;
       setResults(null);
       setError(formatError(cause));
     } finally {
-      setLoading(false);
+      if (!signal.aborted) {
+        setLoading(false);
+      }
     }
   }
 
   function switchTab(tab: Tab) {
+    cancelInFlight();
     setActiveTab(tab);
     setResults(null);
     setError(null);
+    setLoading(false);
   }
 
   return (

@@ -12,6 +12,7 @@ import { createBetterSqliteAdapter } from "@/lib/storage/sqlite-adapter";
 import { createGeneralSettingsStore } from "@/lib/storage/general-settings-db-store";
 import type { GeneralSettingsState, WindowPlacementSetting } from "@/lib/storage/general-settings";
 import type { KeybindMap } from "@/lib/storage/keybind-store";
+import { windowBackgroundForTheme, type AppTheme } from "@/lib/theme/ayu";
 
 let mainWindow: BrowserWindow | null = null;
 let generalSettingsStore: ReturnType<typeof createGeneralSettingsStore> | null = null;
@@ -151,7 +152,11 @@ export function initializeApp(options?: {
   registerSearchHistoryHandlers();
   registerKeybindsHandlers(options?.onKeybindsChange);
   registerGeneralSettingsHandlers((settings) => {
+    const previousTheme = currentGeneralSettings?.theme;
     currentGeneralSettings = settings;
+    if (previousTheme !== undefined && previousTheme !== settings.theme) {
+      getMainWindow()?.setBackgroundColor(windowBackgroundForTheme(settings.theme as AppTheme));
+    }
     options?.onGeneralSettingsChange?.();
   });
 
@@ -161,12 +166,13 @@ export function initializeApp(options?: {
 }
 
 export function createAppWindow(): BrowserWindow {
+  const initialTheme = (currentGeneralSettings?.theme ?? "dark") as AppTheme;
   mainWindow = new BrowserWindow({
     width: WINDOW_WIDTH,
     height: WINDOW_HEIGHT,
     show: false,
     center: true,
-    backgroundColor: "#1c1c1c",
+    backgroundColor: windowBackgroundForTheme(initialTheme),
     icon: appIcon,
     webPreferences: {
       preload: join(__dirname, "../preload/preload.js"),

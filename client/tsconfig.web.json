@@ -5,6 +5,7 @@
     "composite": true,
     "jsx": "react-jsx",
     "baseUrl": ".",
+    "resolveJsonModule": true,
     "types": ["electron-vite/node"],
     "paths": {
       "@/*": ["./*"]

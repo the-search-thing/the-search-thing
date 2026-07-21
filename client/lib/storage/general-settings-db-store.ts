@@ -11,7 +11,7 @@ import {
 type PersistedGeneralSettingKey = keyof GeneralSettingsState;
 
 type GeneralSettingsRow = {
-  setting_key: PersistedGeneralSettingKey;
+  setting_key: string;
   setting_value: string;
 };
 
@@ -28,12 +28,12 @@ const parseBoolean = (value: string, fallback: boolean): boolean => {
   return fallback;
 };
 
-const parseTheme = (value: string, fallback: ThemeSetting): ThemeSetting => {
-  return value === "dark" || value === "light" ? value : fallback;
-};
-
 const parseFont = (value: string, fallback: FontSetting): FontSetting => {
   return value === "sans-serif" || value === "mono" ? value : fallback;
+};
+
+const parseTheme = (value: string, fallback: ThemeSetting): ThemeSetting => {
+  return value === "dark" || value === "light" ? value : fallback;
 };
 
 const parseScope = (value: string, fallback: SearchScopeSetting): SearchScopeSetting => {

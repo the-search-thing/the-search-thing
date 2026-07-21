@@ -21,7 +21,7 @@ export default function General() {
   });
   const [status, setStatus] = useState<"idle" | "saved" | "cleared">("idle");
   const [clearIndexDialogOpen, setClearIndexDialogOpen] = useState(false);
-  const [clearIndexPending, setClearIndexPending] = useState(false);
+  const clearIndexPending = false;
 
   useEffect(() => {
     setDraftSettings({
@@ -62,9 +62,11 @@ export default function General() {
   }, [clearIndexDialogOpen, clearIndexPending]);
 
   useEffect(() => {
+    // Only preview unsaved theme picks. Saved theme is owned by GlobalAppearancePreference.
+    if (draftSettings.theme === settings.theme) return;
+
     const root = document.documentElement;
     const isDark = draftSettings.theme === "dark";
-
     root.classList.toggle("dark", isDark);
     root.classList.toggle("light", !isDark);
 
@@ -76,6 +78,8 @@ export default function General() {
   }, [draftSettings.theme, settings.theme]);
 
   useEffect(() => {
+    if (draftSettings.font === settings.font) return;
+
     document.body.dataset.font = draftSettings.font;
 
     return () => {
@@ -120,42 +124,17 @@ export default function General() {
       console.error("Failed to clear recent searches:", error);
     }
   };
-  const handleConfirmClearIndex = async () => {
-    setClearIndexPending(true);
-    try {
-      await searchApi.clearIndex();
-      setStatus("cleared");
-      setClearIndexDialogOpen(false);
-    } catch (error) {
-      console.error("Failed to clear search index:", error);
-    } finally {
-      setClearIndexPending(false);
-    }
-  };
 
   return (
-    <div
-      className={cn(
-        "flex flex-col gap-4",
-        "w-full h-full",
-        "border-1 border-zinc-700/80 bg-zinc-800/60",
-        "p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]",
-      )}
-    >
+    <div className="flex flex-col gap-4 w-full h-full bg-background text-foreground p-4">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="text-xs uppercase tracking-wider text-zinc-500">General</div>
+          <div className="text-xs uppercase tracking-wider text-foreground">General</div>
           {hasUnsavedChanges && (
-            <div className="text-[11px] text-amber-700/80 dark:text-amber-600/80">
-              Unsaved changes
-            </div>
+            <div className="text-[11px] text-warning">Unsaved changes</div>
           )}
-          {status === "saved" && (
-            <div className="text-[11px] text-emerald-700/80 dark:text-emerald-600/80">Saved</div>
-          )}
-          {status === "cleared" && (
-            <div className="text-[11px] text-emerald-700/80 dark:text-emerald-600/80">Cleared</div>
-          )}
+          {status === "saved" && <div className="text-[11px] text-success">Saved</div>}
+          {status === "cleared" && <div className="text-[11px] text-success">Cleared</div>}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -163,10 +142,10 @@ export default function General() {
             onClick={handleDiscard}
             disabled={!hasUnsavedChanges}
             className={cn(
-              "text-xs transition-colors px-2 py-1 rounded border",
+              "text-xs transition-colors px-2 py-1 rounded",
               hasUnsavedChanges
-                ? "text-zinc-300 hover:text-zinc-200 border-zinc-600 hover:border-zinc-500 dark:text-zinc-400 dark:hover:text-zinc-200 dark:border-zinc-700 dark:hover:border-zinc-500"
-                : "text-zinc-500 border-zinc-700 cursor-not-allowed dark:text-zinc-600 dark:border-zinc-800",
+                ? "text-foreground bg-background hover:bg-accent hover:text-accent-foreground"
+                : "text-foreground cursor-not-allowed",
             )}
           >
             Discard
@@ -176,10 +155,10 @@ export default function General() {
             onClick={handleSave}
             disabled={!hasUnsavedChanges}
             className={cn(
-              "text-xs transition-colors px-2 py-1 rounded border",
+              "text-xs transition-colors px-2 py-1 rounded",
               hasUnsavedChanges
-                ? "text-emerald-700 border-emerald-700/70 hover:border-emerald-600 dark:text-emerald-600 dark:border-emerald-600/60 dark:hover:border-emerald-600"
-                : "text-zinc-500 border-zinc-700 cursor-not-allowed dark:text-zinc-600 dark:border-zinc-800",
+                ? "bg-accent text-accent-foreground"
+                : "text-foreground cursor-not-allowed",
             )}
           >
             Save
@@ -190,8 +169,8 @@ export default function General() {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <div className="text-sm text-zinc-200">Launch at startup</div>
-            <div className="text-xs text-zinc-500">Open the app when you sign in.</div>
+            <div className="text-sm text-foreground">Launch at startup</div>
+            <div className="text-xs text-muted-foreground">Open the app when you sign in.</div>
           </div>
           <button
             type="button"
@@ -201,7 +180,12 @@ export default function General() {
                 "launch-on-startup": !prev["launch-on-startup"],
               }))
             }
-            className="h-7 px-3 rounded-md text-xs text-zinc-200 bg-zinc-700/60 hover:bg-zinc-700 transition-colors duration-150"
+            className={cn(
+              "h-7 px-3 rounded-md text-xs transition-colors",
+              draftSettings["launch-on-startup"]
+                ? "bg-accent text-accent-foreground"
+                : "bg-background text-foreground",
+            )}
           >
             {draftSettings["launch-on-startup"] ? "On" : "Off"}
           </button>
@@ -209,18 +193,18 @@ export default function General() {
 
         <div className="flex items-center justify-between gap-4">
           <div>
-            <div className="text-sm text-zinc-200">Theme</div>
-            <div className="text-xs text-zinc-500">Choose light or dark mode.</div>
+            <div className="text-sm text-foreground">Theme</div>
+            <div className="text-xs text-muted-foreground">Ayu light or dark.</div>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setDraftSettings((prev) => ({ ...prev, theme: "dark" }))}
               className={cn(
-                "h-7 px-3 rounded-md text-xs transition-colors duration-150",
+                "h-7 px-3 rounded-md text-xs transition-colors",
                 draftSettings.theme === "dark"
-                  ? "text-zinc-100 bg-zinc-600/80 ring-1 ring-zinc-500/70"
-                  : "text-zinc-200 bg-zinc-700/60 hover:bg-zinc-700",
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-secondary-foreground hover:bg-accent",
               )}
             >
               Dark
@@ -229,20 +213,21 @@ export default function General() {
               type="button"
               onClick={() => setDraftSettings((prev) => ({ ...prev, theme: "light" }))}
               className={cn(
-                "h-7 px-3 rounded-md text-xs transition-colors duration-150",
+                "h-7 px-3 rounded-md text-xs transition-colors",
                 draftSettings.theme === "light"
-                  ? "text-zinc-100 bg-zinc-600/80 ring-1 ring-zinc-500/70"
-                  : "text-zinc-200 bg-zinc-700/60 hover:bg-zinc-700",
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-secondary-foreground hover:bg-accent",
               )}
             >
               Light
             </button>
           </div>
         </div>
+
         <div className="flex items-center justify-between gap-4">
           <div>
-            <div className="text-sm text-zinc-200">Search scope</div>
-            <div className="text-xs text-zinc-500">Files, folders, or both.</div>
+            <div className="text-sm text-foreground">Search scope</div>
+            <div className="text-xs text-muted-foreground">Files, folders, or both.</div>
           </div>
           <select
             value={draftSettings.scope}
@@ -252,7 +237,7 @@ export default function General() {
                 scope: event.target.value as "both" | "files" | "folders",
               }))
             }
-            className="h-7 rounded-md bg-zinc-800/60 border-1 border-zinc-600/80 text-xs text-zinc-200 px-2"
+            className="h-7 rounded-md bg-background text-xs text-foreground px-2"
           >
             <option value="both">Everything</option>
             <option value="files">Files Only</option>
@@ -262,21 +247,21 @@ export default function General() {
 
         <div className="flex items-center justify-between gap-4">
           <div>
-            <div className="text-sm text-zinc-200">Clear recent searches</div>
-            <div className="text-xs text-zinc-500">Remove cached query history.</div>
+            <div className="text-sm text-foreground">Clear recent searches</div>
+            <div className="text-xs text-muted-foreground">Remove cached query history.</div>
           </div>
           <button
             type="button"
             onClick={() => void handleClearRecentSearches()}
-            className="h-7 px-3 rounded-md text-xs text-zinc-200 bg-zinc-700/60 hover:bg-zinc-700 transition-colors duration-150"
+            className="h-7 px-3 rounded-md text-xs text-foreground bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
           >
             Clear
           </button>
         </div>
         <div className="flex items-center justify-between gap-4">
           <div>
-            <div className="text-sm text-zinc-200">Clear Index</div>
-            <div className="text-xs text-zinc-500">
+            <div className="text-sm text-foreground">Clear Index</div>
+            <div className="text-xs text-muted-foreground">
               Permanently removes all indexed files and embeddings. You will need to run a full
               re-index to search again.
             </div>
@@ -284,7 +269,7 @@ export default function General() {
           <button
             type="button"
             onClick={() => setClearIndexDialogOpen(true)}
-            className="h-7 px-3 rounded-md text-xs text-zinc-200 bg-zinc-700/60 hover:bg-zinc-700 transition-colors duration-150"
+            className="h-7 px-3 rounded-md text-xs text-foreground bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
           >
             Clear
           </button>
@@ -295,20 +280,20 @@ export default function General() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <button
             type="button"
-            className="absolute inset-0 cursor-default bg-black/60"
+            className="absolute inset-0 cursor-default bg-overlay"
             aria-label="Dismiss"
             onClick={() => !clearIndexPending && setClearIndexDialogOpen(false)}
           />
           <div
-            className="relative z-10 w-full max-w-md rounded-lg border border-zinc-700 bg-zinc-900/95 p-4 shadow-xl"
+            className="relative z-10 w-full max-w-md rounded-lg bg-background p-4"
             role="dialog"
             aria-modal="true"
             aria-labelledby="clear-index-title"
           >
-            <div id="clear-index-title" className="text-sm text-zinc-200">
+            <div id="clear-index-title" className="text-sm text-foreground">
               Clear the entire search index?
             </div>
-            <div className="text-xs text-zinc-400 mt-2 leading-relaxed">
+            <div className="text-xs text-muted-foreground mt-2 leading-relaxed">
               This deletes every indexed asset and embedding in the database. The action cannot be
               undone. Search will stay empty until you index your folders again.
             </div>
@@ -317,28 +302,10 @@ export default function General() {
                 type="button"
                 disabled={clearIndexPending}
                 onClick={() => setClearIndexDialogOpen(false)}
-                className={cn(
-                  "text-xs transition-colors px-2 py-1 rounded border",
-                  clearIndexPending
-                    ? "text-zinc-600 border-zinc-800 cursor-not-allowed"
-                    : "text-zinc-400 hover:text-zinc-200 border-zinc-700 hover:border-zinc-500",
-                )}
+                className="text-xs transition-colors px-2 py-1 rounded text-foreground hover:bg-accent hover:text-accent-foreground"
               >
                 Cancel
               </button>
-              {/*<button
-                type="button"
-                disabled={clearIndexPending}
-                onClick={() => void handleConfirmClearIndex()}
-                className={cn(
-                  "text-xs transition-colors px-2 py-1 rounded border",
-                  clearIndexPending
-                    ? "text-rose-300/50 border-rose-900/50 cursor-not-allowed"
-                    : "text-rose-200 border-rose-500/60 hover:border-rose-400",
-                )}
-              >
-                {clearIndexPending ? "Clearing…" : "Clear index"}
-              </button>*/}
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
-import type { TitlebarMenu } from "@/app/components/window/TitlebarMenu";
+import type { TitlebarMenuConfig } from "@/app/components/window/TitlebarMenu";
 
-export const menuItems: TitlebarMenu[] = [
+export const menuItems: TitlebarMenuConfig[] = [
   {
     name: "File",
     items: [
@@ -104,17 +104,6 @@ export const menuItems: TitlebarMenu[] = [
   {
     name: "Window",
     items: [
-      {
-        name: "Dark Mode",
-        action: "window-darkmode-toggle",
-        shortcut: "Toggle",
-        actionCallback: () => {
-          document.documentElement.classList.toggle("dark");
-        },
-      },
-      {
-        name: "---",
-      },
       {
         name: "Maximize",
         action: "window-maximize-toggle",

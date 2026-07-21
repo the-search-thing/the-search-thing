@@ -87,11 +87,6 @@ function GlobalAppearancePreference() {
     root.classList.toggle("dark", isDark);
     root.classList.toggle("light", !isDark);
     document.body.dataset.font = settings.font;
-
-    return () => {
-      root.classList.remove("dark", "light");
-      delete document.body.dataset.font;
-    };
   }, [settings.font, settings.theme]);
 
   return null;

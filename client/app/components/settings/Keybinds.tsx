@@ -15,9 +15,7 @@ import {
 
 function KeyToken({ children }: { children: string }) {
   return (
-    <kbd className="px-2 py-1 text-xs text-zinc-300 bg-zinc-700/50 border border-zinc-600 rounded">
-      {children}
-    </kbd>
+    <kbd className="px-2 py-1 text-xs text-foreground bg-secondary rounded">{children}</kbd>
   );
 }
 
@@ -27,7 +25,7 @@ function ComboDisplay({ combo }: { combo: KeyCombo }) {
     <div className="flex items-center gap-2">
       {tokens.map((token, i) => (
         <span key={i} className="flex items-center gap-2">
-          {i > 0 && <span className="text-xs text-zinc-500">+</span>}
+          {i > 0 && <span className="text-xs text-muted-foreground">+</span>}
           <KeyToken>{token}</KeyToken>
         </span>
       ))}
@@ -83,31 +81,26 @@ function KeybindRow({
     <div
       className={cn(
         "flex items-center justify-between gap-4 px-3 py-2 rounded-md transition-colors",
-        isRecording &&
-          "bg-amber-100/70 ring-1 ring-amber-700/70 dark:bg-zinc-700/40 dark:ring-amber-500/50",
-        conflict && "bg-rose-500/10 ring-1 ring-rose-400/40",
+        isRecording && "bg-warning-muted ring-1 ring-warning",
+        conflict && "bg-destructive/10 ring-1 ring-destructive/40",
       )}
     >
       <div className="flex flex-col gap-0.5 min-w-0">
-        <div className="text-sm text-zinc-200">{label}</div>
-        <div className="text-xs text-zinc-500">{description}</div>
+        <div className="text-sm text-foreground">{label}</div>
+        <div className="text-xs text-muted-foreground">{description}</div>
         {conflict && (
-          <div className="text-xs text-rose-700/80 dark:text-rose-300/80 mt-0.5">
-            Conflicts with: {conflict}
-          </div>
+          <div className="text-xs text-destructive mt-0.5">Conflicts with: {conflict}</div>
         )}
       </div>
 
       <div className="flex items-center gap-3 flex-shrink-0">
         {isRecording ? (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-amber-600 dark:text-amber-600 animate-pulse">
-              Press keys...
-            </span>
+            <span className="text-xs text-warning animate-pulse">Press keys...</span>
             <button
               type="button"
               onClick={onCancelRecording}
-              className="text-xs text-zinc-400 hover:text-zinc-300 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors px-1.5 py-0.5 rounded border border-zinc-600/70 hover:border-zinc-500"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-accent"
             >
               Esc
             </button>
@@ -119,7 +112,7 @@ function KeybindRow({
             className={cn(
               "flex items-center gap-2 group cursor-pointer",
               "rounded-md px-2 py-1 -mx-2 -my-1",
-              "hover:bg-zinc-700/50 transition-colors",
+              "hover:bg-accent transition-colors",
             )}
             title="Click to rebind"
           >
@@ -246,57 +239,49 @@ export default function Keybinds() {
   };
 
   return (
-    <div
-      className={cn(
-        "flex flex-col gap-4",
-        "w-full h-full",
-        "border-1 border-zinc-700/80 bg-zinc-800/60",
-        "p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]",
-      )}
-    >
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-4 w-full h-full bg-background text-foreground p-4">
+      <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="text-xs uppercase tracking-wider text-zinc-500">Keybinds</div>
+          <div className="text-xs uppercase tracking-wider text-foreground">Keybinds</div>
           {hasUnsavedChanges && (
-            <div className="text-[11px] text-amber-700/80 dark:text-amber-600/80">
-              Unsaved changes
-            </div>
+            <div className="text-[11px] text-warning">Unsaved changes</div>
           )}
           {conflictItems.length > 0 && (
-            <div className="text-[11px] text-rose-700/80 dark:text-rose-300/80">
-              Conflicting keybinds
-            </div>
+            <div className="text-[11px] text-destructive">Conflicting keybinds</div>
           )}
         </div>
         <div className="flex items-center gap-2">
           {hasCustomBindings && (
             <button
+              type="button"
               onClick={handleResetDefaults}
-              className="text-xs text-zinc-400 hover:text-zinc-300 transition-colors px-2 py-1 rounded border border-zinc-700 hover:border-zinc-500"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-accent"
             >
               Reset to defaults
             </button>
           )}
           <button
+            type="button"
             onClick={handleDiscard}
             disabled={!hasUnsavedChanges}
             className={cn(
-              "text-xs transition-colors px-2 py-1 rounded border",
+              "text-xs transition-colors px-2 py-1 rounded",
               hasUnsavedChanges
-                ? "text-zinc-300 hover:text-zinc-200 border-zinc-600 hover:border-zinc-500 dark:text-zinc-400 dark:hover:text-zinc-200 dark:border-zinc-700 dark:hover:border-zinc-500"
-                : "text-zinc-500 border-zinc-700 cursor-not-allowed dark:text-zinc-600 dark:border-zinc-800",
+                ? "text-foreground bg-background hover:bg-accent hover:text-accent-foreground"
+                : "text-foreground cursor-not-allowed",
             )}
           >
             Discard
           </button>
           <button
+            type="button"
             onClick={handleSave}
             disabled={!hasUnsavedChanges}
             className={cn(
-              "text-xs transition-colors px-2 py-1 rounded border",
+              "text-xs transition-colors px-2 py-1 rounded",
               hasUnsavedChanges
-                ? "text-emerald-700 border-emerald-700/70 hover:border-emerald-600 dark:text-emerald-200 dark:border-emerald-500/60 dark:hover:border-emerald-400"
-                : "text-zinc-500 border-zinc-700 cursor-not-allowed dark:text-zinc-600 dark:border-zinc-800",
+                ? "bg-accent text-accent-foreground"
+                : "text-foreground cursor-not-allowed",
             )}
           >
             Save
@@ -321,31 +306,32 @@ export default function Keybinds() {
         ))}
       </div>
 
-      {/* Static Enter row — not customizable per user request */}
       <div className="flex items-center justify-between gap-4 px-3 py-2 opacity-50">
         <div className="flex flex-col gap-0.5">
-          <div className="text-sm text-zinc-200">Open selected result</div>
-          <div className="text-xs text-zinc-500">Open the highlighted result.</div>
+          <div className="text-sm text-foreground">Open selected result</div>
+          <div className="text-xs text-muted-foreground">Open the highlighted result.</div>
         </div>
         <div className="flex items-center gap-2">
           <KeyToken>Enter</KeyToken>
         </div>
       </div>
 
-      <div className="text-[11px] text-zinc-400 dark:text-zinc-600 mt-auto">
-        Click a shortcut to rebind it. Press{" "}
-        <kbd className="px-1 text-zinc-300 dark:text-zinc-500">Esc</kbd> to cancel.
+      <div className="text-[11px] text-muted-foreground mt-auto">
+        Click a shortcut to rebind it. Press <kbd className="px-1 text-foreground">Esc</kbd> to
+        cancel.
       </div>
 
       {isConflictModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/60"
+          <button
+            type="button"
+            className="absolute inset-0 cursor-default bg-overlay"
+            aria-label="Dismiss"
             onClick={() => setIsConflictModalOpen(false)}
           />
-          <div className="relative z-10 w-full max-w-md rounded-lg border border-zinc-700 bg-zinc-900/95 p-4 shadow-xl">
-            <div className="text-sm text-zinc-200">Conflicting keybinds</div>
-            <div className="text-xs text-zinc-400 mt-1">
+          <div className="relative z-10 w-full max-w-md rounded-lg bg-background p-4">
+            <div className="text-sm text-foreground">Conflicting keybinds</div>
+            <div className="text-xs text-muted-foreground mt-1">
               These shortcuts overlap. Saving will unbind the older action(s).
             </div>
             <div className="mt-3 flex flex-col gap-2">
@@ -362,22 +348,23 @@ export default function Keybinds() {
                 return (
                   <div
                     key={`${item.action}-${item.conflictAction}-${item.comboLabel}`}
-                    className="rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-2"
+                    className="rounded-md bg-secondary px-3 py-2"
                   >
-                    <div className="text-xs text-zinc-200">
-                      <span className="text-zinc-100">{item.comboLabel}</span> is assigned to{" "}
-                      <span className="text-zinc-100">{currentMeta?.label ?? item.action}</span> and{" "}
-                      <span className="text-zinc-100">
+                    <div className="text-xs text-foreground">
+                      <span className="text-foreground">{item.comboLabel}</span> is assigned to{" "}
+                      <span className="text-foreground">{currentMeta?.label ?? item.action}</span>{" "}
+                      and{" "}
+                      <span className="text-foreground">
                         {conflictMeta?.label ?? item.conflictAction}
                       </span>
                       .
                     </div>
-                    <div className="text-[11px] text-zinc-500 mt-1">
+                    <div className="text-[11px] text-muted-foreground mt-1">
                       {previousMeta ? (
                         <>
                           Saving will unbind{" "}
-                          <span className="text-zinc-300">{previousMeta.label}</span> in favor of{" "}
-                          <span className="text-zinc-300">{otherMeta?.label ?? otherAction}</span>.
+                          <span className="text-foreground">{previousMeta.label}</span> in favor of{" "}
+                          <span className="text-foreground">{otherMeta?.label ?? otherAction}</span>.
                         </>
                       ) : (
                         <>Only the first matching action will trigger.</>
@@ -389,17 +376,19 @@ export default function Keybinds() {
             </div>
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
+                type="button"
                 onClick={() => setIsConflictModalOpen(false)}
-                className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors px-2 py-1 rounded border border-zinc-700 hover:border-zinc-500"
+                className="text-xs transition-colors px-2 py-1 rounded text-foreground hover:bg-accent hover:text-accent-foreground"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={() => {
                   setIsConflictModalOpen(false);
                   void setAllKeybinds(draftKeybinds);
                 }}
-                className="text-xs text-rose-200 border border-rose-500/60 hover:border-rose-400 transition-colors px-2 py-1 rounded"
+                className="text-xs transition-colors px-2 py-1 rounded bg-destructive text-destructive-foreground"
               >
                 Save anyway
               </button>

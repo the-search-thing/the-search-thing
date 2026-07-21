@@ -1,15 +1,9 @@
-:root {
-  --welcome-c-variant: #e6b450;
-}
-
-:root:not(.dark) {
-  --welcome-c-variant: #f29718;
-}
-
 .welcome-content {
   display: flex;
   padding: 0rem;
   gap: 0;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .welcome-content h2 {

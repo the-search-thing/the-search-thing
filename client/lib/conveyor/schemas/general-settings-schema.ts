@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-const themeSetting = z.enum(["dark", "light"]);
 const fontSetting = z.enum(["sans-serif", "mono"]);
+const themeSetting = z.enum(["dark", "light"]);
 const searchScopeSetting = z.enum(["both", "files", "folders"]);
 const windowPlacementSetting = z.enum(["center", "center-above", "center-below", "cursor"]);
 

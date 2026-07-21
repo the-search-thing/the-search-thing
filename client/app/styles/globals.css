@@ -1,7 +1,12 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @source '@/app';
 @source '@/lib';
 
+/*
+  Ayu Light / Ayu Dark — single source of hex values.
+  Everywhere else must use these CSS variables (or Tailwind tokens that map to them).
+  https://github.com/ayu-theme/ayu-colors
+*/
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -22,11 +27,55 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-muted: var(--warning-muted);
+  --color-overlay: var(--overlay);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+
+  --color-zinc-50: var(--zinc-50);
+  --color-zinc-100: var(--zinc-100);
+  --color-zinc-200: var(--zinc-200);
+  --color-zinc-300: var(--zinc-300);
+  --color-zinc-400: var(--zinc-400);
+  --color-zinc-500: var(--zinc-500);
+  --color-zinc-600: var(--zinc-600);
+  --color-zinc-700: var(--zinc-700);
+  --color-zinc-800: var(--zinc-800);
+  --color-zinc-900: var(--zinc-900);
+  --color-zinc-950: var(--zinc-950);
+
+  --color-red-400: var(--destructive);
+  --color-red-500: var(--destructive);
+  --color-red-600: var(--destructive);
+  --color-red-950: var(--destructive-muted);
+
+  --color-rose-300: var(--destructive);
+  --color-rose-400: var(--destructive);
+  --color-rose-500: var(--destructive);
+  --color-rose-700: var(--destructive);
+
+  --color-green-400: var(--success);
+  --color-green-500: var(--success);
+  --color-green-600: var(--success);
+
+  --color-emerald-200: var(--success);
+  --color-emerald-400: var(--success);
+  --color-emerald-500: var(--success);
+  --color-emerald-600: var(--success);
+  --color-emerald-700: var(--success);
+
+  --color-amber-100: var(--warning-muted);
+  --color-amber-500: var(--warning);
+  --color-amber-600: var(--warning);
+  --color-amber-700: var(--warning);
+
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
@@ -36,87 +85,172 @@
   --font-weight-bold: 800;
 }
 
-/* Ayu Light / Ayu Dark — https://github.com/ayu-theme/ayu-colors */
 @layer base {
   :root {
-    --background: #fcfcfc;
-    --foreground: #5c6166;
-    --card: #fafafa;
-    --card-foreground: #5c6166;
-    --popover: #fafafa;
-    --popover-foreground: #5c6166;
-    --primary: #f29718;
-    --primary-foreground: #fcfcfc;
-    --secondary: #f8f9fa;
-    --secondary-foreground: #5c6166;
-    --muted: #f0f1f2;
-    --muted-foreground: #828e9f;
-    --accent: #f8f9fa;
-    --accent-foreground: #5c6166;
-    --destructive: #e65050;
-    --destructive-foreground: #fcfcfc;
-    --border: #d8d8d7;
-    --input: #d8d8d7;
-    --ring: #f29718;
-    --chart-1: #399ee6;
-    --chart-2: #86b300;
-    --chart-3: #f2a300;
-    --chart-4: #a37acc;
-    --chart-5: #f07171;
-    --radius: 0.5rem;
-  }
+    /* Ayu Dark palette (hex only lives here) */
+    --ayu-ui-bg: #0d1017;
+    --ayu-editor-bg: #10141c;
+    --ayu-panel: #141821;
+    --ayu-line: #161a24;
+    --ayu-ui-line: #1b1f29;
+    --ayu-gutter: #6c7380;
+    --ayu-ui-fg: #8a9199;
+    --ayu-fg: #e6e1cf;
+    --ayu-fg-soft: #bfbdb6;
+    --ayu-accent: #e6b450;
+    --ayu-accent-on: #0d1017;
+    --ayu-error: #d95757;
+    --ayu-error-muted: #3a1a1a;
+    --ayu-success: #aad94c;
+    --ayu-success-on: #0d1017;
+    --ayu-warning: #e6b450;
+    --ayu-warning-muted: #4c4126;
+    --ayu-tag: #59c2ff;
+    --ayu-string: #aad94c;
+    --ayu-func: #ffb454;
+    --ayu-constant: #d2a6ff;
+    --ayu-markup: #f07178;
+    --ayu-overlay: #0d101799;
+    --ayu-shadow: #00000080;
+    --ayu-selection: #475266;
 
-  /* Inverted zinc so dark-first zinc-* classes read as Ayu Light */
-  .light {
-    --color-zinc-50: #5c6166;
-    --color-zinc-100: #6b737a;
-    --color-zinc-200: #787b80;
-    --color-zinc-300: #828e9f;
-    --color-zinc-400: #8a9199;
-    --color-zinc-500: #a0a6ad;
-    --color-zinc-600: #c5c8cc;
-    --color-zinc-700: #e3e5e8;
-    --color-zinc-800: #f0f1f2;
-    --color-zinc-900: #f8f9fa;
-    --color-zinc-950: #fcfcfc;
+    --background: var(--ayu-ui-bg);
+    --foreground: var(--ayu-fg);
+    --card: var(--ayu-panel);
+    --card-foreground: var(--ayu-fg);
+    --popover: var(--ayu-panel);
+    --popover-foreground: var(--ayu-fg);
+    --primary: var(--ayu-accent);
+    --primary-foreground: var(--ayu-accent-on);
+    --secondary: var(--ayu-line);
+    --secondary-foreground: var(--ayu-fg);
+    --muted: var(--ayu-line);
+    --muted-foreground: var(--ayu-gutter);
+    --accent: var(--ayu-line);
+    --accent-foreground: var(--ayu-fg);
+    --destructive: var(--ayu-error);
+    --destructive-foreground: var(--ayu-fg);
+    --destructive-muted: var(--ayu-error-muted);
+    --border: var(--ayu-ui-line);
+    --input: var(--ayu-ui-line);
+    --ring: var(--ayu-accent);
+    --success: var(--ayu-success);
+    --success-foreground: var(--ayu-success-on);
+    --warning: var(--ayu-warning);
+    --warning-foreground: var(--ayu-accent-on);
+    --warning-muted: var(--ayu-warning-muted);
+    --overlay: var(--ayu-overlay);
+    --chart-1: var(--ayu-tag);
+    --chart-2: var(--ayu-string);
+    --chart-3: var(--ayu-func);
+    --chart-4: var(--ayu-constant);
+    --chart-5: var(--ayu-markup);
+    --radius: 0.5rem;
+
+    --zinc-50: var(--ayu-fg);
+    --zinc-100: var(--ayu-fg);
+    --zinc-200: var(--ayu-fg-soft);
+    --zinc-300: var(--ayu-ui-fg);
+    --zinc-400: var(--ayu-gutter);
+    --zinc-500: var(--ayu-gutter);
+    --zinc-600: var(--ayu-selection);
+    --zinc-700: var(--ayu-ui-line);
+    --zinc-800: var(--ayu-panel);
+    --zinc-900: var(--ayu-editor-bg);
+    --zinc-950: var(--ayu-ui-bg);
+
+    /* Window chrome */
+    --window-c-background: var(--ayu-ui-bg);
+    --window-c-titlebar-background: var(--ayu-panel);
+    --window-c-titlebar-border: var(--ayu-ui-line);
+    --window-c-text: var(--ayu-fg-soft);
+    --window-c-hover: var(--ayu-line);
+    --window-c-popup-background: var(--ayu-panel);
+    --window-c-popup-border: var(--ayu-ui-line);
+    --window-c-popup-shadow: var(--ayu-shadow);
+    --window-c-separator: var(--ayu-ui-line);
+    --window-c-control-hover: color-mix(in srgb, var(--ayu-selection) 24%, transparent);
+    --window-c-control-close-hover: var(--ayu-error);
+    --window-c-control-close-hover-text: var(--ayu-fg);
+    --window-c-scrollbar-track: color-mix(in srgb, var(--ayu-ui-bg) 78%, transparent);
+    --window-c-scrollbar-thumb: color-mix(in srgb, var(--ayu-gutter) 39%, transparent);
+    --window-c-scrollbar-thumb-hover: var(--ayu-gutter);
+    --window-c-text-shadow: var(--ayu-shadow);
+
+    --welcome-c-variant: var(--ayu-accent);
   }
 
   .dark {
-    --background: #0d1017;
-    --foreground: #bfbdb6;
-    --card: #141821;
-    --card-foreground: #bfbdb6;
-    --popover: #141821;
-    --popover-foreground: #bfbdb6;
-    --primary: #e6b450;
-    --primary-foreground: #0d1017;
-    --secondary: #161a24;
-    --secondary-foreground: #bfbdb6;
-    --muted: #161a24;
-    --muted-foreground: #6c7380;
-    --accent: #161a24;
-    --accent-foreground: #bfbdb6;
-    --destructive: #d95757;
-    --destructive-foreground: #bfbdb6;
-    --border: #1b1f29;
-    --input: #1b1f29;
-    --ring: #e6b450;
-    --chart-1: #59c2ff;
-    --chart-2: #aad94c;
-    --chart-3: #ffb454;
-    --chart-4: #d2a6ff;
-    --chart-5: #f07178;
+    color-scheme: dark;
+  }
 
-    --color-zinc-50: #e6e1cf;
-    --color-zinc-100: #bfbdb6;
-    --color-zinc-200: #bfbdb6;
-    --color-zinc-300: #8a9199;
-    --color-zinc-400: #6c7380;
-    --color-zinc-500: #555e73;
-    --color-zinc-600: #475266;
-    --color-zinc-700: #1b1f29;
-    --color-zinc-800: #141821;
-    --color-zinc-900: #10141c;
-    --color-zinc-950: #0d1017;
+  .light {
+    color-scheme: light;
+
+    /* Ayu Light palette */
+    --ayu-ui-bg: #f8f9fa;
+    --ayu-editor-bg: #fcfcfc;
+    --ayu-panel: #fafafa;
+    --ayu-line: #eef0f2;
+    --ayu-ui-line: #d8d8d7;
+    --ayu-gutter: #828e9f;
+    --ayu-ui-fg: #8a9199;
+    --ayu-fg: #5c6166;
+    --ayu-fg-soft: #5c6166;
+    --ayu-accent: #f29718;
+    --ayu-accent-on: #fcfcfc;
+    --ayu-error: #e65050;
+    --ayu-error-muted: #fde8e8;
+    --ayu-success: #86b300;
+    --ayu-success-on: #fcfcfc;
+    --ayu-warning: #f29718;
+    --ayu-warning-muted: #ffe294;
+    --ayu-tag: #399ee6;
+    --ayu-string: #86b300;
+    --ayu-func: #f2a300;
+    --ayu-constant: #a37acc;
+    --ayu-markup: #f07171;
+    --ayu-overlay: #5c616666;
+    --ayu-shadow: #6b7d8f12;
+    --ayu-selection: #c5c8cc;
+
+    /* Inverted zinc so dark-first zinc-* utilities read as Ayu Light */
+    --zinc-50: var(--ayu-fg);
+    --zinc-100: var(--ayu-fg);
+    --zinc-200: var(--ayu-fg-soft);
+    --zinc-300: var(--ayu-gutter);
+    --zinc-400: var(--ayu-ui-fg);
+    --zinc-500: var(--ayu-gutter);
+    --zinc-600: var(--ayu-selection);
+    --zinc-700: var(--ayu-ui-line);
+    --zinc-800: var(--ayu-line);
+    --zinc-900: var(--ayu-ui-bg);
+    --zinc-950: var(--ayu-editor-bg);
+
+    --window-c-background: var(--ayu-editor-bg);
+    --window-c-titlebar-background: var(--ayu-ui-bg);
+    --window-c-titlebar-border: color-mix(in srgb, var(--ayu-gutter) 10%, transparent);
+    --window-c-text: var(--ayu-fg);
+    --window-c-hover: color-mix(in srgb, var(--ayu-gutter) 12%, transparent);
+    --window-c-popup-background: var(--ayu-panel);
+    --window-c-popup-border: var(--ayu-ui-line);
+    --window-c-popup-shadow: var(--ayu-shadow);
+    --window-c-separator: color-mix(in srgb, var(--ayu-gutter) 12%, transparent);
+    --window-c-control-hover: color-mix(in srgb, var(--ayu-gutter) 10%, transparent);
+    --window-c-control-close-hover: var(--ayu-error);
+    --window-c-control-close-hover-text: var(--ayu-editor-bg);
+    --window-c-scrollbar-track: var(--ayu-line);
+    --window-c-scrollbar-thumb: color-mix(in srgb, var(--ayu-gutter) 60%, transparent);
+    --window-c-scrollbar-thumb-hover: var(--ayu-gutter);
+    --window-c-text-shadow: transparent;
+
+    --welcome-c-variant: var(--ayu-accent);
+  }
+
+  html,
+  body,
+  #app {
+    background: var(--background);
+    color: var(--foreground);
   }
 }

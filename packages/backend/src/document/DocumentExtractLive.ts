@@ -7,6 +7,17 @@ import { DocumentExtractError, DocumentExtractService } from "./DocumentExtractS
 
 const pdfExtensions = new Set([".pdf"]);
 
+/**
+ * Formats that need LiteParse (+ LibreOffice for Office) because the root fff
+ * finder either skips them as binary or only sees markup/container bytes — not
+ * the document's readable text.
+ *
+ * Deliberately excluded: `.csv` / `.tsv`. Those are plain text; root fff greps
+ * the full file content with correct line numbers. Extracting them would
+ * duplicate hits in `contentSearch` (same path after `.txt` remap) without
+ * adding coverage. Keep extracting `.rtf`: raw RTF is greppable as bytes but
+ * is control-word soup; LibreParse recovers the actual prose.
+ */
 const officeExtensions = new Set([
   ".doc",
   ".docx",
@@ -21,8 +32,6 @@ const officeExtensions = new Set([
   ".xlsx",
   ".xlsm",
   ".ods",
-  ".csv",
-  ".tsv",
 ]);
 
 const extensionOf = (path: string): string => NodePathMod.extname(path).toLowerCase();
@@ -31,7 +40,7 @@ const contentTypeFor = (ext: string): string => {
   if (pdfExtensions.has(ext)) return "application/pdf";
   if (ext === ".docx" || ext === ".doc") return "application/msword";
   if (ext.startsWith(".ppt")) return "application/vnd.ms-powerpoint";
-  if (ext.startsWith(".xls") || ext === ".csv" || ext === ".tsv") {
+  if (ext.startsWith(".xls") || ext === ".ods") {
     return "application/vnd.ms-excel";
   }
   return "application/octet-stream";

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import * as NodeFs from "node:fs/promises";
 import * as NodePath from "node:path";
-import { Context, Effect, Layer, Schema } from "effect";
+import { Context, Effect, Layer, Result, Schema } from "effect";
 import { SearchConfig, SearchConfigLive } from "../config.js";
 
 export class ExtractCacheError extends Schema.TaggedErrorClass<ExtractCacheError>()(
@@ -20,20 +20,63 @@ export const cacheRelativePathFor = (relativeSourcePath: string): string => {
   return `${normalizeRelativeSourcePath(relativeSourcePath)}.txt`;
 };
 
-const walkCacheTxtFiles = async (dir: string, root: string): Promise<ReadonlyArray<string>> => {
-  const out: string[] = [];
-  const entries = await NodeFs.readdir(dir, { withFileTypes: true });
-  for (const entry of entries) {
+type CacheWalkResult = {
+  readonly files: ReadonlyArray<string>;
+  /** Cache-relative directory prefixes that could not be listed (maps to source prefixes). */
+  readonly inaccessiblePrefixes: ReadonlyArray<string>;
+};
+
+/**
+ * Recursively list `.txt` extracts under `dir`.
+ *
+ * Nested `readdir` failures are soft: recorded as `inaccessiblePrefixes` and the
+ * walk continues. Failure to read `root` itself is a typed `ExtractCacheError`.
+ */
+const walkCacheTxtFiles: (
+  dir: string,
+  root: string,
+) => Effect.Effect<CacheWalkResult, ExtractCacheError> = Effect.fn("walkCacheTxtFiles")(function* (
+  dir: string,
+  root: string,
+) {
+  const listed = yield* Effect.result(
+    Effect.tryPromise({
+      try: () => NodeFs.readdir(dir, { withFileTypes: true }),
+      catch: (error) =>
+        ExtractCacheError.make({
+          message: error instanceof Error ? error.message : String(error),
+        }),
+    }),
+  );
+
+  if (Result.isFailure(listed)) {
+    if (NodePath.resolve(dir) === NodePath.resolve(root)) {
+      return yield* Effect.fail(listed.failure);
+    }
+    return {
+      files: [],
+      inaccessiblePrefixes: [normalizeRelativeSourcePath(NodePath.relative(root, dir))],
+    } satisfies CacheWalkResult;
+  }
+
+  const files: string[] = [];
+  const inaccessiblePrefixes: string[] = [];
+
+  for (const entry of listed.success) {
     const full = NodePath.join(dir, entry.name);
     if (entry.isDirectory()) {
       if (entry.name === ".meta") continue;
-      out.push(...(await walkCacheTxtFiles(full, root)));
+      const nested = yield* walkCacheTxtFiles(full, root);
+      files.push(...nested.files);
+      inaccessiblePrefixes.push(...nested.inaccessiblePrefixes);
     } else if (entry.isFile() && entry.name.endsWith(".txt")) {
-      out.push(NodePath.relative(root, full).replaceAll("\\", "/"));
+      files.push(NodePath.relative(root, full).replaceAll("\\", "/"));
     }
   }
-  return out;
-};
+
+  return { files, inaccessiblePrefixes } satisfies CacheWalkResult;
+});
+
 
 export class ExtractCache extends Context.Service<
   ExtractCache,
@@ -58,7 +101,9 @@ export class ExtractCache extends Context.Service<
      * Delete cache entries whose source paths are not in `keepRelativeSourcePaths`
      * (normalized with `/`). Removes both `.txt` extracts and matching `.meta` hashes.
      * Paths under `preservePathPrefixes` are kept even if absent from the keep-set
-     * (e.g. directories the indexer could not read).
+     * (e.g. directories the indexer could not read). Nested cache directories that
+     * are unreadable during the prune walk are also treated as preserve prefixes
+     * so pruning continues for accessible entries instead of aborting entirely.
      */
     readonly pruneMissing: (
       keepRelativeSourcePaths: ReadonlySet<string>,
@@ -165,23 +210,20 @@ export const ExtractCacheLive = Layer.effect(ExtractCache)(
         Effect.gen(function* () {
           yield* ensureReady();
 
-          const prefixes = preservePathPrefixes.map(normalizeRelativeSourcePath);
+          const walk = yield* walkCacheTxtFiles(extractCacheDir, extractCacheDir);
+
+          const prefixes = [
+            ...preservePathPrefixes.map(normalizeRelativeSourcePath),
+            ...walk.inaccessiblePrefixes.map(normalizeRelativeSourcePath),
+          ];
           const isPreserved = (relativeSourcePath: string): boolean =>
             prefixes.some(
               (prefix) =>
                 relativeSourcePath === prefix || relativeSourcePath.startsWith(`${prefix}/`),
             );
 
-          const cacheTxts = yield* Effect.tryPromise({
-            try: () => walkCacheTxtFiles(extractCacheDir, extractCacheDir),
-            catch: (error) =>
-              ExtractCacheError.make({
-                message: error instanceof Error ? error.message : String(error),
-              }),
-          });
-
           let pruned = 0;
-          for (const cacheRelativePath of cacheTxts) {
+          for (const cacheRelativePath of walk.files) {
             const original = originalRelativePath(cacheRelativePath);
             if (!original || keepRelativeSourcePaths.has(original) || isPreserved(original)) {
               continue;

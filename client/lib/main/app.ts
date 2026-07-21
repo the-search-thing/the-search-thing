@@ -13,9 +13,6 @@ import { createGeneralSettingsStore } from "@/lib/storage/general-settings-db-st
 import type { GeneralSettingsState, WindowPlacementSetting } from "@/lib/storage/general-settings";
 import type { KeybindMap } from "@/lib/storage/keybind-store";
 
-const WINDOW_WIDTH = 800;
-const WINDOW_HEIGHT = 450;
-
 let mainWindow: BrowserWindow | null = null;
 let generalSettingsStore: ReturnType<typeof createGeneralSettingsStore> | null = null;
 let currentGeneralSettings: GeneralSettingsState | null = null;
@@ -84,6 +81,7 @@ const positionAppWindowWithPlacement = (
   window: BrowserWindow,
   placement: WindowPlacementSetting,
 ) => {
+  if (window.isFullScreen()) return;
   const { width, height } = window.getBounds();
   const bounds = computeWindowBoundsForPlacement(placement, width, height);
   window.setBounds(bounds, false);
@@ -125,20 +123,9 @@ export function initializeApp(options?: {
 }
 
 export function createAppWindow(): BrowserWindow {
-  const settings = currentGeneralSettings ?? getGeneralSettingsStore().getGeneralSettings();
-  const initialPlacement = settings["window-placement"];
-  const initialPosition = computeWindowPositionForSize(
-    initialPlacement,
-    WINDOW_WIDTH,
-    WINDOW_HEIGHT,
-  );
   mainWindow = new BrowserWindow({
-    width: WINDOW_WIDTH,
-    height: WINDOW_HEIGHT,
     show: false,
-    center: false,
-    x: initialPosition.x,
-    y: initialPosition.y,
+    fullscreen: true,
     backgroundColor: "#1c1c1c",
     icon: appIcon,
     frame: false,
@@ -152,29 +139,13 @@ export function createAppWindow(): BrowserWindow {
     },
   });
 
-  positionAppWindow(mainWindow);
-
-  const attachResizeReposition = () => {
-    if (!mainWindow) return;
-    const window = mainWindow;
-    const onResize = () => {
-      window.removeListener("resize", onResize);
-      positionAppWindow(window);
-    };
-    window.once("resize", onResize);
-  };
-
   mainWindow.on("ready-to-show", () => {
-    if (mainWindow) {
-      positionAppWindow(mainWindow);
-      mainWindow.show();
-    }
+    mainWindow?.show();
   });
 
-  mainWindow.on("show", () => {
+  mainWindow.on("leave-full-screen", () => {
     if (mainWindow) {
       positionAppWindow(mainWindow);
-      attachResizeReposition();
     }
   });
 

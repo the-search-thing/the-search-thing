@@ -1,1 +1,1 @@
-- [ ] move the indexing job status to somwhere else now that footer is gone from home.tsx, maybe preview pane or a smaller footer(hate this), or maybe even between index and settings icons
+- [x] move the indexing job status to somwhere else now that footer is gone from home.tsx, maybe preview pane or a smaller footer(hate this), or maybe even between index and settings icons

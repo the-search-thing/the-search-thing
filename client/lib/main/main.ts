@@ -1,4 +1,4 @@
-import { app, BrowserWindow, globalShortcut } from "electron";
+import { Menu, app, BrowserWindow, globalShortcut } from "electron";
 import { electronApp, optimizer } from "@electron-toolkit/utils";
 import { join } from "path";
 import { createAppWindow, getMainWindow, initializeApp, positionAppWindow } from "./app";
@@ -82,6 +82,8 @@ const handleKeybindsChange = (map: KeybindMap) => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  Menu.setApplicationMenu(null);
+
   // Set app user model id for windows
   electronApp.setAppUserModelId("com.electron");
   // Register IPC handlers and custom protocols once, before any window is created.

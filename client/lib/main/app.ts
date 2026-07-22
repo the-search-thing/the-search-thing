@@ -1,4 +1,4 @@
-import { BrowserWindow, Menu, app, screen } from "electron";
+import { BrowserWindow, app, screen } from "electron";
 import { join } from "path";
 import appIcon from "@/resources/build/logo-white-bg.webp";
 import { registerResourcesProtocol } from "./protocols";
@@ -24,41 +24,6 @@ const MIN_WINDOW_HEIGHT = 600;
 const WINDOW_WIDTH = 1200;
 const WINDOW_HEIGHT = 800;
 const WINDOW_PLACEMENT_OFFSET = 80;
-
-const setupApplicationMenu = () => {
-  const isMac = process.platform === "darwin";
-
-  const template: Electron.MenuItemConstructorOptions[] = [
-    ...(isMac
-      ? [
-          {
-            role: "appMenu" as const,
-          },
-        ]
-      : []),
-    {
-      label: "File",
-      submenu: [{ type: "separator" }, { role: "quit" }],
-    },
-    {
-      label: "View",
-      submenu: [{ role: "reload" }, { role: "forceReload" }, { role: "toggleDevTools" }],
-    },
-    {
-      label: "Settings",
-      submenu: [
-        {
-          label: "Go to Settings",
-          click: () => {
-            getMainWindow()?.webContents.send("navigate", "/settings");
-          },
-        },
-      ],
-    },
-  ];
-
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
-};
 
 const getGeneralSettingsStore = () => {
   if (generalSettingsStore) {
@@ -147,7 +112,6 @@ export function initializeApp(options?: {
   onKeybindsChange?: (map: KeybindMap) => void;
   onGeneralSettingsChange?: () => void;
 }): void {
-  setupApplicationMenu();
   registerResourcesProtocol();
   registerWindowHandlers(getMainWindow, positionAppWindowWithPlacement);
   registerAppHandlers(app);

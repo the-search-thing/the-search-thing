@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings } from "lucide-react";
 import { Searchbar } from "../components/ui/searchbar";
+import { Button } from "../components/ui/button";
 import { useConveyor } from "@/app/hooks/use-conveyor";
 import { cn } from "@/lib/utils";
 import "./styles.css";
 import Results from "../components/Results";
-import Footer from "../components/Footer";
 import { SearchHistoryEntry, SearchResponse } from "../types/types";
 import { useAppContext } from "../AppContext";
 
@@ -16,6 +16,7 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState<SearchResponse>();
   const [hasSearched, setHasSearched] = useState(false); //temporary logic (pls remove in the future :pray:)
   const [isLoading, setIsLoading] = useState(false);
+  const [isIndexing, setIsIndexing] = useState(false);
   const [recentSearches, setRecentSearches] = useState<SearchHistoryEntry[]>([]);
   const {
     setAwaitingIndexing,
@@ -24,8 +25,9 @@ export default function Home() {
     setCurrentJobId,
     setIndexingLocation,
     indexingLocation,
+    setDirIndexed,
+    setJobStatus,
   } = useAppContext();
-  const [hasInteracted, setHasInteracted] = useState(false);
   const navigate = useNavigate();
 
   const refreshRecentSearches = useCallback(async () => {
@@ -41,6 +43,76 @@ export default function Home() {
     refreshRecentSearches();
   }, [refreshRecentSearches]);
 
+  // Poll job status while an index job is running (previously lived in Footer)
+  useEffect(() => {
+    if (!currentJobId) {
+      setJobStatus(null);
+      return;
+    }
+
+    let isActive = true;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const fetchStatus = async () => {
+      try {
+        const status = await search.indexStatus(currentJobId);
+        if (!isActive) return;
+        setJobStatus(status);
+        if (status.status === "completed" || status.status === "failed") {
+          clearInterval(intervalId);
+          const delay = status.status === "completed" ? 3000 : 5000;
+          timeoutId = setTimeout(() => {
+            if (!isActive) return;
+            setCurrentJobId(null);
+            setIndexingLocation(null);
+            setDirIndexed(null);
+            setJobStatus(null);
+            setAwaitingIndexing(false);
+          }, delay);
+        }
+      } catch (error) {
+        console.error("Error fetching index status:", error);
+      }
+    };
+
+    fetchStatus();
+    const intervalId = window.setInterval(fetchStatus, 2000);
+    return () => {
+      isActive = false;
+      clearInterval(intervalId);
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [
+    currentJobId,
+    search,
+    setCurrentJobId,
+    setIndexingLocation,
+    setDirIndexed,
+    setJobStatus,
+    setAwaitingIndexing,
+  ]);
+
+  const handleStartIndexing = useCallback(async () => {
+    const res = await search.openFileDialog();
+
+    if (!res || res.length === 0) return;
+
+    setIsIndexing(true);
+    try {
+      const indexRes = await search.index(res);
+      if (indexRes.success && indexRes.job_id) {
+        setCurrentJobId(indexRes.job_id);
+        setDirIndexed(res);
+        setIndexingLocation("footer");
+      }
+    } catch (error) {
+      console.error("Error indexing files:", error);
+    } finally {
+      setIsIndexing(false);
+    }
+  }, [search, setCurrentJobId, setDirIndexed, setIndexingLocation]);
+
   const handleSearch = async (nextQuery?: string) => {
     const effectiveQuery = (nextQuery ?? query).trim();
     if (!effectiveQuery) {
@@ -51,7 +123,6 @@ export default function Home() {
       setQuery(effectiveQuery);
     }
 
-    setHasInteracted(true);
     setIsLoading(true);
     try {
       const res = await search.search(effectiveQuery);
@@ -75,14 +146,12 @@ export default function Home() {
     try {
       const state = JSON.parse(raw) as {
         query?: string;
-        hasInteracted?: boolean;
         hasSearched?: boolean;
         searchResults?: SearchResponse;
         awaitingIndexing?: boolean;
         currentJobId?: string | null;
       };
       if (typeof state.query === "string") setQuery(state.query);
-      if (typeof state.hasInteracted === "boolean") setHasInteracted(state.hasInteracted);
       if (typeof state.hasSearched === "boolean") setHasSearched(state.hasSearched);
       if (state.searchResults !== undefined) setSearchResults(state.searchResults);
       if (typeof state.awaitingIndexing === "boolean") setAwaitingIndexing(state.awaitingIndexing);
@@ -95,18 +164,17 @@ export default function Home() {
   useEffect(() => {
     const state = {
       query,
-      hasInteracted,
       hasSearched,
       searchResults,
       awaitingIndexing,
       currentJobId,
     };
     sessionStorage.setItem("home-state", JSON.stringify(state));
-  }, [query, hasInteracted, hasSearched, searchResults, awaitingIndexing, currentJobId]);
+  }, [query, hasSearched, searchResults, awaitingIndexing, currentJobId]);
 
   return (
     <div className="welcome-content flex flex-col gap-5 h-screen bg-background text-foreground">
-      <div className="flex flex-row items-center flex-none min-h-[55px] bg-background pl-4">
+      <div className="flex flex-row items-center flex-none min-h-[55px] bg-background pl-4 border-b border-zinc-700">
         <Searchbar
           className="bg-transparent shadow-none px-0"
           data-search-input="true"
@@ -116,13 +184,12 @@ export default function Home() {
             setQuery(newQuery);
             setHasSearched(false);
             setAwaitingIndexing(false);
-            setHasInteracted(true);
 
             if (currentJobId && indexingLocation === "results" && newQuery.length > 0) {
               setIndexingLocation("footer");
             }
           }}
-          placeholder="Search for files or folders…"
+          placeholder="Search for anything..."
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -130,6 +197,16 @@ export default function Home() {
             }
           }}
         />
+        <Button
+          variant="transparent"
+          size="sm"
+          onClick={handleStartIndexing}
+          disabled={isIndexing || !!currentJobId}
+          data-index-button="true"
+          className="flex-none"
+        >
+          Index 
+        </Button>
         <button
           onClick={() => navigate("/settings")}
           className="flex items-center justify-center h-8 w-8 rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-150 flex-none mx-2"
@@ -139,36 +216,19 @@ export default function Home() {
         </button>
       </div>
 
-      {hasInteracted ? (
-        <div className={cn("flex flex-1 min-h-0", "bg-background", "px-4")}>
-          {isLoading ? (
-            <div className="flex items-center justify-center w-full text-foreground">Searching...</div>
-          ) : (
-            <Results
-              searchResults={searchResults}
-              query={query}
-              hasSearched={hasSearched}
-              recentSearches={recentSearches}
-              onRecentSearchSelect={(searchQuery) => handleSearch(searchQuery)}
-              onIndexingCancelled={() => setAwaitingIndexing(false)}
-            />
-          )}
-        </div>
-      ) : (
-        <div
-          className={cn(
-            "flex flex-1 min-h-0 gap-1 flex-col items-center justify-center",
-            "bg-background",
-            "px-4",
-          )}
-        >
-          <div className="text-lg text-foreground">Welcome to the-search-thing!</div>
-          <div className="text-sm text-foreground">Please start searching to get started...</div>
-        </div>
-      )}
-
-      <div className="flex items-center flex-none min-h-[56px] bg-background px-4">
-        <Footer />
+      <div className={cn("flex flex-1 min-h-0", "bg-background", "px-4 pt-4")}>
+        {isLoading ? (
+          <div className="flex items-center justify-center w-full text-foreground">Searching...</div>
+        ) : (
+          <Results
+            searchResults={searchResults}
+            query={query}
+            hasSearched={hasSearched}
+            recentSearches={recentSearches}
+            onRecentSearchSelect={(searchQuery) => handleSearch(searchQuery)}
+            onIndexingCancelled={() => setAwaitingIndexing(false)}
+          />
+        )}
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { ResultProps, SearchResultItem } from "../types/types";
 import * as fileIcons from "@/resources/filetype icons";
 import { useConveyor } from "../hooks/use-conveyor";
 import { useAppContext } from "../AppContext";
+import WhimsyLoader from "./WhimsyLoader";
 
 type ResultItem = SearchResultItem;
 
@@ -134,123 +135,11 @@ const Results: React.FC<ResultsWithContextProps> = ({
     }
   }, [awaitingIndexing, currentJobId, hasInitiatedIndexing, handleStartIndexing]);
 
-  const progressSection = (
-    label: string,
-    found: number,
-    indexed: number,
-    errors: number,
-    skipped: number,
-  ) => {
-    const total = found || 1;
-    const pct = found > 0 ? Math.round((indexed / total) * 100) : 0;
-    if (found === 0 && indexed === 0) return null;
-    return (
-      <div className="w-full">
-        <div className="flex justify-between text-xs text-zinc-400 mb-1">
-          <span>{label}</span>
-          <span>
-            {indexed}/{found}
-            {errors > 0 && <span className="text-red-400 ml-1">({errors} errors)</span>}
-            {skipped > 0 && <span className="text-yellow-600 ml-1">({skipped} skipped)</span>}
-          </span>
-        </div>
-        <div className="w-full h-1.5 bg-zinc-700 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-blue-500 rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-      </div>
-    );
-  };
+  // Searched but found nothing (keep split layout available while indexing)
+  const isIndexingActive =
+    !!currentJobId || (indexingLocation === "results" && awaitingIndexing);
 
-  // Show full indexing UI when actively indexing in results view
-  if (indexingLocation === "results" && awaitingIndexing) {
-    return (
-      <div className="flex flex-col w-full h-full items-center justify-center p-6 gap-5">
-        {/* Spinner + phase label */}
-        <div className="flex items-center gap-3">
-          {(!jobStatus || (jobStatus.status !== "completed" && jobStatus.status !== "failed")) && (
-            <svg className="animate-spin h-5 w-5 text-blue-400" viewBox="0 0 24 24" fill="none">
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-              />
-            </svg>
-          )}
-          <div className="text-zinc-200 text-lg font-medium">
-            {jobStatus ? phaseLabels[jobStatus.phase] || jobStatus.phase : "Starting indexing..."}
-          </div>
-        </div>
-
-        {currentJobId && dirIndexed && (
-          <div className="text-zinc-500 text-xs font-mono">Directory: {dirIndexed}</div>
-        )}
-
-        {jobStatus && (
-          <div className="flex flex-col gap-3 w-full max-w-sm">
-            {progressSection(
-              "Text files",
-              jobStatus.text_found,
-              jobStatus.text_indexed,
-              jobStatus.text_errors,
-              jobStatus.text_skipped,
-            )}
-            {progressSection(
-              "Videos",
-              jobStatus.video_found,
-              jobStatus.video_indexed,
-              jobStatus.video_errors,
-              jobStatus.video_skipped,
-            )}
-            {progressSection(
-              "Images",
-              jobStatus.image_found,
-              jobStatus.image_indexed,
-              jobStatus.image_errors,
-              jobStatus.image_skipped,
-            )}
-
-            {/* Status message */}
-            {jobStatus.message && (
-              <div className="text-zinc-400 text-xs text-center mt-1">{jobStatus.message}</div>
-            )}
-
-            {/* Error */}
-            {jobStatus.error && (
-              <div className="text-red-500 text-xs text-center mt-1 bg-red-950/30 rounded px-3 py-2">
-                {jobStatus.error}
-              </div>
-            )}
-
-            {/* Completed / failed badge */}
-            {jobStatus.status === "completed" && (
-              <div className="text-green-600 text-sm text-center mt-2 font-medium">
-                Indexing complete!
-              </div>
-            )}
-            {jobStatus.status === "failed" && (
-              <div className="text-red-600 text-sm text-center mt-2 font-medium">
-                Indexing failed
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // Searched but found nothing
-  if (hasSearched && allResults.length === 0 && query) {
+  if (hasSearched && allResults.length === 0 && query && !isIndexingActive) {
     return (
       <div className="flex flex-col items-center gap-4 w-full h-full pt-30">
         <FileX className="w-15 h-15 opacity-55" />
@@ -261,6 +150,38 @@ const Results: React.FC<ResultsWithContextProps> = ({
       </div>
     );
   }
+
+  const jobDone = jobStatus?.status === "completed" || jobStatus?.status === "failed";
+
+  const indexingProgress = (
+    <div className="flex flex-col w-full h-full items-center justify-center p-6 gap-4">
+      {!jobDone && <WhimsyLoader size={48} />}
+
+      <div className="text-zinc-200 text-lg font-medium">
+        {jobStatus?.status === "completed"
+          ? "Indexing complete!"
+          : jobStatus?.status === "failed"
+            ? "Indexing failed"
+            : jobStatus
+              ? phaseLabels[jobStatus.phase] || jobStatus.phase
+              : "Starting indexing..."}
+      </div>
+
+      {currentJobId && dirIndexed && (
+        <div className="text-zinc-500 text-xs font-mono">Directory: {dirIndexed}</div>
+      )}
+
+      {jobStatus?.message && (
+        <div className="text-zinc-400 text-xs text-center">{jobStatus.message}</div>
+      )}
+
+      {jobStatus?.error && (
+        <div className="text-red-500 text-xs text-center bg-red-950/30 rounded px-3 py-2">
+          {jobStatus.error}
+        </div>
+      )}
+    </div>
+  );
 
   const showRecentSearches = !hasSearched;
 
@@ -341,7 +262,9 @@ const Results: React.FC<ResultsWithContextProps> = ({
 
         {/* Content preview */}
         <div className="flex-1 h-full min-w-0">
-          {selectedItem ? (
+          {isIndexingActive ? (
+            indexingProgress
+          ) : selectedItem ? (
             <div className="pl-4 py-2 h-full min-w-0">
               {selectedItem.label === "image" ? (
                 <div className="p-5 rounded-2xl h-full bg-zinc-900/60 overflow-hidden flex flex-col min-h-0">

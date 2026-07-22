@@ -185,6 +185,7 @@ export default function Home() {
             setHasSearched(false);
             setAwaitingIndexing(false);
 
+            // now that footer is commented out this needs to change as well
             if (currentJobId && indexingLocation === "results" && newQuery.length > 0) {
               setIndexingLocation("footer");
             }

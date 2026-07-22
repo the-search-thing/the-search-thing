@@ -1,5 +1,6 @@
 ## IMMEDIATE TODOs TO FIGURE OUT
 
+- [ ] write / integrate an application finder
 - [ ] better way for `DATA_DIR` instead of `cwd/.data/extracted` or env var
 - [ ] file watcher event emitter being worked on by [neogoose](https://github.com/dmtrKovalenko). Event emitter will be used to do the following:
   - [ ] auto-index on startup (or other trigger) so new/changed source files get LiteParse extracts without a manual `POST /index/run`

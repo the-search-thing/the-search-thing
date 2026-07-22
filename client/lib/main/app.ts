@@ -18,6 +18,9 @@ let mainWindow: BrowserWindow | null = null;
 let generalSettingsStore: ReturnType<typeof createGeneralSettingsStore> | null = null;
 let currentGeneralSettings: GeneralSettingsState | null = null;
 
+// eventually move these outta here
+const MIN_WINDOW_WIDTH = 400;
+const MIN_WINDOW_HEIGHT = 600;
 const WINDOW_WIDTH = 1200;
 const WINDOW_HEIGHT = 800;
 const WINDOW_PLACEMENT_OFFSET = 80;
@@ -169,6 +172,8 @@ export function createAppWindow(): BrowserWindow {
   const initialTheme = (currentGeneralSettings?.theme ?? "dark") as AppTheme;
   mainWindow = new BrowserWindow({
     width: WINDOW_WIDTH,
+    minWidth: MIN_WINDOW_WIDTH,
+    minHeight: MIN_WINDOW_HEIGHT,
     height: WINDOW_HEIGHT,
     show: false,
     center: true,

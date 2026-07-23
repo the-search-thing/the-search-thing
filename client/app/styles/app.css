@@ -1,5 +1,5 @@
-@import './globals.css';
-@import './window.css';
+@import "./globals.css";
+@import "./window.css";
 
 html {
   font-size: 15px;
@@ -9,7 +9,7 @@ body {
   font-family:
     system-ui,
     -apple-system,
-    'Segoe UI',
+    "Segoe UI",
     sans-serif;
   font-size: 1rem;
   font-weight: 500;
@@ -17,18 +17,17 @@ body {
   overflow: hidden;
 }
 
-body[data-font='sans-serif'] {
+body[data-font="sans-serif"] {
   font-family:
     system-ui,
     -apple-system,
-    'Segoe UI',
+    "Segoe UI",
     sans-serif;
 }
 
-body[data-font='mono'] {
+body[data-font="mono"] {
   font-family:
-    'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-    monospace;
+    "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 html,

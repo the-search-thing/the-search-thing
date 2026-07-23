@@ -10,7 +10,9 @@ export const Searchbar = React.forwardRef<HTMLInputElement, SearchbarProps>(func
   ref,
 ) {
   return (
-    <div className={cn("flex items-center gap-3", "h-full w-screen", "bg-background px-4", className)}>
+    <div
+      className={cn("flex items-center gap-3", "h-full w-screen", "bg-background px-4", className)}
+    >
       <svg
         aria-hidden="true"
         viewBox="0 0 24 24"
@@ -33,11 +35,7 @@ export const Searchbar = React.forwardRef<HTMLInputElement, SearchbarProps>(func
         {...props}
       />
 
-      {kbd && (
-        <kbd className="px-2 py-1 text-sm text-foreground bg-background rounded">
-          {kbd}
-        </kbd>
-      )}
+      {kbd && <kbd className="px-2 py-1 text-sm text-foreground bg-background rounded">{kbd}</kbd>}
     </div>
   );
 });

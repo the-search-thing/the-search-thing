@@ -198,6 +198,7 @@ export default function Home() {
             }
           }}
         />
+        {/*replace Index button text with better icon imo */}
         <Button
           variant="transparent"
           size="sm"
@@ -206,7 +207,7 @@ export default function Home() {
           data-index-button="true"
           className="flex-none"
         >
-          Index 
+          Index
         </Button>
         <button
           onClick={() => navigate("/settings")}
@@ -219,7 +220,9 @@ export default function Home() {
 
       <div className={cn("flex flex-1 min-h-0", "bg-background", "px-4 pt-4")}>
         {isLoading ? (
-          <div className="flex items-center justify-center w-full text-foreground">Searching...</div>
+          <div className="flex items-center justify-center w-full text-foreground">
+            Searching...
+          </div>
         ) : (
           <Results
             searchResults={searchResults}

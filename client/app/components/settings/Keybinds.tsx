@@ -14,9 +14,7 @@ import {
 } from "@/lib/storage/keybind-store";
 
 function KeyToken({ children }: { children: string }) {
-  return (
-    <kbd className="px-2 py-1 text-xs text-foreground bg-secondary rounded">{children}</kbd>
-  );
+  return <kbd className="px-2 py-1 text-xs text-foreground bg-secondary rounded">{children}</kbd>;
 }
 
 function ComboDisplay({ combo }: { combo: KeyCombo }) {
@@ -243,9 +241,7 @@ export default function Keybinds() {
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="text-xs uppercase tracking-wider text-foreground">Keybinds</div>
-          {hasUnsavedChanges && (
-            <div className="text-[11px] text-warning">Unsaved changes</div>
-          )}
+          {hasUnsavedChanges && <div className="text-[11px] text-warning">Unsaved changes</div>}
           {conflictItems.length > 0 && (
             <div className="text-[11px] text-destructive">Conflicting keybinds</div>
           )}
@@ -364,7 +360,8 @@ export default function Keybinds() {
                         <>
                           Saving will unbind{" "}
                           <span className="text-foreground">{previousMeta.label}</span> in favor of{" "}
-                          <span className="text-foreground">{otherMeta?.label ?? otherAction}</span>.
+                          <span className="text-foreground">{otherMeta?.label ?? otherAction}</span>
+                          .
                         </>
                       ) : (
                         <>Only the first matching action will trigger.</>

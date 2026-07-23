@@ -130,9 +130,7 @@ export default function General() {
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="text-xs uppercase tracking-wider text-foreground">General</div>
-          {hasUnsavedChanges && (
-            <div className="text-[11px] text-warning">Unsaved changes</div>
-          )}
+          {hasUnsavedChanges && <div className="text-[11px] text-warning">Unsaved changes</div>}
           {status === "saved" && <div className="text-[11px] text-success">Saved</div>}
           {status === "cleared" && <div className="text-[11px] text-success">Cleared</div>}
         </div>

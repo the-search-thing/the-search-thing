@@ -8,14 +8,11 @@ import { registerSearchHandlers } from "@/lib/conveyor/handlers/search-handler";
 import { registerSearchHistoryHandlers } from "@/lib/conveyor/handlers/search-history-handler";
 import { registerKeybindsHandlers } from "@/lib/conveyor/handlers/keybinds-handler";
 import { registerGeneralSettingsHandlers } from "@/lib/conveyor/handlers/general-settings-handler";
-import { createBetterSqliteAdapter } from "@/lib/storage/sqlite-adapter";
-import { createGeneralSettingsStore } from "@/lib/storage/general-settings-db-store";
 import type { GeneralSettingsState, WindowPlacementSetting } from "@/lib/storage/general-settings";
 import type { KeybindMap } from "@/lib/storage/keybind-store";
 import { windowBackgroundForTheme, type AppTheme } from "@/lib/theme/ayu";
 
 let mainWindow: BrowserWindow | null = null;
-let generalSettingsStore: ReturnType<typeof createGeneralSettingsStore> | null = null;
 let currentGeneralSettings: GeneralSettingsState | null = null;
 
 // eventually move these outta here
@@ -24,19 +21,6 @@ const MIN_WINDOW_HEIGHT = 600;
 const WINDOW_WIDTH = 1200;
 const WINDOW_HEIGHT = 800;
 const WINDOW_PLACEMENT_OFFSET = 80;
-
-const getGeneralSettingsStore = () => {
-  if (generalSettingsStore) {
-    return generalSettingsStore;
-  }
-
-  const dbPath = join(app.getPath("userData"), "general-settings.db");
-  const adapter = createBetterSqliteAdapter(dbPath);
-  generalSettingsStore = createGeneralSettingsStore(adapter);
-  generalSettingsStore.init();
-
-  return generalSettingsStore;
-};
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
@@ -125,10 +109,6 @@ export function initializeApp(options?: {
       getMainWindow()?.setBackgroundColor(windowBackgroundForTheme(settings.theme as AppTheme));
     }
     options?.onGeneralSettingsChange?.();
-  });
-
-  app.on("before-quit", () => {
-    generalSettingsStore?.close?.();
   });
 }
 

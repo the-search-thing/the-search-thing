@@ -1,6 +1,6 @@
 ## IMMEDIATE TODOs TO FIGURE OUT
 
-- [ ] add cache to search hits
+- [x] add cache to search hits - marked as complete feature doenst add much to our current functionality 
 - [x] profile contentSearch dual-grep vs root-only fff grep (`src/search/grep-profile.test.ts` → `grep-profile.md`)
 - [ ] better way for `DATA_DIR` instead of `cwd/.data/extracted` or env var
 - [ ] file watcher event emitter being worked on by [neogoose](https://github.com/dmtrKovalenko). Event emitter will be used to do the following:

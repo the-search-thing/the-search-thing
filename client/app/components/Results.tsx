@@ -165,7 +165,7 @@ const Results: React.FC<ResultsWithContextProps> = ({
           onRecentSearchSelect={onRecentSearchSelect}
         />
       </ResizablePanel>
-      <ResizableHandle withHandle className="bg-border" />
+      <ResizableHandle className="bg-border" />
       <ResizablePanel id="preview" minSize={300} className="min-h-0 min-w-0">
         <ResultsPreview
           isIndexingActive={isIndexingActive}

@@ -11,11 +11,10 @@ const keyCombo = z.object({
 const keybindMap = z.object({
   "toggle-app": keyCombo,
   search: keyCombo,
-  index: keyCombo,
   settings: keyCombo,
 });
 
-const keybindAction = z.enum(["toggle-app", "search", "index", "settings"]);
+const keybindAction = z.enum(["toggle-app", "search", "settings"]);
 
 export const keybindsIpcSchema = {
   "keybinds/get": {

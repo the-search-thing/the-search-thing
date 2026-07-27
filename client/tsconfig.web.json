@@ -1,10 +1,12 @@
 {
   "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
   "include": ["app/index.d.ts", "app/**/*", "lib/**/*", "lib/conveyor/*.d.ts", "resources/**/*"],
+  "exclude": ["lib/main/**/*", "lib/conveyor/handlers/**/*"],
   "compilerOptions": {
     "composite": true,
     "jsx": "react-jsx",
     "baseUrl": ".",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "types": ["electron-vite/node"],
     "paths": {

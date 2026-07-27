@@ -15,21 +15,7 @@ files:
   - "!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}"
 asarUnpack:
   - "**/*.node"
-extraResources:
-  - from: resources/sidecar
-    to: sidecar
-    filter:
-      - "**/*"
-  - from: "../config"
-    to: "config"
-    filter:
-      - "file_types.json"
 win:
-  extraResources:
-    - from: resources/ffmpeg
-      to: ffmpeg
-      filter:
-        - "**/*"
   executableName: the-search-thing
   icon: resources/build/logo-256.ico
 nsis:
@@ -48,11 +34,6 @@ mac:
 dmg:
   artifactName: ${name}-${version}.${ext}
 linux:
-  extraResources:
-    - from: resources/ffmpeg
-      to: ffmpeg
-      filter:
-        - "**/*"
   target:
     - AppImage
     - snap

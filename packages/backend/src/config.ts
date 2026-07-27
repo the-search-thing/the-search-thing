@@ -9,6 +9,17 @@ export class SearchConfig extends Context.Service<
   }
 >()("SearchConfig") {}
 
+export type SearchConfigOptions = {
+  readonly root: string;
+  readonly extractCacheDir: string;
+};
+
+export const makeSearchConfigLayer = (options: SearchConfigOptions) =>
+  Layer.succeed(SearchConfig)({
+    root: NodePath.resolve(options.root),
+    extractCacheDir: NodePath.resolve(options.extractCacheDir),
+  });
+
 export const SearchConfigLive = Layer.effect(SearchConfig)(
   Effect.gen(function* () {
     const root = process.env.SEARCH_ROOT;

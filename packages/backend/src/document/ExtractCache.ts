@@ -51,7 +51,7 @@ const walkCacheTxtFiles: (
 
   if (Result.isFailure(listed)) {
     if (NodePath.resolve(dir) === NodePath.resolve(root)) {
-      return yield* Effect.fail(listed.failure);
+      return yield* listed.failure;
     }
     return {
       files: [],
@@ -76,7 +76,6 @@ const walkCacheTxtFiles: (
 
   return { files, inaccessiblePrefixes } satisfies CacheWalkResult;
 });
-
 
 export class ExtractCache extends Context.Service<
   ExtractCache,
@@ -115,7 +114,7 @@ export class ExtractCache extends Context.Service<
   }
 >()("ExtractCache") {}
 
-export const ExtractCacheLive = Layer.effect(ExtractCache)(
+export const ExtractCacheLayer = Layer.effect(ExtractCache)(
   Effect.gen(function* () {
     const { extractCacheDir } = yield* SearchConfig;
     const metaDir = NodePath.join(extractCacheDir, ".meta");
@@ -256,4 +255,6 @@ export const ExtractCacheLive = Layer.effect(ExtractCache)(
       originalRelativePath,
     };
   }),
-).pipe(Layer.provide(SearchConfigLive));
+);
+
+export const ExtractCacheLive = ExtractCacheLayer.pipe(Layer.provide(SearchConfigLive));

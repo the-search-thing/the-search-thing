@@ -5,10 +5,12 @@ import { createAppWindow, getMainWindow, initializeApp, positionAppWindow } from
 import { createBetterSqliteAdapter } from "@/lib/storage/sqlite-adapter";
 import { createKeybindsStore } from "@/lib/storage/keybinds-db-store";
 import { comboModifierTokens, type KeyCombo, type KeybindMap } from "@/lib/storage/keybind-store";
-import { sidecarClient } from "@/lib/main/sidecar-client";
+import { SearchRuntime } from "./search-runtime";
 
 let keybindsStore: ReturnType<typeof createKeybindsStore> | null = null;
 let currentToggleShortcut: string | null = null;
+let searchRuntime: SearchRuntime | null = null;
+let searchRuntimeDisposing = false;
 
 const getKeybindsStore = () => {
   if (keybindsStore) {
@@ -83,6 +85,7 @@ const handleKeybindsChange = (map: KeybindMap) => {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   Menu.setApplicationMenu(null);
+  searchRuntime = new SearchRuntime(join(app.getPath("userData"), "extracted"));
 
   // Set app user model id for windows
   electronApp.setAppUserModelId("com.electron");
@@ -90,21 +93,13 @@ app.whenReady().then(() => {
   // This must not be called again — ipcMain.handle() throws on duplicate registrations.
   initializeApp({
     onKeybindsChange: handleKeybindsChange,
+    searchRuntime,
   });
   // Create app window
   createAppWindow();
 
   const initialKeybinds = getKeybindsStore().getKeybinds();
   handleKeybindsChange(initialKeybinds);
-
-  sidecarClient
-    .ping()
-    .then((result) => {
-      console.log(`[sidecar] connected to ${result.service} v${result.version}`);
-    })
-    .catch((error) => {
-      console.error("[sidecar] ping failed:", error);
-    });
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -126,10 +121,22 @@ app.whenReady().then(() => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 
+app.on("before-quit", (event) => {
+  if (!searchRuntime || searchRuntimeDisposing) {
+    return;
+  }
+
+  event.preventDefault();
+  searchRuntimeDisposing = true;
+  void searchRuntime.dispose().finally(() => {
+    searchRuntime = null;
+    app.quit();
+  });
+});
+
 app.on("will-quit", () => {
   globalShortcut.unregisterAll();
   keybindsStore?.close?.();
-  sidecarClient.stop();
 });
 
 app.on("window-all-closed", () => {

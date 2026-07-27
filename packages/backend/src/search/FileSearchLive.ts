@@ -1,8 +1,8 @@
-import { FileFinder, type Result } from "@ff-labs/fff-node";
+import type { FileFinder, Result } from "@ff-labs/fff-node";
 import { Effect, Layer } from "effect";
 import * as NodeFs from "node:fs/promises";
 import { SearchConfig, SearchConfigLive } from "../config.js";
-import { ExtractCache, ExtractCacheLive } from "../document/ExtractCache.js";
+import { ExtractCache, ExtractCacheLayer } from "../document/ExtractCache.js";
 import { FileSearchError, type GrepMode } from "@the-search-thing/api";
 import { FileSearchService } from "./FileSearchService.js";
 
@@ -16,15 +16,28 @@ const fromResult = <A, B>(
     ? Effect.succeed(onSuccess(result.value))
     : Effect.fail(FileSearchError.make({ message: result.error }));
 
-const createFinder = (basePath: string) =>
+const createNativeFinder = (basePath: string) =>
   Effect.gen(function* () {
+    const { FileFinder } = yield* Effect.tryPromise({
+      try: () => import("@ff-labs/fff-node"),
+      catch: (error) =>
+        FileSearchError.make({
+          message: error instanceof Error ? error.message : String(error),
+        }),
+    });
+
     const created = FileFinder.create({ basePath, aiMode: true });
     if (!created.ok) {
-      return yield* Effect.die(new Error(created.error));
+      return yield* Effect.fail(FileSearchError.make({ message: created.error }));
     }
+    return created.value;
+  });
 
+const createFinder = (basePath: string) =>
+  Effect.gen(function* () {
+    const created = yield* createNativeFinder(basePath);
     const finder = yield* Effect.acquireRelease(
-      Effect.sync(() => created.value),
+      Effect.succeed(created),
       (instance) => Effect.sync(() => instance.destroy()),
     );
 
@@ -67,7 +80,35 @@ const grepFinder = (finder: FileFinder, input: { query: string; mode: GrepMode; 
     ),
   );
 
-export const FileSearchLive = Layer.effect(FileSearchService)(
+const fileSearchFinder = (finder: FileFinder, input: { query: string; limit: number }) =>
+  Effect.sync(() => finder.fileSearch(input.query, { pageSize: input.limit })).pipe(
+    Effect.flatMap((result) =>
+      fromResult(result, (value) => ({
+        items: value.items.map((item) => ({
+          relativePath: item.relativePath,
+          fileName: item.fileName,
+        })),
+        totalMatched: value.totalMatched,
+      })),
+    ),
+  );
+
+export const FileSearchBasicLayer = Layer.effect(FileSearchService)(
+  Effect.gen(function* () {
+    const { root } = yield* SearchConfig;
+    const rootFinder = yield* createFinder(root);
+
+    return {
+      fileSearch: ({ query, limit = defaultLimit }) =>
+        fileSearchFinder(rootFinder, { query, limit }),
+      contentSearch: ({ query, mode = "plain", limit = defaultLimit }) =>
+        grepFinder(rootFinder, { query, mode, limit }),
+      refreshExtractIndex: () => Effect.void,
+    };
+  }),
+);
+
+export const FileSearchLayer = Layer.effect(FileSearchService)(
   Effect.gen(function* () {
     const { root, extractCacheDir } = yield* SearchConfig;
     const extractCache = yield* ExtractCache;
@@ -110,17 +151,7 @@ export const FileSearchLive = Layer.effect(FileSearchService)(
 
     return {
       fileSearch: ({ query, limit = defaultLimit }) =>
-        Effect.sync(() => rootFinder.fileSearch(query, { pageSize: limit })).pipe(
-          Effect.flatMap((result) =>
-            fromResult(result, (value) => ({
-              items: value.items.map((item) => ({
-                relativePath: item.relativePath,
-                fileName: item.fileName,
-              })),
-              totalMatched: value.totalMatched,
-            })),
-          ),
-        ),
+        fileSearchFinder(rootFinder, { query, limit }),
 
       contentSearch: ({ query, mode = "plain", limit = defaultLimit }) =>
         Effect.gen(function* () {
@@ -149,4 +180,6 @@ export const FileSearchLive = Layer.effect(FileSearchService)(
       refreshExtractIndex,
     };
   }),
-).pipe(Layer.provide(ExtractCacheLive), Layer.provide(SearchConfigLive));
+).pipe(Layer.provide(ExtractCacheLayer));
+
+export const FileSearchLive = FileSearchLayer.pipe(Layer.provide(SearchConfigLive));

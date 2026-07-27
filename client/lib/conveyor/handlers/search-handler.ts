@@ -1,63 +1,30 @@
 import { handle } from "@/lib/main/shared";
 import { dialog, shell } from "electron";
-import axios from "axios";
-import { sidecarClient } from "@/lib/main/sidecar-client";
+import type { SearchRuntime } from "@/lib/main/search-runtime";
 
-export const registerSearchHandlers = () => {
-  const useSidecarForIndexing = process.env["USE_RUST_SIDECAR_INDEXING"] !== "false";
-  const useSidecarForSearch = process.env["USE_RUST_SIDECAR_SEARCH"] !== "false";
+export const registerSearchHandlers = (searchRuntime: SearchRuntime) => {
+  handle("search-root/get", () => searchRuntime.getRoot());
+  handle("search-root/set", (root) => searchRuntime.setRoot(root));
 
-  handle("search", async (query: string) => {
-    if (useSidecarForSearch) {
-      return sidecarClient.searchQuery(query);
-    }
-
-    const response = await axios.get("http://localhost:8000/api/search", {
-      params: { q: query },
-    });
-    return response.data;
+  handle("file-search", async (query, limit) => {
+    const result = await searchRuntime.searchFiles(query, limit);
+    return {
+      query,
+      items: [...result.items],
+      totalMatched: result.totalMatched,
+    };
   });
 
-  handle("sidecar-ping", async () => {
-    return sidecarClient.ping();
+  handle("content-search", async (query, mode, limit) => {
+    const result = await searchRuntime.searchContent(query, mode, limit);
+    return {
+      query,
+      mode,
+      items: [...result.items],
+      totalMatched: result.totalMatched,
+    };
   });
 
-  handle("sidecar-walk-text-batch", async (input) => {
-    return sidecarClient.walkTextBatch(input);
-  });
-
-  handle("index", async (dirPaths: string) => {
-    if (useSidecarForIndexing) {
-      return sidecarClient.indexStart(dirPaths);
-    }
-
-    const response = await axios.get("http://localhost:8000/api/index", {
-      params: { dir: dirPaths },
-    });
-    return { success: response.data.success, job_id: response.data.job_id };
-  });
-
-  handle("index-status", async (jobId: string) => {
-    if (useSidecarForIndexing) {
-      return sidecarClient.indexStatus(jobId);
-    }
-
-    const response = await axios.get("http://localhost:8000/api/index/status", {
-      params: { job_id: jobId },
-    });
-    return response.data;
-  });
-
-  handle("clear-index", async () => {
-    if (!useSidecarForIndexing) {
-      throw new Error(
-        "Clear index requires the Rust sidecar (USE_RUST_SIDECAR_INDEXING must not be false).",
-      );
-    }
-    return sidecarClient.clearIndex();
-  });
-
-  // System operations
   handle("open-file-dialog", async () => {
     const result = await dialog.showOpenDialog({
       properties: ["openDirectory"],
@@ -65,8 +32,12 @@ export const registerSearchHandlers = () => {
     return result.filePaths[0] ?? "";
   });
 
-  handle("open-file", async (filePath: string) => {
-    await shell.openPath(filePath);
+  handle("open-file", async (relativePath) => {
+    const absolutePath = await searchRuntime.resolveResultPath(relativePath);
+    const errorMessage = await shell.openPath(absolutePath);
+    if (errorMessage) {
+      throw new Error(errorMessage);
+    }
     return null;
   });
 };

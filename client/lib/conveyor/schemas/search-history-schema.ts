@@ -5,7 +5,7 @@ const searchHistoryEntry = z.object({
   search_string: z.string(),
   timestamp: z.number(),
   file_types: z.array(z.string()).nullable(),
-  filters: z.record(z.unknown()).nullable(),
+  filters: z.record(z.string(), z.unknown()).nullable(),
   path_scope: z.string().nullable(),
 });
 
@@ -16,7 +16,7 @@ export const searchHistoryIpcSchema = {
         search_string: z.string(),
         timestamp: z.number().optional(),
         file_types: z.array(z.string()).optional(),
-        filters: z.record(z.unknown()).optional(),
+        filters: z.record(z.string(), z.unknown()).optional(),
         path_scope: z.string().optional(),
       }),
     ]),

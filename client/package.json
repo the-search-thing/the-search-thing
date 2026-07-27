@@ -1,5 +1,5 @@
 {
-  "name": "the-search-thing",
+  "name": "@the-search-thing/client",
   "version": "12.0.0",
   "description": "A modern Electron application template with React, Vite, TypeScript, Shadcn UI and TailwindCSS",
   "homepage": "https://the-search-thing.vercel.app",
@@ -16,30 +16,28 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "start": "electron-vite preview",
-    "sidecar:build:debug": "cargo build --manifest-path ../Cargo.toml --bin the-search-thing-sidecar",
-    "sidecar:test:jrpc": "cargo test --manifest-path ../Cargo.toml --test sidecar_jrpc -- --test-threads=1",
-    "sidecar:stage": "node ./scripts/stage-sidecar.cjs",
-    "ffmpeg:fetch-windows": "bash ./scripts/fetch-ffmpeg-windows.sh",
-    "ffmpeg:fetch-linux": "bash ./scripts/fetch-ffmpeg-linux.sh",
     "postinstall": "electron-builder install-app-deps",
     "vite:build:app": "electron-vite build",
     "electron:build:win": "electron-builder --win",
     "electron:build:mac": "electron-builder --mac",
     "electron:build:linux": "electron-builder --linux",
     "electron:build:dir": "electron-builder --dir",
-    "build:win": "run-s ffmpeg:fetch-windows sidecar:stage vite:build:app electron:build:win",
-    "build:mac": "run-s sidecar:stage vite:build:app electron:build:mac",
-    "build:linux": "run-s ffmpeg:fetch-linux sidecar:stage vite:build:app electron:build:linux"
+    "build:win": "run-s vite:build:app electron:build:win",
+    "build:mac": "run-s vite:build:app electron:build:mac",
+    "build:linux": "run-s vite:build:app electron:build:linux"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
+    "@ff-labs/fff-node": "catalog:",
     "@radix-ui/react-slot": "^1.2.3",
-    "axios": "^1.13.4",
+    "@the-search-thing/api": "workspace:*",
+    "@the-search-thing/backend": "workspace:*",
     "better-sqlite3": "^12.4.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "dotenv": "^17.4.2",
+    "effect": "catalog:",
+    "ffi-rs": "^1.3.2",
     "lucide-react": "^0.541.0",
     "react-resizable-panels": "^4.12.2",
     "react-router-dom": "^7.13.0",
@@ -73,6 +71,7 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "better-sqlite3",
       "electron",
       "esbuild"
     ]

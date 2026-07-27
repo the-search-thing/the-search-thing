@@ -1,7 +1,6 @@
 import { BrowserWindow, app, screen } from "electron";
 import { join } from "path";
 import appIcon from "@/resources/build/logo-white-bg.webp";
-import { registerResourcesProtocol } from "./protocols";
 import { registerWindowHandlers } from "@/lib/conveyor/handlers/window-handler";
 import { registerAppHandlers } from "@/lib/conveyor/handlers/app-handler";
 import { registerSearchHandlers } from "@/lib/conveyor/handlers/search-handler";
@@ -11,6 +10,7 @@ import { registerGeneralSettingsHandlers } from "@/lib/conveyor/handlers/general
 import type { GeneralSettingsState, WindowPlacementSetting } from "@/lib/storage/general-settings";
 import type { KeybindMap } from "@/lib/storage/keybind-store";
 import { windowBackgroundForTheme, type AppTheme } from "@/lib/theme/ayu";
+import type { SearchRuntime } from "./search-runtime";
 
 let mainWindow: BrowserWindow | null = null;
 let currentGeneralSettings: GeneralSettingsState | null = null;
@@ -92,23 +92,23 @@ export function getMainWindow(): BrowserWindow | null {
  * Calling this more than once will throw because ipcMain.handle() and
  * protocol.handle() do not allow duplicate channel registrations.
  */
-export function initializeApp(options?: {
+export function initializeApp(options: {
   onKeybindsChange?: (map: KeybindMap) => void;
   onGeneralSettingsChange?: () => void;
+  searchRuntime: SearchRuntime;
 }): void {
-  registerResourcesProtocol();
   registerWindowHandlers(getMainWindow, positionAppWindowWithPlacement);
   registerAppHandlers(app);
-  registerSearchHandlers();
+  registerSearchHandlers(options.searchRuntime);
   registerSearchHistoryHandlers();
-  registerKeybindsHandlers(options?.onKeybindsChange);
+  registerKeybindsHandlers(options.onKeybindsChange);
   registerGeneralSettingsHandlers((settings) => {
     const previousTheme = currentGeneralSettings?.theme;
     currentGeneralSettings = settings;
     if (previousTheme !== undefined && previousTheme !== settings.theme) {
       getMainWindow()?.setBackgroundColor(windowBackgroundForTheme(settings.theme as AppTheme));
     }
-    options?.onGeneralSettingsChange?.();
+    options.onGeneralSettingsChange?.();
   });
 }
 

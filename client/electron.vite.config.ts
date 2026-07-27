@@ -17,12 +17,24 @@ export default defineConfig({
         input: {
           main: resolve(__dirname, "lib/main/main.ts"),
         },
+        // Native napi packages must stay external. Bundling them turns optional
+        // platform requires into top-level loads of both gnu and musl .node files.
+        external: ["ffi-rs", /^@yuuang\/ffi-rs-/, /^@ff-labs\/fff-bin-/],
       },
     },
     resolve: {
       alias: aliases,
     },
-    plugins: [externalizeDepsPlugin()],
+    plugins: [
+      externalizeDepsPlugin({
+        // Bundle TS workspace packages, but keep fff-node external because it is
+        // ESM-only and performs runtime native binary resolution.
+        exclude: ["@the-search-thing/api", "@the-search-thing/backend"],
+        // Keep ffi-rs external so napi platform detection is not flattened into
+        // top-level .node requires during bundling.
+        include: ["ffi-rs"],
+      }),
+    ],
   },
   preload: {
     build: {

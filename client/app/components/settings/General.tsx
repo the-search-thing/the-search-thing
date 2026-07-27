@@ -20,8 +20,6 @@ export default function General() {
     "window-placement": settings["window-placement"],
   });
   const [status, setStatus] = useState<"idle" | "saved" | "cleared">("idle");
-  const [clearIndexDialogOpen, setClearIndexDialogOpen] = useState(false);
-  const clearIndexPending = false;
 
   useEffect(() => {
     setDraftSettings({
@@ -48,18 +46,6 @@ export default function General() {
 
     return () => window.clearTimeout(timeoutId);
   }, [status]);
-
-  useEffect(() => {
-    if (!clearIndexDialogOpen) return;
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !clearIndexPending) {
-        setClearIndexDialogOpen(false);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [clearIndexDialogOpen, clearIndexPending]);
 
   useEffect(() => {
     // Only preview unsaved theme picks. Saved theme is owned by GlobalAppearancePreference.
@@ -256,58 +242,7 @@ export default function General() {
             Clear
           </button>
         </div>
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <div className="text-sm text-foreground">Clear Index</div>
-            <div className="text-xs text-muted-foreground">
-              Permanently removes all indexed files and embeddings. You will need to run a full
-              re-index to search again.
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setClearIndexDialogOpen(true)}
-            className="h-7 px-3 rounded-md text-xs text-foreground bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
-          >
-            Clear
-          </button>
-        </div>
       </div>
-
-      {clearIndexDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <button
-            type="button"
-            className="absolute inset-0 cursor-default bg-overlay"
-            aria-label="Dismiss"
-            onClick={() => !clearIndexPending && setClearIndexDialogOpen(false)}
-          />
-          <div
-            className="relative z-10 w-full max-w-md rounded-lg bg-background p-4"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="clear-index-title"
-          >
-            <div id="clear-index-title" className="text-sm text-foreground">
-              Clear the entire search index?
-            </div>
-            <div className="text-xs text-muted-foreground mt-2 leading-relaxed">
-              This deletes every indexed asset and embedding in the database. The action cannot be
-              undone. Search will stay empty until you index your folders again.
-            </div>
-            <div className="mt-4 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                disabled={clearIndexPending}
-                onClick={() => setClearIndexDialogOpen(false)}
-                className="text-xs transition-colors px-2 py-1 rounded text-foreground hover:bg-accent hover:text-accent-foreground"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

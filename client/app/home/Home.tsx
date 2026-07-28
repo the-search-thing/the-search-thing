@@ -111,8 +111,13 @@ const useSearchResults = (
 ) => {
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<SearchMode>("files");
-  const [results, setResults] = useState<SearchResponse>();
-  const [searched, setSearched] = useState(false);
+  const [resultsByMode, setResultsByMode] = useState<Record<SearchMode, SearchResponse | undefined>>(
+    { files: undefined, grep: undefined },
+  );
+  const [searchedByMode, setSearchedByMode] = useState<Record<SearchMode, boolean>>({
+    files: false,
+    grep: false,
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -128,8 +133,9 @@ const useSearchResults = (
     setError(null);
     try {
       const response = await searchWithMode(search, mode, effectiveQuery);
-      setResults({ query: effectiveQuery, mode, ...response });
-      setSearched(true);
+      const nextResults = { query: effectiveQuery, mode, ...response };
+      setResultsByMode((previous) => ({ ...previous, [mode]: nextResults }));
+      setSearchedByMode((previous) => ({ ...previous, [mode]: true }));
       await search.addSearchHistory({ search_string: effectiveQuery, timestamp: Date.now() });
       void refreshRecentSearches();
     } catch (cause) {
@@ -141,19 +147,31 @@ const useSearchResults = (
 
   const changeMode = (nextMode: SearchMode) => {
     setMode(nextMode);
-    setResults(undefined);
-    setSearched(false);
     setError(null);
+  };
+
+  const setResultsForCurrentMode = (nextResults: SearchResponse | undefined) => {
+    setResultsByMode((previous) => ({ ...previous, [mode]: nextResults }));
+  };
+
+  const setSearchedForCurrentMode = (nextSearched: boolean) => {
+    setSearchedByMode((previous) => ({ ...previous, [mode]: nextSearched }));
+  };
+
+  const clearAll = () => {
+    setResultsByMode({ files: undefined, grep: undefined });
+    setSearchedByMode({ files: false, grep: false });
   };
   return {
     query,
     setQuery,
     mode,
     changeMode,
-    results,
-    setResults,
-    searched,
-    setSearched,
+    results: resultsByMode[mode],
+    setResults: setResultsForCurrentMode,
+    searched: searchedByMode[mode],
+    setSearched: setSearchedForCurrentMode,
+    clearAll,
     run,
     loading,
     error,
@@ -242,8 +260,7 @@ export default function Home() {
   const chooseRoot = async () => {
     const changed = await searchRoot.choose();
     if (!changed) return;
-    searchState.setResults(undefined);
-    searchState.setSearched(false);
+    searchState.clearAll();
   };
   return (
     <div className="welcome-content flex h-screen flex-col gap-5 bg-background text-foreground">

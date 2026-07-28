@@ -21,6 +21,9 @@ export default function ResultsPreview({ selectedItem, hasResults }: ResultsPrev
           {selectedItem.fileName}
           {selectedItem.lineNumber ? `:${selectedItem.lineNumber}` : ""}
         </div>
+	{/* 
+	    here we need to add a file preview, fine if truncated
+	    */}
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto whitespace-pre-wrap wrap-break-word text-foreground">
           {selectedItem.lineContent ?? "Open this file to view its contents."}
         </div>

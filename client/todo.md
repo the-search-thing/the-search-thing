@@ -1,4 +1,4 @@
 - [ ] need a light mode LOGO for About.tsx
-- [ ] file content preview (fine if truncated)
+- [x] file content preview (fine if truncated)
 - [ ] use arrow keys to navigate the files up and down rather than scrolling
 - [ ] scrollbar next to preview content needs some love 

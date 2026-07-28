@@ -5,8 +5,6 @@
 dist/
 
 # env vars
-.env
-.env.local
 
 # rust
 target/
@@ -45,3 +43,4 @@ client/resources/ffmpeg/
 backend.spec
 .repos/
 .playwright-mcp/
+config.bat

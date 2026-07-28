@@ -4,8 +4,10 @@ import {
   makeSearchConfigLayer,
 } from "@the-search-thing/backend/search";
 import { Effect, Layer, ManagedRuntime } from "effect";
-import { stat } from "node:fs/promises";
+import { open, stat } from "node:fs/promises";
 import * as NodePath from "node:path";
+
+const PREVIEW_BYTES_MAX = 64 * 1024;
 
 const fileSearch = Effect.fn("EmbeddedSearch.fileSearch")(function* (input: {
   readonly query: string;
@@ -82,18 +84,28 @@ export class SearchRuntime {
     });
 
   resolveResultPath = (relativePath: string): Promise<string> =>
+    this.enqueue(async () => this.resolvePathUnderRoot(relativePath));
+
+  previewFile = (relativePath: string): Promise<{ content: string; truncated: boolean }> =>
     this.enqueue(async () => {
-      const { root } = this.requireState();
-      const absolutePath = NodePath.resolve(root, relativePath);
-      const pathFromRoot = NodePath.relative(root, absolutePath);
-      const outsideRoot =
-        pathFromRoot === ".." ||
-        pathFromRoot.startsWith(`..${NodePath.sep}`) ||
-        NodePath.isAbsolute(pathFromRoot);
-      if (outsideRoot) {
-        throw new Error("Refusing to open a path outside the search root");
+      const absolutePath = this.resolvePathUnderRoot(relativePath);
+      const file = await open(absolutePath, "r");
+      try {
+        const { size } = await file.stat();
+        const toRead = Math.min(size, PREVIEW_BYTES_MAX);
+        const buffer = Buffer.alloc(toRead);
+        const { bytesRead } = await file.read(buffer, 0, toRead, 0);
+        const slice = buffer.subarray(0, bytesRead);
+        if (slice.includes(0)) {
+          return { content: "(Binary file — open to view contents.)", truncated: false };
+        }
+        return {
+          content: slice.toString("utf8"),
+          truncated: size > bytesRead,
+        };
+      } finally {
+        await file.close();
       }
-      return absolutePath;
     });
 
   dispose = (): Promise<void> =>
@@ -108,6 +120,20 @@ export class SearchRuntime {
       throw new Error("Choose a search folder before searching");
     }
     return this.state;
+  };
+
+  private resolvePathUnderRoot = (relativePath: string): string => {
+    const { root } = this.requireState();
+    const absolutePath = NodePath.resolve(root, relativePath);
+    const pathFromRoot = NodePath.relative(root, absolutePath);
+    const outsideRoot =
+      pathFromRoot === ".." ||
+      pathFromRoot.startsWith(`..${NodePath.sep}`) ||
+      NodePath.isAbsolute(pathFromRoot);
+    if (outsideRoot) {
+      throw new Error("Refusing to open a path outside the search root");
+    }
+    return absolutePath;
   };
 
   private enqueue = <A>(operation: () => Promise<A>): Promise<A> => {

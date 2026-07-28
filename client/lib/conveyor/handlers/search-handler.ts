@@ -37,4 +37,6 @@ export const registerSearchHandlers = (searchRuntime: SearchRuntime) => {
     shell.showItemInFolder(absolutePath);
     return null;
   });
+
+  handle("preview-file", (relativePath) => searchRuntime.previewFile(relativePath));
 };

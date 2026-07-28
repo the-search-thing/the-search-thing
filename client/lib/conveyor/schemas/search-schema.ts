@@ -45,4 +45,11 @@ export const searchIpcSchema = {
     args: z.tuple([z.string()]),
     return: z.null(),
   },
+  "preview-file": {
+    args: z.tuple([z.string()]),
+    return: z.object({
+      content: z.string(),
+      truncated: z.boolean(),
+    }),
+  },
 };

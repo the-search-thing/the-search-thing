@@ -34,10 +34,7 @@ export const registerSearchHandlers = (searchRuntime: SearchRuntime) => {
 
   handle("open-file", async (relativePath) => {
     const absolutePath = await searchRuntime.resolveResultPath(relativePath);
-    const errorMessage = await shell.openPath(absolutePath);
-    if (errorMessage) {
-      throw new Error(errorMessage);
-    }
+    shell.showItemInFolder(absolutePath);
     return null;
   });
 };

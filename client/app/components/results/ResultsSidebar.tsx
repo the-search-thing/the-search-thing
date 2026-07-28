@@ -55,6 +55,7 @@ const ResultRow = (props: {
   <div
     tabIndex={0}
     onClick={props.onSelect}
+    onDoubleClick={props.onOpen}
     onKeyDown={(event) => {
       if (event.key === "Enter") props.onOpen();
     }}

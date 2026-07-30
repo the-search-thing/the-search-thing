@@ -2,12 +2,14 @@ export type ThemeSetting = "dark" | "light";
 export type SearchScopeSetting = "both" | "files" | "folders";
 export type FontSetting = "sans-serif" | "mono";
 export type WindowPlacementSetting = "center" | "center-above" | "center-below" | "cursor";
+export type InputModeSetting = "normal" | "vim";
 type GeneralSettingKey =
   | "launch-on-startup"
   | "theme"
   | "font"
   | "scope"
   | "window-placement"
+  | "input-mode"
   | "clear-search";
 
 export type GeneralSettingsState = {
@@ -16,6 +18,7 @@ export type GeneralSettingsState = {
   font: FontSetting;
   scope: SearchScopeSetting;
   "window-placement": WindowPlacementSetting;
+  "input-mode": InputModeSetting;
 };
 
 export const DEFAULT_GENERAL_SETTINGS: GeneralSettingsState = {
@@ -24,6 +27,7 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettingsState = {
   font: "sans-serif",
   scope: "both",
   "window-placement": "center",
+  "input-mode": "normal",
 };
 
 export const GENERAL_SETTINGS_CHANGE_EVENT = "general-settings:change";
@@ -49,6 +53,11 @@ const SETTINGS_ACTIONS: GeneralMeta[] = [
     action: "window-placement",
     label: "Window placement",
     description: "Choose where the window appears.",
+  },
+  {
+    action: "input-mode",
+    label: "Input mode",
+    description: "Choose between normal and Vim navigation.",
   },
   {
     action: "clear-search",

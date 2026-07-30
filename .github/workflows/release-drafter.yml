@@ -1,0 +1,67 @@
+name: Release Drafter
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+# Permissions for default token (secrets.GITHUB_TOKEN)
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  update_release_draft:
+    permissions:
+      contents: write
+      pull-requests: write
+        
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: release-drafter/release-drafter@v7
+        id: release_drafter
+        with:
+          config-name: release-drafter.yml # the default, loads '.github/release-drafter.yml'
+      - name: Update changelog
+        if: github.event_name == 'push'
+        uses: actions/github-script@v7
+        env:
+          RELEASE_BODY: ${{ steps.release_drafter.outputs.body }}
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'CHANGELOG.md';
+            const start = '<!-- RELEASE_DRAFTER_START -->';
+            const end = '<!-- RELEASE_DRAFTER_END -->';
+            const body = (process.env.RELEASE_BODY || '').trim();
+
+            let content = fs.existsSync(path)
+              ? fs.readFileSync(path, 'utf8')
+              : '# Changelog\n\n## Unreleased\n\n' + start + '\n' + end + '\n';
+
+            if (!content.includes(start) || !content.includes(end)) {
+              throw new Error('Changelog markers not found');
+            }
+
+            const before = content.split(start)[0] + start + '\n';
+            const after = '\n' + content.split(end)[1];
+            const insert = body ? body + '\n' : '';
+            const next = before + insert + end + after;
+
+            if (next !== content) {
+              fs.writeFileSync(path, next);
+            }
+      - name: Commit changelog
+        if: github.event_name == 'push' && github.actor != 'github-actions[bot]'
+        run: |
+          git add CHANGELOG.md
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore: update changelog [skip ci]"
+            git push
+          }

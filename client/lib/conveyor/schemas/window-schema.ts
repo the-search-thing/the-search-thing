@@ -11,27 +11,7 @@ export const windowIpcSchema = {
       platform: z.string(),
     }),
   },
-  "window-is-minimizable": {
-    args: z.tuple([]),
-    return: z.boolean(),
-  },
-  "window-is-maximizable": {
-    args: z.tuple([]),
-    return: z.boolean(),
-  },
-  "window-minimize": {
-    args: z.tuple([]),
-    return: z.void(),
-  },
-  "window-maximize": {
-    args: z.tuple([]),
-    return: z.void(),
-  },
   "window-close": {
-    args: z.tuple([]),
-    return: z.void(),
-  },
-  "window-maximize-toggle": {
     args: z.tuple([]),
     return: z.void(),
   },
@@ -39,7 +19,6 @@ export const windowIpcSchema = {
     args: z.tuple([z.enum(["center", "center-above", "center-below", "cursor"])]),
     return: z.void(),
   },
-
   // Web content operations
   "web-undo": {
     args: z.tuple([]),
@@ -65,35 +44,7 @@ export const windowIpcSchema = {
     args: z.tuple([]),
     return: z.void(),
   },
-  "web-select-all": {
-    args: z.tuple([]),
-    return: z.void(),
-  },
-  "web-reload": {
-    args: z.tuple([]),
-    return: z.void(),
-  },
-  "web-force-reload": {
-    args: z.tuple([]),
-    return: z.void(),
-  },
-  "web-toggle-devtools": {
-    args: z.tuple([]),
-    return: z.void(),
-  },
-  "web-actual-size": {
-    args: z.tuple([]),
-    return: z.void(),
-  },
-  "web-zoom-in": {
-    args: z.tuple([]),
-    return: z.void(),
-  },
-  "web-zoom-out": {
-    args: z.tuple([]),
-    return: z.void(),
-  },
-  "web-toggle-fullscreen": {
+  "web-select-all": { 
     args: z.tuple([]),
     return: z.void(),
   },

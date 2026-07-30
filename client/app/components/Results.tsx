@@ -8,6 +8,36 @@ import { useAppContext } from "../AppContext";
 
 type ResultItem = SearchResultItem;
 
+const iconCache = new Map<string, string>();
+
+function FileIcon({ path, ext }: { path: string; ext: string }) {
+  const conveyor = useConveyor();
+  const fallback = fileIcons[ext.toLowerCase()] || fileIcons.txt;
+  const [src, setSrc] = useState<string>(fallback);
+
+  useEffect(() => {
+    if (iconCache.has(path)) {
+      setSrc(iconCache.get(path)!);
+      return;
+    }
+    setSrc(fallback);
+    let cancelled = false;
+    conveyor.search
+      .getFileIcon(path)
+      .then((dataUrl) => {
+        if (cancelled) return;
+        iconCache.set(path, dataUrl);
+        setSrc(dataUrl);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [path, fallback, conveyor]);
+
+  return <img src={src} className="w-5 h-5" alt="" />;
+}
+
 const phaseLabels: Record<string, string> = {
   scan_text: "Scanning text files",
   index_text: "Indexing text files",
@@ -31,6 +61,7 @@ const Results: React.FC<ResultsWithContextProps> = ({
   onRecentSearchSelect,
 }) => {
   const [selectedItem, setSelectedItem] = useState<ResultItem | null>(null);
+  const [fileContent, setFileContent] = useState<string | null>(null);
   const [brokenImagePaths, setBrokenImagePaths] = useState<Set<string>>(new Set());
   const [hasInitiatedIndexing, setHasInitiatedIndexing] = useState(false);
   const hasOpenedDialogRef = useRef(false);
@@ -52,8 +83,40 @@ const Results: React.FC<ResultsWithContextProps> = ({
 
   useEffect(() => {
     setSelectedItem(null);
+    setFileContent(null);
     setBrokenImagePaths(new Set());
   }, [searchResults]);
+
+  useEffect(() => {
+    if (!selectedItem || selectedItem.label === "image" || selectedItem.label === "video") {
+      setFileContent(null);
+      return;
+    }
+    if (selectedItem.content) {
+      setFileContent(selectedItem.content);
+      return;
+    }
+
+    const path = selectedItem.path;
+    setFileContent(null);
+    let cancelled = false;
+    search
+      .readFileContent(path)
+      .then((content) => {
+        if (!cancelled) {
+          setFileContent(content);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setFileContent("(Could not read file content)");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedItem, search]);
 
   useEffect(() => {
     if (!hasSearched) {
@@ -319,16 +382,12 @@ const Results: React.FC<ResultsWithContextProps> = ({
                       handleOpen(result.path);
                     }
                   }}
-                  className={`flex flex-row p-2 rounded-xl cursor-pointer hover:bg-zinc-800 transition-colors border-b border-zinc-800 ${
-                    selectedItem?.path === result.path ? "bg-zinc-700" : ""
+                  className={`flex flex-row p-2 rounded-xl cursor-pointer hover:bg-zinc-700/60 transition-colors border-b border-zinc-800 ${
+                    selectedItem?.path === result.path ? "bg-zinc-600/70 ring-1 ring-zinc-500/40" : ""
                   }`}
                 >
                   <div className="pr-2 shrink-0">
-                    <img
-                      src={fileIcons[getFileExt(result.path).toLowerCase()] || fileIcons.txt}
-                      className="w-5 h-5"
-                      alt=""
-                    />
+                    <FileIcon path={result.path} ext={getFileExt(result.path)} />
                   </div>
                   <div className="min-w-0 flex-1 text-zinc-100 truncate" title={result.path}>
                     {getFileName(result.path)}
@@ -344,8 +403,8 @@ const Results: React.FC<ResultsWithContextProps> = ({
           {selectedItem ? (
             <div className="pl-4 py-2 h-full min-w-0">
               {selectedItem.label === "image" ? (
-                <div className="p-5 rounded-2xl h-full bg-zinc-900/60 overflow-hidden flex flex-col min-h-0">
-                  <div className="w-full h-[320px] rounded-xl overflow-hidden mb-4 bg-zinc-950 flex items-center justify-center shrink-0">
+                <div className="p-4 rounded-2xl h-full bg-zinc-900/60 overflow-hidden flex flex-col min-h-0">
+                  <div className="w-full h-[255px] rounded-xl overflow-hidden bg-zinc-950 flex items-center justify-center shrink-0">
                     {!brokenImagePaths.has(selectedItem.path) ? (
                       <img
                         src={toImageSrc(selectedItem.path)}
@@ -359,9 +418,6 @@ const Results: React.FC<ResultsWithContextProps> = ({
                       </div>
                     )}
                   </div>
-                  <div className="text-zinc-300 whitespace-pre-wrap break-words overflow-y-auto overflow-x-hidden min-h-0 flex-1">
-                    {selectedItem.content ?? "No preview available for this result."}
-                  </div>
                   <div
                     className="text-zinc-400 text-xs mt-3 truncate shrink-0"
                     title={selectedItem.path}
@@ -370,15 +426,12 @@ const Results: React.FC<ResultsWithContextProps> = ({
                   </div>
                 </div>
               ) : selectedItem.label === "video" && selectedItem.thumbnail_url ? (
-                <div className="p-5 rounded-2xl h-full bg-zinc-900/60 overflow-hidden flex flex-col min-h-0">
+                <div className="p-4 rounded-2xl h-full bg-zinc-900/60 overflow-hidden flex flex-col min-h-0">
                   <img
                     src={toImageSrc(selectedItem.thumbnail_url)}
                     alt=""
-                    className="w-full h-[320px] object-contain rounded-xl bg-zinc-950 shrink-0"
+                    className="w-full h-[255px] object-contain rounded-xl bg-zinc-950 shrink-0"
                   />
-                  <div className="text-zinc-300 whitespace-pre-wrap break-words overflow-y-auto overflow-x-hidden min-h-0 flex-1 mt-4">
-                    {selectedItem.content ?? "No preview available for this result."}
-                  </div>
                   <div
                     className="text-zinc-400 text-xs mt-3 truncate shrink-0"
                     title={selectedItem.path}
@@ -387,9 +440,21 @@ const Results: React.FC<ResultsWithContextProps> = ({
                   </div>
                 </div>
               ) : (
-                <div className="p-5 rounded-2xl h-full bg-zinc-700/60 overflow-hidden flex flex-col min-h-0">
-                  <div className="text-zinc-300 whitespace-pre-wrap break-words overflow-y-auto overflow-x-hidden min-h-0 flex-1">
-                    {selectedItem.content ?? "No preview available for this result."}
+                <div className="p-5 rounded-2xl h-full bg-zinc-900/60 overflow-hidden flex flex-col min-h-0">
+                  <div className="text-zinc-300 whitespace-pre-wrap break-words overflow-y-auto overflow-x-hidden min-h-0 flex-1 text-sm font-mono leading-relaxed">
+                    {fileContent === null ? (
+                      <span className="text-zinc-500 italic">Loading…</span>
+                    ) : fileContent !== "" ? (
+                      fileContent
+                    ) : (
+                      <span className="text-zinc-500 italic">No preview available.</span>
+                    )}
+                  </div>
+                  <div
+                    className="text-zinc-400 text-xs mt-3 truncate shrink-0"
+                    title={selectedItem.path}
+                  >
+                    {selectedItem.path}
                   </div>
                 </div>
               )}

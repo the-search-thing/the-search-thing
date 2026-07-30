@@ -20,21 +20,7 @@ export const registerWindowHandlers = (
 
     return { width, height, minimizable, maximizable, platform };
   });
-
-  handle("window-is-minimizable", () => getWindow()?.isMinimizable() ?? false);
-  handle("window-is-maximizable", () => getWindow()?.isMaximizable() ?? false);
-  handle("window-minimize", () => getWindow()?.minimize());
-  handle("window-maximize", () => getWindow()?.maximize());
   handle("window-close", () => getWindow()?.close());
-  handle("window-maximize-toggle", () => {
-    const window = getWindow();
-    if (!window) return;
-    if (window.isMaximized()) {
-      window.unmaximize();
-    } else {
-      window.maximize();
-    }
-  });
 
   handle("window-apply-placement", (placement) => {
     const window = getWindow();
@@ -50,24 +36,5 @@ export const registerWindowHandlers = (
   handle("web-paste", () => getWindow()?.webContents.paste());
   handle("web-delete", () => getWindow()?.webContents.delete());
   handle("web-select-all", () => getWindow()?.webContents.selectAll());
-  handle("web-reload", () => getWindow()?.webContents.reload());
-  handle("web-force-reload", () => getWindow()?.webContents.reloadIgnoringCache());
-  handle("web-toggle-devtools", () => getWindow()?.webContents.toggleDevTools());
-  handle("web-actual-size", () => getWindow()?.webContents.setZoomLevel(0));
-  handle("web-zoom-in", () => {
-    const wc = getWindow()?.webContents;
-    if (!wc) return;
-    wc.setZoomLevel(wc.zoomLevel + 0.5);
-  });
-  handle("web-zoom-out", () => {
-    const wc = getWindow()?.webContents;
-    if (!wc) return;
-    wc.setZoomLevel(wc.zoomLevel - 0.5);
-  });
-  handle("web-toggle-fullscreen", () => {
-    const window = getWindow();
-    if (!window) return;
-    window.setFullScreen(!window.fullScreen);
-  });
   handle("web-open-url", (url: string) => shell.openExternal(url));
 };

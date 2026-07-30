@@ -1,6 +1,7 @@
 import { handle } from "@/lib/main/shared";
-import { dialog, shell } from "electron";
+import { app, dialog, shell } from "electron";
 import axios from "axios";
+import * as fs from "fs";
 import { sidecarClient } from "@/lib/main/sidecar-client";
 
 export const registerSearchHandlers = () => {
@@ -68,5 +69,15 @@ export const registerSearchHandlers = () => {
   handle("open-file", async (filePath: string) => {
     await shell.openPath(filePath);
     return null;
+  });
+
+  handle("get-file-icon", async (filePath: string) => {
+    const icon = await app.getFileIcon(filePath, { size: "normal" });
+    return icon.toDataURL();
+  });
+
+  handle("read-file-content", async (filePath: string) => {
+    const content = await fs.promises.readFile(filePath, { encoding: "utf-8" });
+    return content.length > 8000 ? content.slice(0, 8000) + "\n…" : content;
   });
 };

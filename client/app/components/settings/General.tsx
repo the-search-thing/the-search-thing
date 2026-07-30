@@ -139,7 +139,7 @@ export default function General() {
     <div
       className={cn(
         "flex flex-col gap-4",
-        "w-full h-full",
+        "w-full h-full overflow-hidden",
         "border-1 border-zinc-700/80 bg-zinc-800/60",
         "p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]",
       )}
@@ -189,7 +189,7 @@ export default function General() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 overflow-y-auto flex-1 min-h-0 pr-2">
         <div className="flex items-center justify-between gap-4">
           <div>
             <div className="text-sm text-zinc-200">Launch at startup</div>

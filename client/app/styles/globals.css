@@ -32,6 +32,29 @@
   --radius-sm: calc(var(--radius) - 4px);
 }
 
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(113, 113, 122, 0.4) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(113, 113, 122, 0.4);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(113, 113, 122, 0.65);
+}
+
 @layer base {
   :root {
     --background: var(--color-neutral-50);

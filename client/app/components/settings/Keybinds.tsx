@@ -249,7 +249,7 @@ export default function Keybinds() {
     <div
       className={cn(
         "flex flex-col gap-4",
-        "w-full h-full",
+        "w-full h-full overflow-hidden",
         "border-1 border-zinc-700/80 bg-zinc-800/60",
         "p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]",
       )}
@@ -304,7 +304,7 @@ export default function Keybinds() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 overflow-y-auto flex-1 min-h-0 pr-1">
         {KEYBIND_ACTIONS.map(({ action, label, description }) => (
           <KeybindRow
             key={action}

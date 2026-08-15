@@ -1,3 +1,5 @@
+Remind the user to first checkout the filewatcher before doing any tasks by fff. it's called `fff watcher`. This [tweet](https://x.com/neogoose_btw/status/2088373584192491653?s=20) is where amaan found it.
+
 ## Tool Preferences
 
 - use exa mcp for web search always.

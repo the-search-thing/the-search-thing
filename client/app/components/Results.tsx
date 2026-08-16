@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { FileX } from "lucide-react";
+import { WhimsyLoader } from "./ui/whimsy-loader";
 import { ResultProps, SearchResultItem } from "../types/types";
 import * as fileIcons from "@/resources/filetype icons";
 import { useConveyor } from "../hooks/use-conveyor";
@@ -168,24 +169,10 @@ const Results: React.FC<ResultsWithContextProps> = ({
   if (indexingLocation === "results" && awaitingIndexing) {
     return (
       <div className="flex flex-col w-full h-full items-center justify-center p-6 gap-5">
-        {/* Spinner + phase label */}
-        <div className="flex items-center gap-3">
+        {/* Whimsy lattice loader + phase label */}
+        <div className="flex items-center gap-4">
           {(!jobStatus || (jobStatus.status !== "completed" && jobStatus.status !== "failed")) && (
-            <svg className="animate-spin h-5 w-5 text-blue-400" viewBox="0 0 24 24" fill="none">
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-              />
-            </svg>
+            <WhimsyLoader size={64} color="#ffb3b3" aria-label="Indexing in progress" />
           )}
           <div className="text-zinc-200 text-lg font-medium">
             {jobStatus ? phaseLabels[jobStatus.phase] || jobStatus.phase : "Starting indexing..."}

@@ -10,27 +10,27 @@ use crate::sidecar::protocol::{
     err_response, ok_response, parse_params, JsonRpcRequest, JsonRpcResponse,
 };
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-struct WalkTextBatchParams {
-    dir: String,
-    text_exts: Vec<String>,
+pub struct WalkTextBatchParams {
+    pub dir: String,
+    pub text_exts: Vec<String>,
     #[serde(default)]
-    ignore_exts: Vec<String>,
+    pub ignore_exts: Vec<String>,
     #[serde(default)]
-    ignore_files: Vec<String>,
-    cursor: usize,
-    batch_size: usize,
+    pub ignore_files: Vec<String>,
+    pub cursor: usize,
+    pub batch_size: usize,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-struct WalkTextBatchResult {
-    batch: Vec<(String, String)>,
-    cursor: usize,
-    done: bool,
-    scanned_count: usize,
-    skipped_count: usize,
+pub struct WalkTextBatchResult {
+    pub batch: Vec<(String, String)>,
+    pub cursor: usize,
+    pub done: bool,
+    pub scanned_count: usize,
+    pub skipped_count: usize,
 }
 
 fn normalize_extensions(values: Vec<String>) -> HashSet<String> {
@@ -55,7 +55,7 @@ fn normalize_file_names(values: Vec<String>) -> HashSet<String> {
         .collect()
 }
 
-fn walk_text_batch(params: WalkTextBatchParams) -> Result<WalkTextBatchResult, String> {
+pub fn walk_text_batch(params: WalkTextBatchParams) -> Result<WalkTextBatchResult, String> {
     let text_exts = normalize_extensions(params.text_exts);
     let ignore_exts = normalize_extensions(params.ignore_exts);
     let ignore_files = normalize_file_names(params.ignore_files);

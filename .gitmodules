@@ -1,0 +1,3 @@
+[submodule "the-search-thing-gpui"]
+	path = the-search-thing-gpui
+	url = https://github.com/the-search-thing/the-search-thing-gpui

@@ -1,0 +1,17 @@
+use helix_db::dsl::prelude::*;
+
+// Reference-only migration artifact.
+// This file is intentionally not part of the Rust build and documents
+// how db/schema.hx maps to the Helix v2 Rust DSL surface.
+// Schema labels/properties are implicit in v2; this keeps only setup-time index intent.
+
+#[register]
+pub fn EnsureAssetIndexes() -> WriteBatch {
+    write_batch()
+        .step(g().create_index_if_not_exists(IndexSpec::node_equality(
+            "Asset",
+            "content_hash",
+        )))
+        .step(g().create_vector_index_nodes("AssetEmbedding", "embedding", None))
+        .returning([])
+}

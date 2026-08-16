@@ -5,15 +5,9 @@
 dist/
 
 # env vars
-.env
-.env.*
 
 # rust
 target/
-
-# python
-uv.lock
-__pycache__/
 
 # misc
 backup.txt
@@ -30,16 +24,14 @@ node_modules/
 .webpack/
 
 
-client/resources/
-
 linux/
 .ruff_cache/
+client/resources/
 client/videos/output_indexer/
 client/videos/thumbnails/
-backend.spec
-backend/build/backend/
-lazygit
-backend/build/backend/
 client/resources/backend/
 client/resources/ffmpeg/
 backend.spec
+backend/build/backend/
+lazygit
+config.bat
